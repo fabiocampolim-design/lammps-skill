@@ -29,7 +29,7 @@ def test_parse_help_on_garbage_gives_empty_fields():
 
 
 @pytest.mark.parametrize("win,posix", [
-    (r"C:\Users\x\runs\a", "/mnt/c/Users/x/runs/a"),
+    (r"E:\work\runs\a", "/mnt/e/work/runs/a"),
     ("D:/claude-bulk/LAMMPS", "/mnt/d/claude-bulk/LAMMPS"),
     ("/home/u/runs", "/home/u/runs"),
 ])

@@ -57,7 +57,7 @@ python scripts/run_benchmarks.py --potential <Cu_u3.eam from your installation> 
 
 ## What is verified
 
-- The suite (`python -m pytest tests -q`, 130+ tests, pyflakes clean) runs everywhere; the tests that
+- The suite (`python -m pytest tests -q`, 228 tests, pyflakes clean, conformance FAIL=0) runs everywhere; the tests that
   need LAMMPS run against every detected route and skip otherwise. On the reference machine they ran
   against the Ubuntu 26.04 apt build (10 Dec 2025): data-file round trip through LAMMPS, dumps and
   restarts written by LAMMPS, a synthetic EAM file accepted by `pair_style eam/alloy`, SPC/E water with
