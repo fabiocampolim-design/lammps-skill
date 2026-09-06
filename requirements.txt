@@ -1,0 +1,13 @@
+# Python side of lammps-skill (executed with Python 3.12, 2026-09). Optional backends are NOT listed:
+#   pip install lammps       (GPL-2.0; third-party wheel njzjz/lammps-wheel, bundles liblammps — see references/backends.md)
+#   pip install ase          (LGPL-2.1)      pip install pymatgen   (MIT)
+#   pip install MDAnalysis   (GPL-2.0)       conda install -c conda-forge ovito   (GPL-3.0 / MIT modules)
+numpy>=2.0,<3
+scipy>=1.14
+matplotlib>=3.9
+pyyaml
+jupyter
+ipykernel
+nbconvert>=7
+pytest>=7
+pyflakes

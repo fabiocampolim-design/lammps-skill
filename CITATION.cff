@@ -1,0 +1,62 @@
+cff-version: 1.2.0
+message: "If you use this skill, please cite it as below, and cite LAMMPS (Thompson et al. 2022; Plimpton 1995) and the reference data listed in references/benchmarks.md."
+title: "lammps-skill: an AI-agent skill, verified toolkit, teaching engine and course for molecular dynamics with LAMMPS"
+type: software
+version: "0.1.0"
+date-released: "2026-09-06"
+license: Apache-2.0
+authors:
+  - family-names: Campolim
+    given-names: Fabio
+keywords:
+  - LAMMPS
+  - molecular dynamics
+  - AI-agent skill
+  - undergraduate course
+references:
+  - type: article
+    title: "LAMMPS - a flexible simulation tool for particle-based materials modeling at the atomic, meso, and continuum scales"
+    authors:
+      - family-names: Thompson
+        given-names: A. P.
+      - family-names: Aktulga
+        given-names: H. M.
+      - family-names: Berger
+        given-names: R.
+      - family-names: Bolintineanu
+        given-names: D. S.
+      - family-names: Brown
+        given-names: W. M.
+      - family-names: Crozier
+        given-names: P. S.
+      - family-names: in 't Veld
+        given-names: P. J.
+      - family-names: Kohlmeyer
+        given-names: A.
+      - family-names: Moore
+        given-names: S. G.
+      - family-names: Nguyen
+        given-names: T. D.
+      - family-names: Shan
+        given-names: R.
+      - family-names: Stevens
+        given-names: M. J.
+      - family-names: Tranchida
+        given-names: J.
+      - family-names: Trott
+        given-names: C.
+      - family-names: Plimpton
+        given-names: S. J.
+    journal: "Computer Physics Communications"
+    volume: 271
+    year: 2022
+    doi: 10.1016/j.cpc.2021.108171
+  - type: article
+    title: "Fast Parallel Algorithms for Short-Range Molecular Dynamics"
+    authors:
+      - family-names: Plimpton
+        given-names: S.
+    journal: "Journal of Computational Physics"
+    volume: 117
+    year: 1995
+    doi: 10.1006/jcph.1995.1039
