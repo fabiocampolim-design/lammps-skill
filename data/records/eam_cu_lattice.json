@@ -1,0 +1,20 @@
+{
+ "a0_lammps": 3.615,
+ "a0_mdlite": 3.614965409557378,
+ "ecoh_lammps": -3.54,
+ "ecoh_mdlite": -3.5400275395845426,
+ "measured": {
+  "da": 3.4590442622217665e-05,
+  "de": 2.7539584542601858e-05
+ },
+ "potential": "Cu_u3.eam",
+ "provenance": {
+  "date": "2026-09-06",
+  "lammps_skill": "0.1.0",
+  "lammps_version": "10 Dec 2025",
+  "route": "wsl-apt",
+  "why": "mdlite: cubic fit of E(a) on 12 points; LAMMPS: box/relax minimisation; spline vs LAMMPS's own table interpolation"
+ },
+ "tolerance_a0": 0.0001,
+ "tolerance_ecoh": 0.0001
+}

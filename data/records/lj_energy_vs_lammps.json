@@ -1,0 +1,19 @@
+{
+ "energy_lammps": -1545.7383,
+ "energy_mdlite": -1545.7382640088708,
+ "force_maxdiff": 3.161915174132446e-13,
+ "measured": {
+  "dE": 3.5991129152534995e-05,
+  "dF": 3.161915174132446e-13
+ },
+ "natoms": 256,
+ "provenance": {
+  "date": "2026-09-06",
+  "lammps_skill": "0.1.0",
+  "lammps_version": "10 Dec 2025",
+  "route": "wsl-apt",
+  "why": "double precision both sides; forces (dump_modify format %20.15g) agree to round-off; the energy residue is the thermo print precision (pe printed with ~8 significant digits); tolerance one decade above measured"
+ },
+ "tolerance_energy": 0.0001,
+ "tolerance_force": 1e-12
+}

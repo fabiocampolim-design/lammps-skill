@@ -1,0 +1,26 @@
+{
+ "P_err": 0.00767440110008093,
+ "P_mdlite": -0.010097412211691909,
+ "P_nist": 0.0067714,
+ "P_nist_err": 0.00177,
+ "U_err": 0.0011808414634057673,
+ "U_mdlite": -5.514747502787762,
+ "U_nist": -5.5121,
+ "U_nist_err": 0.000455,
+ "measured": {
+  "dP": 0.01686881221169191,
+  "dU": 0.002647502787762157
+ },
+ "natoms": 500,
+ "provenance": {
+  "date": "2026-09-06",
+  "lammps_skill": "0.1.0",
+  "lammps_version": "",
+  "route": "none",
+  "why": "finite-size (500 atoms) and sampling; tolerance = max(decade above measured, 3 sigma combined)"
+ },
+ "state_point": "T0.85_rho0.776",
+ "steps": 20000,
+ "tolerance_P": 0.1,
+ "tolerance_U": 0.01
+}
