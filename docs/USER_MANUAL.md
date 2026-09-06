@@ -1,0 +1,122 @@
+# lammps-skill — user manual
+
+lammps-skill drives a LAMMPS installation you own, checks and runs input scripts, reads what LAMMPS
+writes, analyses it, and teaches molecular dynamics with a small engine of its own. This manual is
+the human-facing companion of `AGENTS.md` (every flag) and `SKILL.md` (agent workflows).
+
+## 1. Install
+
+1. Python side: `scripts/install_env_windows.ps1` (Windows) or `scripts/install_env.sh`
+   (Linux/macOS/WSL) creates the conda env `lammps` (Python 3.12, numpy 2, scipy, matplotlib, pyyaml,
+   jupyter, pytest, pyflakes) and the Jupyter kernel `lammps-mc`. Both accept `--dry-run` / `-DryRun`.
+   Then `pip install -e .` for the `lammpskill` command; optional extras `[ase]`, `[pymatgen]`,
+   `[mdanalysis]`, `[lammps]`, `[all]`.
+2. LAMMPS itself (GPL-2.0, not included): pick a route in `references/install-routes.md`. On this
+   kind of machine the quickest is the Ubuntu archive inside WSL:
+   `wsl -d Ubuntu -u root -- bash /mnt/c/<path>/scripts/install_lammps_wsl.sh` (steps `update`,
+   `install`, `verify`, each reported OK/FAIL; `--dry-run` prints them). A source build with a chosen
+   tag and package preset: `--source --deps-only` once as root, then `--source --tag <tag>
+   --preset core|molecular|metals|reactive|ml|all-cpu --jobs N` as the user. conda-forge, the PyPI wheel
+   (`pip install lammps`, in-process only, needs MS-MPI on Windows) and the official Windows installer
+   are the other routes; Docker and a remote cluster are designed and pinned.
+
+## 2. Verify
+
+`python scripts/verify_lammps.py` checks the imports, our parsers on the fixtures, and every route.
+`--probe` runs a 4000-atom LJ melt on each detected installation and prints the platform table;
+`--table-out FILE` appends the rows as Markdown; `--steps N` changes the probe length; `--outdir DIR`
+puts the probe runs elsewhere; `--route NAME` detects one route and explains a failure;
+`--no-lammps` skips detection (CI); `--require-lammps` fails when nothing is found; `--log-dir DIR`
+appends the results to a log; `-q`/`--quiet` prints one line; `--version` prints the version.
+`lammpskill detect` (`--route`, `--json`) lists the installations; `lammpskill verify --probe` runs
+the same check.
+
+## 3. Write, check and run a case from the command line
+
+- `lammpskill new --preset lj_melt|eam_fcc|spce_water --out DIR [--steps N] [--n N]` writes
+  `DIR/in.lammps` (and `water.data` for `spce_water`).
+- `lammpskill check FILE [--workdir DIR]` prints every finding (`error`/`warning`/`info`, code
+  C01–C14, line, manual page) and exits 1 on an error.
+- `lammpskill run DIR [--in NAME] [--route R] [--backend auto|subprocess|library] [--mpi N] [--omp N]
+  [--time-limit S]` runs the case hidden, with a time limit, MPI/OpenMP only when the build has them,
+  and prints the thermo block.
+- `lammpskill log FILE [--csv OUT] [--last]`, `lammpskill dump FILE [--info] [--frames]`,
+  `lammpskill rdf FILE [--nbins N] [--rmax R] [--out FILE]`.
+- `--log-dir DIR` before the subcommand appends an audit record per command; `--version` prints the version.
+
+## 4. Use the toolkit from Python
+
+```python
+from lammpskill.script import lj_melt, render, check
+from lammpskill.run import run
+from lammpskill.io.log import read_log
+from lammpskill.io.dump import read_dump
+from lammpskill.post import rdf_trajectory, block_average
+
+spec = lj_melt(steps=2000)
+spec.dumps = ["d all custom 100 d.dump id type x y z"]
+text = render(spec)
+assert not [f for f in check(text) if f.level == "error"]
+res = run(text, "case", mpi=2, time_limit=600)          # first executable route; in-process if only the module exists
+print(res.ok, res.thermo.last, res.warnings)
+r, g = rdf_trajectory(read_dump("case/d.dump"), nbins=100)
+```
+
+`run_or_load(name, compute, records_dir)` is the record-or-run helper for notebooks: with LAMMPS the
+computation runs and its result is stored; without it the record is loaded; with neither it is skipped.
+`LibraryBackend().session(workdir)` yields the raw `lammps` object for per-step access.
+
+## 5. Files LAMMPS writes
+
+`lammpskill.io.data.read_data / write_data` (data files, atom styles atomic, charge, bond, angle,
+molecular, full, sphere, image flags, topology, coefficient sections), `io.dump.read_dump /
+iter_dump / write_dump` (text dumps, `.gz`, scaled/unwrapped coordinates, triclinic bounds),
+`io.log.read_log` (thermo `one` and `yaml` styles, warnings, errors, several runs),
+`io.restart.read_restart_header` (magic, endianness, version only), `io.potential.read_eam_setfl /
+read_eam_funcfl / write_eam_setfl`. Details and pitfalls: `references/file-formats.md`.
+
+## 6. Analysis and benchmarks
+
+`lammpskill.post`: `block_average`, `rdf`, `rdf_trajectory`, `msd`, `diffusion_coefficient`, `vacf`,
+`structure_factor`, `energy_drift`, `elastic_from_stress`, `load_benchmark`, `compare`
+(`references/analysis.md`). Reference tables with provenance live in `data/benchmarks/` (NIST SRSW
+Lennard-Jones, EAM Cu); measured cross-checks in `data/records/`, regenerated by
+`python scripts/run_benchmarks.py --which lj-vs-lammps,lj-nvt,eam-cu --potential <Cu EAM file>
+[--steps N] [--state-point KEY] [--outdir DIR] [--workdir DIR] [--log-dir DIR]`
+(`references/benchmarks.md`).
+
+## 7. mdlite
+
+`mdlite.box.Box`, `mdlite.neighbors.CellList / VerletList`, `mdlite.pair.LennardJones / HarmonicBond`,
+`mdlite.eam.EAM` (from an `EAMSetfl`), `mdlite.integrate.State / velocity_verlet`,
+`mdlite.thermostats.Berendsen / Langevin / NoseHooverChain`, `mdlite.minimize.steepest_descent / fire`,
+`mdlite.measure.kinetic_temperature / pressure`. Reduced units, k_B = 1, orthogonal boxes. Its
+validations: NVE energy conservation, forces vs numerical derivatives, LJ lattice energy analytic,
+thermostats reach the target, Nosé–Hoover conserved quantity, and the three records against LAMMPS
+and NIST.
+
+## 8. Tests
+
+`python -m pytest tests -q` from the product root. Tests that need LAMMPS use the `lammps_exe` /
+`lammps_installations` fixtures and skip when nothing is detected; the rest (parsers on fixtures,
+routes with fakes, script checker, runner with a stub, analysis, mdlite, docs guard, licence guard,
+held-material guard, vendored conformance checker) run everywhere. `python -m pyflakes lammpskill
+mdlite scripts tests docs` must be silent (CI runs it first).
+
+## 9. This manual as HTML or PDF
+
+`python docs/build_manual.py [--outdir DIR] [--no-pdf] [-v|--verbose]` writes `USER_MANUAL.html`
+(pandoc when installed, a built-in converter otherwise) and, with pandoc + a LaTeX engine, the PDF.
+
+## 10. Troubleshooting
+
+| symptom | cause / fix |
+|---|---|
+| `no LAMMPS installation detected` | no route present: install one (§1); `verify_lammps.py --route R` explains a single route |
+| `import lammps` fails on Windows with "Could not find module … liblammps.dll" | the wheel needs the MS-MPI runtime (finding N-2) |
+| `pe` in a `units lj` run is tiny | thermo energies are per atom by default; `thermo_modify norm no` |
+| forces from a dump differ at 1e-5 | the dump's default float format; `dump_modify ID format float %20.15g` |
+| "Pair style requires a KSpace style" | checker C02: add `kspace_style` |
+| "All masses are not set" | checker C11: `mass` before `velocity … create` |
+| `mpi=N ignored` warning | the detected build has no MPI; choose another route |
+| a WSL window pops up | never launch `wsl.exe` outside `run_command`; it uses `CREATE_NO_WINDOW` |
