@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lammps-skill"
+dynamic = ["version"]
+description = "AI-agent skill, verified toolkit, teaching engine (mdlite) and course for molecular dynamics with LAMMPS"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+authors = [{name = "Fabio Campolim"}]
+requires-python = ">=3.12"
+dependencies = ["numpy>=2.0,<3", "scipy>=1.14", "matplotlib>=3.9", "pyyaml"]
+keywords = ["LAMMPS", "molecular dynamics", "skill", "teaching"]
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Chemistry",
+]
+
+[project.optional-dependencies]
+ase = ["ase>=3.23"]
+pymatgen = ["pymatgen>=2024.1"]
+mdanalysis = ["MDAnalysis>=2.7"]
+lammps = ["lammps"]
+all = ["ase>=3.23", "pymatgen>=2024.1", "MDAnalysis>=2.7", "lammps"]
+
+[project.scripts]
+lammpskill = "lammpskill.cli:main"
+
+[project.urls]
+Documentation = "https://github.com/fabiocampolim-design/lammps-skill#readme"
+
+[tool.setuptools]
+packages = ["lammpskill", "lammpskill.install", "lammpskill.io", "mdlite"]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}
