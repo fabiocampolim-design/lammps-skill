@@ -2,6 +2,26 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.1 — 2026-09-06
+
+The `wsl-source` route is live: `stable_22Jul2025_update6` built with the `core` preset on WSL2
+Ubuntu 26.04 (11 packages, MPI, OpenMP, shared library, python module), measured at 1.38 s on the
+LJ-melt probe and recorded in `references/platforms.md`. Getting there found four defects in our
+installer and detection, each fixed with a failing test first, and one upstream candidate (P-1).
+
+- `scripts/install_lammps_wsl.sh` (source route): install RPATH so the installed `lmp_<preset>` finds
+  `liblammps_<preset>.so` (N-11); the python module goes into `~/.local/venv-lammps-<preset>` through
+  upstream's `python/install.py` with the venv activated and run from the build directory, because
+  `--target install-python` is refused by PEP 668 distributions (N-10, P-1); the verify step loads the
+  module with `name=<preset>` (N-12). New step name `python-module` in the status list.
+- `lammpskill.install`: `detect_in_wsl` takes an optional `python_query` (the source route's module
+  lives in a venv, not in the system python3); it derives the machine name from `lmp_<machine>`,
+  probes the module by **constructing** `lammps.lammps(name=<machine>)` instead of importing, records
+  it as `Installation.extra["machine"]`, and asks only for that route's own library so an apt row is
+  not shadowed by a source build (N-12, N-13). `wsl_source.cmake_command` emits the RPATH flags.
+- References: `install-routes.md` §2 documents the three deviations from the manual's build page;
+  `platforms.md` gains the measured `wsl-source` row; `pitfalls.md` gains four entries.
+
 ## 0.1.0 — 2026-09-06 (foundation)
 
 - Product skeleton: Apache-2.0 licence, NOTICE, non-affiliation (Sandia, NTESS, Temple, the LAMMPS

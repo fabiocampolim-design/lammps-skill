@@ -84,3 +84,23 @@ def test_install_env_windows_dry_run():
               os.path.join(SCRIPTS, "install_env_windows.ps1"), "-DryRun"])
     assert p.returncode == 0, p.stdout + p.stderr
     assert "create-env : DRY-RUN" in p.stdout and "register-kernel : DRY-RUN" in p.stdout
+
+
+@pytest.mark.skipif(BASH is None, reason="bash not on PATH")
+def test_install_lammps_wsl_source_dry_run_sets_an_rpath_and_a_venv():
+    """N-10/N-11 (both PROVEN on the 22Jul2025_update6 build, 2026-09-06):
+
+    * the installed lmp_<preset> could not find liblammps_<preset>.so because $HOME/.local/lib is not
+      on the loader path -> the configure line must set an install RPATH;
+    * `cmake --build . --target install-python` pip-installs into system site-packages, which Ubuntu
+      26.04 (PEP 668) refuses -> the module goes into a per-preset venv through upstream's install.py.
+    """
+    script = os.path.join(SCRIPTS, "install_lammps_wsl.sh")
+    p = _run([BASH, script, "--dry-run", "--source", "--preset", "core"])
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "-D CMAKE_INSTALL_RPATH=" in p.stdout
+    assert "python-module : DRY-RUN" in p.stdout
+    assert "venv-lammps-core" in p.stdout and "python/install.py" in p.stdout
+    # P-1: install.py reads VIRTUAL_ENV, so the venv must be activated, not merely used as the interpreter.
+    assert "venv-lammps-core/bin/activate" in p.stdout
+    assert "--target install-python" not in p.stdout

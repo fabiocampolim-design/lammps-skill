@@ -35,8 +35,28 @@ CMake build of a chosen tag (default the latest stable) in $HOME/src/lammps-<tag
   the manual's `most.cmake` preset).
 - Detection: `LAMMPSKILL_WSL_LMP=/path/to/lmp_core` or the first of `~/.local/bin/lmp_*`,
   `~/src/lammps-*/build/lmp_*`.
-- Gives: exactly the packages you asked for, the shared library and `import lammps` for the WSL
-  python (`cmake --build . --target install-python`).
+- Gives: exactly the packages you asked for, the shared library, and `import lammps` for a **venv**
+  interpreter at `~/.local/venv-lammps-<preset>/bin/python`.
+
+Three things this route does differently from the manual's build page, each because a run here proved
+it necessary (2026-09-06, `stable_22Jul2025_update6` on Ubuntu 26.04):
+
+1. **An install RPATH.** `$HOME/.local/lib` is not on the loader path, so the installed `lmp_<preset>`
+   could not find `liblammps_<preset>.so` and printed nothing. `cmake_command()` therefore passes
+   `-D CMAKE_INSTALL_RPATH=<prefix>/lib -D CMAKE_INSTALL_RPATH_USE_LINK_PATH=yes` (finding N-11).
+2. **The python module goes into a venv, not system site-packages.** `cmake --build . --target
+   install-python` pip-installs system-wide, which a PEP 668 distribution refuses
+   ("This environment is externally managed"), and it would collide with an apt `python3-lammps`
+   anyway. The installer creates `~/.local/venv-lammps-<preset>` and runs upstream's
+   `python/install.py` with that venv **activated** — `install.py` chooses its target from the
+   `VIRTUAL_ENV` environment variable, not from `sys.prefix`, so passing the venv interpreter alone
+   is not enough — from the build directory, because it resolves the wheel it just built relative to
+   the current directory (findings N-10, P-1).
+3. **`lammps.lammps(name="<preset>")`.** The build is `LAMMPS_MACHINE=<preset>`, so the module must be
+   told to load `liblammps_<preset>.so`; with no name it falls through to the system loader and binds
+   whatever `liblammps.so` it finds — here the apt one, which fails with "LAMMPS Python module
+   installed for LAMMPS version 20250722, but shared library is version 20251210" (finding N-12).
+   `detect()` therefore probes the module by *constructing* it with the machine name, not by importing.
 
 ## 3. `conda`
 

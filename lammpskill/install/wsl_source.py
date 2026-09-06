@@ -29,8 +29,11 @@ def cmake_command(preset="core", tag="stable_22Jul2025_update6", prefix="$HOME/.
         flags = "-C ../cmake/presets/most.cmake -D PKG_PYTHON=yes"
     else:
         flags = " ".join("-D PKG_%s=yes" % p for p in PRESET_PACKAGES[preset].split())
-    return ("cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=%s -D BUILD_MPI=yes -D BUILD_OMP=yes "
-            "-D BUILD_SHARED_LIBS=yes -D LAMMPS_MACHINE=%s %s ../cmake" % (prefix, preset, flags))
+    # CMAKE_INSTALL_RPATH: $PREFIX/lib is not on the loader path, so without it the installed
+    # lmp_<preset> cannot find liblammps_<preset>.so (finding N-11, PROVEN 2026-09-06).
+    return ("cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX=%s -D CMAKE_INSTALL_RPATH=%s/lib "
+            "-D CMAKE_INSTALL_RPATH_USE_LINK_PATH=yes -D BUILD_MPI=yes -D BUILD_OMP=yes "
+            "-D BUILD_SHARED_LIBS=yes -D LAMMPS_MACHINE=%s %s ../cmake" % (prefix, prefix, preset, flags))
 
 
 def detect(env=None, run=None):
@@ -40,4 +43,7 @@ def detect(env=None, run=None):
         query = "test -x %s && echo %s" % (override, override)
     else:
         query = "ls -1 $HOME/.local/bin/lmp_* $HOME/src/lammps-*/build/lmp_* 2>/dev/null | head -1"
-    return detect_in_wsl(query, NAME, env=env, run=run)
+    # The source build's python module lives in its own venv (PEP 668 forbids the system install, and
+    # an apt python3-lammps would answer for it); ask that interpreter, not python3 (finding N-10).
+    return detect_in_wsl(query, NAME, env=env, run=run,
+                         python_query="ls -1 $HOME/.local/venv-lammps-*/bin/python 2>/dev/null | head -1")

@@ -54,3 +54,21 @@ with its manual page) and the operational pitfalls met while building this produ
   `wsl.exe` does not kill `lmp` inside WSL; `run_command` wraps the executable with GNU `timeout`.
 - **2026-09-06 — a fixed-step steepest descent explodes on a Lennard-Jones wall** (fmax 2.6e14 after
   200 steps at α = 0.01). Cap the displacement (`dmax`) or use FIRE; that is the point of chapter 01.
+- **2026-09-06 — a CMake install to `$HOME/.local` needs an install RPATH.** `~/.local/lib` is not on
+  the loader path: `lmp_core` printed nothing and exited 0 until the build passed
+  `-D CMAKE_INSTALL_RPATH=$HOME/.local/lib` (finding N-11). Check with `ldd $(which lmp_core)`.
+- **2026-09-06 — `cmake --build . --target install-python` fails on PEP 668 distributions.** It
+  pip-installs into system site-packages; Ubuntu 26.04 answers "This environment is externally
+  managed" and the build target fails after the wheel is built. Install into a venv instead — and
+  *activate* it: upstream's `python/install.py` decides where to install from the `VIRTUAL_ENV`
+  environment variable, not from `sys.prefix`, so running it with the venv interpreter alone still
+  targets the system (findings N-10, P-1). It also resolves the wheel relative to the current
+  directory, so run it from the build directory.
+- **2026-09-06 — a build made with `LAMMPS_MACHINE=<m>` needs `lammps.lammps(name="<m>")`.** The
+  library is `liblammps_<m>.so`; with no name the module falls back to the system `liblammps.so` and
+  silently binds a different LAMMPS — here the apt build, which raised "LAMMPS Python module installed
+  for LAMMPS version 20250722, but shared library is version 20251210" (finding N-12). A module that
+  imports is not a module that works: probe it by constructing.
+- **2026-09-06 — with two builds installed, ask each route for its own library.** One `ls` over
+  `/usr/lib/...` and `$HOME/.local/lib/...` sorts `$HOME` first, so the apt row reported the
+  source-built library (finding N-13).

@@ -129,3 +129,101 @@ def test_real_detection_if_any(lammps_installations):
     """Skipped when nothing is installed; otherwise every found installation has a version and either an executable or the module."""
     for inst in lammps_installations:
         assert inst.version and (inst.executable or inst.python_module)
+
+
+def test_wsl_source_cmake_command_sets_the_install_rpath():
+    """N-11: without an install RPATH the installed lmp_<preset> cannot load liblammps_<preset>.so."""
+    from lammpskill.install import wsl_source
+    line = wsl_source.cmake_command("core", prefix="/home/u/.local")
+    assert "-D CMAKE_INSTALL_RPATH=/home/u/.local/lib" in line
+
+
+def test_wsl_source_detect_tests_the_module_with_the_build_venv_python():
+    """N-10: the source build's module lives in its own venv; python3 would report the apt module instead."""
+    venv = "/home/u/.local/venv-lammps-core/bin/python"
+
+    def fake_run(cmd, **kw):
+        q = cmd[-1]
+        if "venv-lammps-" in q and "import lammps" not in q:
+            return subprocess.CompletedProcess(cmd, 0, stdout=venv + "\n", stderr="")
+        if "-h" in q and "import" not in q:
+            return subprocess.CompletedProcess(cmd, 0, stdout=_help(), stderr="")
+        if "test -x" in q:
+            return subprocess.CompletedProcess(cmd, 0, stdout="/home/u/.local/bin/lmp_core\n", stderr="")
+        if "import lammps" in q:
+            ok = q.startswith(venv)
+            return subprocess.CompletedProcess(cmd, 0 if ok else 1, stdout="ok\n" if ok else "", stderr="")
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    inst = get_route("wsl-source").detect(env={"LAMMPSKILL_WSL_LMP": "/home/u/.local/bin/lmp_core"}, run=fake_run)
+    assert inst is not None and inst.python == venv and inst.python_module is True
+
+
+def test_wsl_detect_probes_the_module_with_the_machine_name_and_instantiates():
+    """N-12 (PROVEN 2026-09-06): a source build made with LAMMPS_MACHINE=<preset> ships
+    liblammps_<preset>.so, so `lammps.lammps()` with no name falls through to the system loader and
+    binds the *apt* library (AttributeError: module 20250722 vs shared library 20251210). The probe
+    must therefore pass name=<preset> and actually construct, not merely import."""
+    venv = "/home/u/.local/venv-lammps-core/bin/python"
+
+    def fake_run(cmd, **kw):
+        q = cmd[-1]
+        if "venv-lammps-" in q and "import lammps" not in q:
+            return subprocess.CompletedProcess(cmd, 0, stdout=venv + "\n", stderr="")
+        if "test -x" in q:
+            return subprocess.CompletedProcess(cmd, 0, stdout="/home/u/.local/bin/lmp_core\n", stderr="")
+        if "import lammps" in q:
+            ok = q.startswith(venv) and 'name="core"' in q and "lammps.lammps(" in q
+            return subprocess.CompletedProcess(cmd, 0 if ok else 1, stdout="ok\n" if ok else "", stderr="")
+        if "-h" in q:
+            return subprocess.CompletedProcess(cmd, 0, stdout=_help(), stderr="")
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    inst = get_route("wsl-source").detect(env={"LAMMPSKILL_WSL_LMP": "/home/u/.local/bin/lmp_core"}, run=fake_run)
+    assert inst is not None and inst.python_module is True and inst.extra.get("machine") == "core"
+
+
+def test_wsl_apt_detect_probes_the_module_with_an_empty_machine_name():
+    """The apt build has no LAMMPS_MACHINE: liblammps.so, so the probe must pass name=""."""
+    def fake_run(cmd, **kw):
+        q = cmd[-1]
+        if "command -v lmp" in q:
+            return subprocess.CompletedProcess(cmd, 0, stdout="/usr/bin/lmp\n", stderr="")
+        if "import lammps" in q:
+            ok = 'name=""' in q
+            return subprocess.CompletedProcess(cmd, 0 if ok else 1, stdout="ok\n" if ok else "", stderr="")
+        if "-h" in q:
+            return subprocess.CompletedProcess(cmd, 0, stdout=_help(), stderr="")
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    inst = get_route("wsl-apt").detect(env={}, run=fake_run)
+    assert inst is not None and inst.python_module is True and inst.extra.get("machine") == ""
+
+
+def test_wsl_apt_library_is_not_shadowed_by_a_source_build():
+    """N-13 (ours, PROVEN 2026-09-06): the library query listed both /usr/lib/.. and $HOME/.local/lib
+    and took the first line, so once a source build existed the apt row reported liblammps_core.so."""
+    apt = "/usr/lib/x86_64-linux-gnu/liblammps.so.0"
+    src = "/home/u/.local/lib/liblammps_core.so"
+
+    def make(exe, help_text):
+        def fake_run(cmd, **kw):
+            q = cmd[-1]
+            if "command -v lmp" in q or "test -x" in q:
+                return subprocess.CompletedProcess(cmd, 0, stdout=exe + "\n", stderr="")
+            if q.startswith("ls -1") and "liblammps" in q:
+                # both builds exist; the route must ask only for its own
+                out = [p for p in (apt, src) if ("liblammps_core" in q) == ("liblammps_core" in p)]
+                return subprocess.CompletedProcess(cmd, 0, stdout=(out[0] + "\n") if out else "", stderr="")
+            if "import lammps" in q:
+                return subprocess.CompletedProcess(cmd, 0, stdout="ok 20250722\n", stderr="")
+            if "-h" in q:
+                return subprocess.CompletedProcess(cmd, 0, stdout=help_text, stderr="")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        return fake_run
+
+    a = get_route("wsl-apt").detect(env={}, run=make("/usr/bin/lmp", _help()))
+    s = get_route("wsl-source").detect(env={"LAMMPSKILL_WSL_LMP": "/home/u/.local/bin/lmp_core"},
+                                       run=make("/home/u/.local/bin/lmp_core", _help()))
+    assert a.library == apt, a.library
+    assert s.library == src, s.library

@@ -47,16 +47,24 @@ if [ $DRY = 1 ] || [ "$UID_NOW" = "0" ] || [ $DEPS_ONLY = 1 ]; then
 else
   status+=("deps : SKIP (run once as root with --source --deps-only)")
 fi
-SRC="$HOME/src/lammps-$TAG"; BUILD="$SRC/build"; PREFIX="$HOME/.local"
+SRC="$HOME/src/lammps-$TAG"; BUILD="$SRC/build"; PREFIX="$HOME/.local"; VENV="$PREFIX/venv-lammps-$PRESET"
 if [ "$PKGS" = "__ALL_CPU__" ]; then
   CMAKE_PKGS="-C ../cmake/presets/most.cmake -D PKG_PYTHON=yes"
 else
   CMAKE_PKGS=""; for p in $PKGS; do CMAKE_PKGS="$CMAKE_PKGS -D PKG_$p=yes"; done
 fi
 step fetch     "mkdir -p '$HOME/src' && { [ -d '$SRC/.git' ] || git clone --depth 1 --branch '$TAG' https://github.com/lammps/lammps.git '$SRC'; }"
-step configure "mkdir -p '$BUILD' && cd '$BUILD' && cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='$PREFIX' -D BUILD_MPI=yes -D BUILD_OMP=yes -D BUILD_SHARED_LIBS=yes -D LAMMPS_MACHINE=$PRESET $CMAKE_PKGS ../cmake"
+step configure "mkdir -p '$BUILD' && cd '$BUILD' && cmake -D CMAKE_BUILD_TYPE=Release -D CMAKE_INSTALL_PREFIX='$PREFIX' -D CMAKE_INSTALL_RPATH='$PREFIX/lib' -D CMAKE_INSTALL_RPATH_USE_LINK_PATH=yes -D BUILD_MPI=yes -D BUILD_OMP=yes -D BUILD_SHARED_LIBS=yes -D LAMMPS_MACHINE=$PRESET $CMAKE_PKGS ../cmake"
 step build     "cd '$BUILD' && cmake --build . --parallel $JOBS"
-step install   "cd '$BUILD' && cmake --install . && cmake --build . --target install-python"
-step verify    "'$PREFIX/bin/lmp_$PRESET' -h | head -1 && python3 -c 'import lammps; l = lammps.lammps(cmdargs=[\"-log\",\"none\",\"-screen\",\"none\"]); print(\"python module\", l.version()); l.close()'"
+step install       "cd '$BUILD' && cmake --install ."
+# The python module goes into its own venv: `--target install-python` pip-installs into system site-packages,
+# which PEP 668 distributions (Ubuntu 26.04) refuse, and it would collide with an apt python3-lammps anyway.
+# We call upstream's python/install.py with the venv *activated*: it decides where to install from the
+# VIRTUAL_ENV environment variable, not from sys.prefix, so a venv interpreter alone is not enough (P-1).
+step python-module "cd '$BUILD' && python3 -m venv --system-site-packages '$VENV' && . '$VENV/bin/activate' && python '$SRC/python/install.py' -p '$SRC/python/lammps' -l '$BUILD/liblammps_$PRESET.so' -w '$BUILD' -v '$SRC/src/version.h'"
+# name=$PRESET is required: the build is LAMMPS_MACHINE=$PRESET, so the module must load
+# liblammps_$PRESET.so; with no name it falls back to the system liblammps.so (the apt one here).
+step verify        "'$PREFIX/bin/lmp_$PRESET' -h | head -2 | tail -1 && '$VENV/bin/python' -c 'import lammps; l = lammps.lammps(name=\"$PRESET\", cmdargs=[\"-log\",\"none\",\"-screen\",\"none\",\"-nocite\"]); print(\"python module\", l.version()); l.close()'"
 printf '%s\n' "${status[@]}"
 echo "Executable: $PREFIX/bin/lmp_$PRESET   Library: $PREFIX/lib/liblammps_$PRESET.so   Source: $SRC"
+echo "Python module: $VENV/bin/python   (the system python3 keeps whatever apt installed)"
