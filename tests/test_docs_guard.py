@@ -31,7 +31,8 @@ def test_build_manual_writes_html_without_pandoc(tmp_path, monkeypatch):
     assert "<title>lammps-skill" in out and "<h2>" in out and "scripts/verify_lammps.py" in out
 
 
-@pytest.mark.parametrize("module", ["verify_lammps", "run_benchmarks", "build_manual", "lammpskill.cli"])
+@pytest.mark.parametrize("module", ["verify_lammps", "run_benchmarks", "run_examples", "build_manual",
+                                   "lammpskill.cli"])
 def test_script_flags_are_documented(module):
     mod = __import__(module, fromlist=["build_parser"])
     agents, manual = _read("AGENTS.md"), _read("docs", "USER_MANUAL.md")

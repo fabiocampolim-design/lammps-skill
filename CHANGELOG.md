@@ -2,6 +2,27 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.2 — 2026-09-06
+
+LAMMPS's own `bench/` cases now run here on both live routes and are compared against the reference
+logs upstream ships with them: `lj`, `chain` and `eam` reproduce every printed digit on both routes
+at 1 and 4 processes, and `rhodo` agrees to 4e-9 (one unit in the last printed digit of `TotEng`);
+`chute` is the one case the `core` source build cannot run, for want of GRANULAR. Recorded in
+`docs/04-examples-run-log.md` (study side).
+
+- New `scripts/run_examples.py`: sweeps `bench/` or `examples/` on one route, copying each case out
+  of the installed tree (upstream inputs are never redistributed by this project) and recording the
+  outcome as `ok` / `missing-package` (naming the package) / `error` / `timeout` / `no-run`, plus a
+  column-by-column comparison against upstream's reference log where one exists. Timing columns are
+  recorded but never drive the verdict -- they measure the machine that wrote the reference.
+- `lammpskill.io.log.parse_log` understands **`thermo_style multi`** (finding N-18): `bench/in.rhodo`
+  uses it, ran for 42 s, and was scored "no thermo output" by a parser that knew only `one` and `yaml`.
+- Four defects fixed test-first while building the sweep: it scores on the log because both builds
+  here exit 0 after a fatal input error (N-15); discovery runs in the shell that owns the tree, since
+  Windows Python cannot see an ext4 path (N-16); the scratch root is resolved to an absolute path,
+  because `build_command` single-quotes the working directory and `cd '$HOME/...'` never expands
+  (N-17); and discovery is one `find` instead of one `wsl.exe` launch per directory (N-19).
+
 ## 0.1.1 — 2026-09-06
 
 The `wsl-source` route is live: `stable_22Jul2025_update6` built with the `core` preset on WSL2

@@ -1,7 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 Fabio Campolim
-"""LAMMPS log/screen parser: thermo blocks (`one` and `yaml` styles), warnings, errors, loop lines.
-Written from the manual's description of thermo output and from logs LAMMPS wrote on this machine."""
+"""LAMMPS log/screen parser: thermo blocks (`one`, `multi` and `yaml` styles), warnings, errors,
+loop lines. Written from the manual's description of thermo output and from logs LAMMPS wrote on
+this machine -- `multi` was added after bench/in.rhodo, which uses it, ran for 42 s and was scored
+"no thermo output" by a parser that knew only `one` and `yaml` (finding N-18)."""
 
 from __future__ import annotations
 
@@ -13,6 +15,10 @@ _NUM = re.compile(r"^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$|^[-+]?(inf|nan)$", r
 _LOOP = re.compile(r"Loop time of ([\d.eE+-]+) on (\d+) procs for (\d+) steps with (\d+) atoms")
 _VERSION = re.compile(r"^LAMMPS \((.+?)\)")
 _CREATED = re.compile(r"Created (\d+) atoms")
+# thermo_style multi: "------------ Step  0 ----- CPU = 0 (sec) -------------" then "Name = value" pairs.
+_MULTI_HEAD = re.compile(r"^-+\s*Step\s+(\S+)\s*-+\s*CPU\s*=\s*(\S+)\s*\(sec\)\s*-+$")
+_MULTI_PAIR = re.compile(r"([A-Za-z][\w/\[\]]*)\s*=\s*([-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?|[-+]?(?:inf|nan))",
+                         re.I)
 
 
 class ThermoRun:
@@ -76,6 +82,26 @@ def _yaml_block(lines, i):
     return cols, rows, j
 
 
+def _multi_block(lines, i):
+    """Parse one `thermo_style multi` record starting at its "---- Step N ---- CPU = t ----" line.
+    Returns (ordered column names, one row of values, next_index)."""
+    m = _MULTI_HEAD.match(lines[i].strip())
+    cols, vals = ["Step", "CPU"], [float(m.group(1)), float(m.group(2))]
+    j = i + 1
+    while j < len(lines):
+        s = lines[j].strip()
+        if not s or _MULTI_HEAD.match(s) or _LOOP.search(s) or s.startswith(("WARNING:", "ERROR")):
+            break
+        pairs = _MULTI_PAIR.findall(s)
+        if not pairs:
+            break
+        for name, value in pairs:
+            cols.append(name)
+            vals.append(float(value))
+        j += 1
+    return cols, vals, j
+
+
 def parse_log(text: str) -> LogFile:
     lf = LogFile()
     lines = text.splitlines()
@@ -98,6 +124,13 @@ def parse_log(text: str) -> LogFile:
             cols, rows, i = _yaml_block(lines, i)
             if cols:
                 current = (cols, rows)
+            continue
+        elif _MULTI_HEAD.match(s):
+            cols, vals, i = _multi_block(lines, i)
+            if current is not None and current[0] == cols:
+                current[1].append(vals)
+            else:
+                current = (cols, [vals])
             continue
         m = _LOOP.search(s)
         if m:

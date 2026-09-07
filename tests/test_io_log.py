@@ -69,3 +69,44 @@ def test_no_thermo_raises_a_clear_error():
         assert "no thermo" in str(e)
     else:
         raise AssertionError("expected ValueError")
+
+
+# thermo_style multi, exactly as bench/in.rhodo produced it here on 2026-09-06 (finding N-18:
+# the parser knew `one` and `yaml` only, so a 42 s rhodo run was scored "no thermo output").
+MULTI = """LAMMPS (22 Jul 2025 - Update 6)
+Per MPI rank memory allocation (min/avg/max) = 49.25 | 49.35 | 49.64 Mbytes
+------------ Step              0 ----- CPU =            0 (sec) -------------
+TotEng   =    -25356.2057 KinEng   =     21444.8313 Temp     =       299.0397
+PotEng   =    -46801.0370 E_bond   =      2537.9940 E_angle  =     10921.3742
+E_dihed  =      5211.7865 E_impro  =       213.5116 E_vdwl   =     -2307.8634
+E_coul   =    207025.8934 E_long   =   -270403.7333 Press    =      -149.3300
+Volume   =    307995.0335
+------------ Step             50 ----- CPU =     15.07474 (sec) -------------
+TotEng   =    -25330.0307 KinEng   =     21501.0009 Temp     =       299.8229
+PotEng   =    -46831.0316 E_bond   =      2471.7035 E_angle  =     10836.5102
+E_dihed  =      5239.6319 E_impro  =       227.1218 E_vdwl   =     -1993.2873
+E_coul   =    206797.6807 E_long   =   -270410.3925 Press    =       237.6572
+Volume   =    308031.6762
+Loop time of 42.1 on 4 procs for 100 steps with 32000 atoms
+Total wall time: 0:00:42
+"""
+
+
+def test_multi_style_block_is_parsed_into_columns_and_rows():
+    lf = parse_log(MULTI)
+    assert len(lf.runs) == 1
+    run = lf.runs[0]
+    assert run.columns[:3] == ["Step", "CPU", "TotEng"]
+    assert "Volume" in run.columns and "E_long" in run.columns
+    assert run.data.shape == (2, len(run.columns))
+    assert run.last["Step"] == 50
+    assert run.last["TotEng"] == -25330.0307
+    assert run.last["Volume"] == 308031.6762
+    assert run.last["CPU"] == 15.07474
+    assert run.loop_time == 42.1 and run.nprocs == 4 and run.nsteps == 100 and run.natoms == 32000
+
+
+def test_multi_style_does_not_disturb_a_one_style_log():
+    lf = parse_log(MULTI + "\nStep Temp\n0 1.0\n1 2.0\nLoop time of 1 on 1 procs for 1 steps with 2 atoms\n")
+    assert len(lf.runs) == 2
+    assert lf.runs[1].columns == ["Step", "Temp"]

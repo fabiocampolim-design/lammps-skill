@@ -61,6 +61,30 @@ Exit codes: 0 all checks passed or skipped, 1 a check failed.
 
 Exit codes: 0 every requested benchmark wrote its record, 1 one failed, 2 unknown benchmark name.
 
+## `scripts/run_examples.py`
+
+Runs LAMMPS's **own** `bench/` and `examples/` cases on one route and records the outcome. The
+inputs are the LAMMPS developers' (GPL-2.0) and are never copied into this repository: each case is
+copied out of the installed tree into a scratch directory on the host that runs it, and only the
+outcome is written here. Scores on the **log**, never on the return code — both builds on the
+reference machine exit 0 after a fatal input error (finding N-15).
+
+| flag | meaning |
+|---|---|
+| `--route NAME` | install route to run on, e.g. `wsl-apt`, `wsl-source` (required) |
+| `--set bench\|examples` | which tree to sweep (default `bench`) |
+| `--root DIR` | the installed LAMMPS tree holding `bench/` and `examples/` |
+| `--procs N` | repeatable; process counts to run (default 1). `N > 1` is skipped on a build without MPI |
+| `--time-limit S` | seconds per case, enforced by `timeout` inside WSL (default 120) |
+| `--only TEXT` | substring filter on the case name |
+| `--outdir DIR` | where the JSON record and the markdown table are written (default `out/examples`) |
+| `--run-root DIR` | scratch directory for the copies (default `~/runs/examples`) |
+
+Outcomes: `ok`, `missing-package` (names the package the build lacks — a fact about the build, not a
+broken case), `error`, `timeout`, `no-run`. When upstream ships a reference log for the case at that
+process count (`log.<date>.<case>.g++.<n>`), the final thermo row is compared with it and the worst
+relative difference is recorded.
+
 ## `docs/build_manual.py`
 
 | flag | meaning |

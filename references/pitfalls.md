@@ -72,3 +72,19 @@ with its manual page) and the operational pitfalls met while building this produ
 - **2026-09-06 — with two builds installed, ask each route for its own library.** One `ls` over
   `/usr/lib/...` and `$HOME/.local/lib/...` sorts `$HOME` first, so the apt row reported the
   source-built library (finding N-13).
+- **2026-09-06 — LAMMPS exits 0 after a fatal input error.** `nonsense_command 1 2 3` prints
+  `ERROR: Unknown command` and returns status **0** on both builds here (22 Jul 2025 update 6 and
+  10 Dec 2025). Never gate anything on `lmp`'s return code: parse the log (`LogFile.errors`,
+  `LogFile.runs`), which is what `Result.ok` and `run_examples.classify` do (finding N-15). The
+  return code is still meaningful for one thing: `124` from `timeout`.
+- **2026-09-06 — `thermo_style multi` is a different format entirely.** Not columns but
+  `------------ Step N ----- CPU = t ----` followed by `Name = value` pairs; `bench/in.rhodo` uses
+  it. A parser written for `one`/`yaml` silently reports "no thermo output" for a run that worked
+  (finding N-18).
+- **2026-09-06 — an example is its whole directory.** Inputs read data files and potentials sitting
+  next to them; copying only `in.<name>` gives `ERROR: Cannot open file data.<name>`, which reads
+  like a broken example. Copy the directory.
+- **2026-09-06 — "missing package" is a fact about the build, not a broken case.** `ERROR:
+  Unrecognized pair style 'reaxff' is part of the REAXFF package which is not enabled in this LAMMPS
+  binary.` Record it as its own outcome, with the package named, or a route comparison turns into a
+  list of false failures.
