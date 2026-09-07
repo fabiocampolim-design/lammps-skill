@@ -87,6 +87,47 @@ build, not a broken case), `error`, `timeout-after-start` (ran, then hit the cap
 process count (`log.<date>.<case>.g++.<n>`), the final thermo row is compared with it and the worst
 relative difference is recorded.
 
+## `scripts/watch_upstream.py`
+
+The weekly upstream watch (playbook S8 / rule 23). Anonymous, one request per second. Every source
+is wrapped: one that is unreachable is recorded in the report, never raised. Sources: the
+`lammps/lammps` GitHub API (head, tags, releases, open issues and PRs), six pages by visible-text
+hash (lammps.org, the manual front page, *Python_install*, *Build_package*, download, the Windows
+installer directory), the matsci.org LAMMPS category, and PyPI for `lammps` and the optional
+backends.
+
+| flag | meaning |
+|---|---|
+| `--snapshot` | record the current state, write no report (the baseline) |
+| `--weekly` | compare with the previous snapshot, write `docs/watch/YYYY-WW.md`, then snapshot |
+| `--pull` | fetch the clones under `--upstream-dir` and report new commits per clone |
+| `--state-dir DIR` | where `snapshot.json` and `logs/` live (default `runs/watch`, gitignored) |
+| `--outdir DIR` | where the weekly reports go (default `docs/watch`) |
+| `--log-dir DIR` | audit log directory (default `<state-dir>/logs`) |
+| `--upstream-dir DIR` | directory of upstream clones for `--pull` (default `mirror/`) |
+| `--week LABEL` | override the ISO week label (tests) |
+| `-q`, `--quiet` | one summary line |
+| `--version` | print the version and exit |
+
+Exit codes: 0 all sources reached, 1 at least one was unreachable (the report names it), 2 usage.
+Idempotent within a week, and the week's report is never emptied: a second run compares against the
+first run's snapshot, so it rewrites only when something moved since.
+
+## `scripts/register_watch_task.ps1`
+
+Registers the weekly watch as a hidden Windows Scheduled Task (rules/12: nothing an agent starts
+may appear on the owner's screen; the task logs to a file).
+
+| flag | meaning |
+|---|---|
+| `-TaskName NAME` | task name (default "lammps-skill upstream watch") |
+| `-Python PATH` | interpreter to run (default the `lammps` env's python) |
+| `-Day DAY` | day of the week (default Monday) |
+| `-At HH:MM` | local time (default 09:00) |
+| `-Pull` | pass `--pull` to the watch |
+| `-Remove` | unregister the task |
+| `-DryRun` | print the plan and change nothing |
+
 ## `docs/build_manual.py`
 
 | flag | meaning |

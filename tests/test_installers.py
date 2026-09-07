@@ -104,3 +104,17 @@ def test_install_lammps_wsl_source_dry_run_sets_an_rpath_and_a_venv():
     # P-1: install.py reads VIRTUAL_ENV, so the venv must be activated, not merely used as the interpreter.
     assert "venv-lammps-core/bin/activate" in p.stdout
     assert "--target install-python" not in p.stdout
+
+
+@pytest.mark.skipif(sys.platform != "win32" or shutil.which("powershell") is None, reason="Windows only")
+def test_register_watch_task_dry_run_changes_nothing():
+    """Rule 24: the installer-shaped scripts have a dry run. Registering a scheduled task writes to
+    the user's task store, so -DryRun must print the plan and stop."""
+    p = _run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+              os.path.join(SCRIPTS, "register_watch_task.ps1"), "-DryRun"])
+    assert p.returncode == 0, p.stdout + p.stderr
+    assert "register : DRY-RUN" in p.stdout
+    assert 'watch_upstream.py" --weekly' in p.stdout       # the script path is quoted for cmd.exe
+    out = _run(["powershell", "-NoProfile", "-Command",
+                "(Get-ScheduledTask -TaskName 'lammps-skill upstream watch' -ErrorAction SilentlyContinue) -ne $null"])
+    assert "True" not in out.stdout, "the dry run registered a task"

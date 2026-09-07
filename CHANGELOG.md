@@ -2,6 +2,24 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.6 — 2026-09-07
+
+The weekly upstream watch (playbook S8 / rule 23).
+
+- New `scripts/watch_upstream.py`: `--snapshot` records a baseline, `--weekly [--pull]` writes
+  `docs/watch/YYYY-WW.md` with what moved on GitHub (head, releases, open issues and PRs), which
+  upstream pages changed, new matsci.org topics and new PyPI versions. Every source is wrapped --
+  an unreachable one is reported, never raised, because a watch that dies when a forum is down is
+  not a watch. Idempotent within a week, and a second run never empties the week's report.
+- New `scripts/register_watch_task.ps1`: registers it as a **hidden** weekly Scheduled Task that
+  logs to a file (KEEP rules/12), with `-DryRun` and `-Remove`.
+- Two defects the first live run exposed, both fixed and tested:
+  `www.lammps.org/download.html` is a 252-byte meta-refresh stub, so that sensor hashed to **one
+  word** and could never have fired -- the URL is the canonical `/download/` now, and any watched
+  page under `MIN_PAGE_WORDS` visible words is reported as a warning. And GitHub's `/tags` is not
+  date-ordered (the live call returned `stable_31Mar2017` first), so a new tag can fall outside the
+  window: the release signal is `/releases`, which is ordered and covers every tag LAMMPS tags.
+
 ## 0.1.5 — 2026-09-07
 
 Two misclassifications the first full `examples/` sweep made, both found by reading its output

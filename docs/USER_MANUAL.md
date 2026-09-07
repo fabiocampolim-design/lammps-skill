@@ -105,6 +105,20 @@ validations: NVE energy conservation, forces vs numerical derivatives, LJ lattic
 thermostats reach the target, Nosé–Hoover conserved quantity, and the three records against LAMMPS
 and NIST.
 
+## 7b. Watching upstream
+
+LAMMPS moves: a feature release every six to eight weeks and a stable update alongside it. `python
+scripts/watch_upstream.py --snapshot` records a baseline; `--weekly [--pull]` compares against it
+and writes `docs/watch/YYYY-WW.md`, listing what moved on GitHub (head, tags, releases, open issues
+and PRs), which upstream pages changed, new matsci.org topics, and new PyPI versions of `lammps`
+and the optional backends. `--state-dir`, `--outdir`, `--log-dir`, `--upstream-dir` and `--week`
+change where it reads and writes; `-q` prints one line. Every source is wrapped, so a forum outage
+produces a report that says the forum was unreachable rather than a traceback.
+
+On Windows, `scriptsegister_watch_task.ps1 [-DryRun] [-Remove] [-Day Monday] [-At 09:00]
+[-Pull] [-Python PATH] [-TaskName NAME]` registers it as a hidden weekly Scheduled Task that logs
+to a file.
+
 ## 8. Tests
 
 `python -m pytest tests -q` from the product root. Tests that need LAMMPS use the `lammps_exe` /
