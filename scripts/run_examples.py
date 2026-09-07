@@ -222,6 +222,10 @@ def classify(returncode, log_text):
         return "error", detail.strip() if line else ""
     log = parse_log(log_text)
     if not log.runs:
+        # Not every case opens a thermo block: examples/voronoi checks itself with `print` and
+        # never runs dynamics. Reaching LAMMPS's normal termination line means it worked (N-23).
+        if "Total wall time:" in log_text:
+            return "ok-no-thermo", "finished, no thermo block"
         return "no-run", "no thermo output"
     return "ok", ""
 
@@ -279,8 +283,10 @@ def run_case(case, installation, procs=1, time_limit=120, potentials=None, run_r
     safe = case.name.replace("/", "__")
     if installation.host == "wsl":
         workdir = "%s/%s" % (run_root, safe)
-        prep = "rm -rf %s && mkdir -p %s && cp -r %s/. %s/" % (workdir, workdir,
-                                                              to_wsl_path(case.directory), workdir)
+        # -L dereferences: upstream links potentials relatively (examples/snap/Ta06A.snap ->
+        # ../../potentials/Ta06A.snap), and a copied link dangles under the scratch root (N-24).
+        prep = "rm -rf %s && mkdir -p %s && cp -rL %s/. %s/" % (workdir, workdir,
+                                                                to_wsl_path(case.directory), workdir)
         subprocess.run(list(installation.launch) + [prep], stdin=subprocess.DEVNULL,
                        capture_output=True, text=True, timeout=300,
                        creationflags=_CNW if sys.platform == "win32" else 0)

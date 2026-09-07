@@ -81,8 +81,9 @@ reference machine exit 0 after a fatal input error (finding N-15).
 | `--run-root DIR` | scratch directory for the copies (default `~/runs/examples`) |
 | `--potentials DIR` | directory exported as `$LAMMPS_POTENTIALS` (default `<root>/potentials`) |
 
-Outcomes: `ok`, `missing-package` (names the package the build lacks — a fact about the build, not a
-broken case), `error`, `timeout`, `no-run`. When upstream ships a reference log for the case at that
+Outcomes: `ok`, `ok-no-thermo` (finished, but the case never opened a thermo block — several are
+self-checking with `print`), `missing-package` (names the package the build lacks — a fact about the
+build, not a broken case), `error`, `timeout-after-start` (ran, then hit the cap), `timeout`, `no-run`. When upstream ships a reference log for the case at that
 process count (`log.<date>.<case>.g++.<n>`), the final thermo row is compared with it and the worst
 relative difference is recorded.
 

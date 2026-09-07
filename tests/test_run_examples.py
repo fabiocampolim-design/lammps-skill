@@ -101,7 +101,10 @@ def test_classify_reports_a_timeout():
 
 
 def test_classify_flags_a_log_with_no_run_at_all():
-    assert rx.classify(0, "LAMMPS (22 Jul 2025)\nTotal wall time: 0:00:00\n")[0] == "no-run"
+    """`no-run` is for a log that stops mid-way with nothing to show. One that reached LAMMPS's
+    normal termination line finished, thermo block or not -- see the ok-no-thermo test below."""
+    assert rx.classify(0, "LAMMPS (22 Jul 2025)\nreading data file ...\n")[0] == "no-run"
+    assert rx.classify(0, "LAMMPS (22 Jul 2025)\nTotal wall time: 0:00:00\n")[0] == "ok-no-thermo"
 
 
 def test_compare_final_thermo_reports_the_worst_relative_difference():
@@ -277,3 +280,54 @@ def test_early_abort_when_the_first_cases_all_fail_the_same_way():
     assert rx.early_abort_reason([{"outcome": "no-run"}] * 4) is None
     assert rx.early_abort_reason([{"outcome": "no-run"}] * 4 + [{"outcome": "ok"}]) is None
     assert rx.early_abort_reason([{"outcome": "missing-package"}] * 9) is None
+
+
+def test_a_case_that_finished_without_thermo_is_not_called_no_run():
+    """N-23 (PROVEN 2026-09-07): examples/voronoi is a self-checking case -- it prints TEST_n
+    results and never opens a thermo block. It ran to completion in 6 s and was scored `no-run`,
+    which reads as a failure. A log that reached "Total wall time:" with no error did run."""
+    finished = ("LAMMPS (10 Dec 2025)\nTEST_6  0% Error.\nTEST_DONE\nTotal wall time: 0:00:06\n")
+    assert rx.classify(0, finished)[0] == "ok-no-thermo"
+    # still `no-run` when LAMMPS never got to the end
+    assert rx.classify(0, "LAMMPS (10 Dec 2025)\nSetting up run ...\n")[0] == "no-run"
+
+
+def test_the_case_copy_dereferences_symlinks(monkeypatch):
+    """N-24 (PROVEN 2026-09-07): upstream's examples link their potentials relatively --
+    examples/snap/Ta06A.snap -> ../../potentials/Ta06A.snap. `cp -r` copies the link, whose target
+    does not exist under the scratch directory, so 12 snap/mliap cases failed with "Cannot open
+    input script Ta06A.snap" while `ls` showed the name sitting right there."""
+    import subprocess as sp
+
+    seen = []
+
+    class Inst:
+        host, route, mpi, omp = "wsl", "wsl-source", True, True
+        launch = ("wsl.exe", "-d", "Ubuntu", "-e", "bash", "-lc")
+        executable = "/home/u/.local/bin/lmp_core"
+        version, packages, library, python_module, distro, python = "x", (), None, True, "Ubuntu", "python3"
+        extra = {}
+
+        def as_dict(self):
+            return dict(host=self.host, route=self.route, mpi=self.mpi, omp=self.omp, launch=self.launch,
+                        executable=self.executable, version=self.version, packages=self.packages,
+                        library=self.library, python_module=self.python_module, distro=self.distro,
+                        python=self.python, extra=self.extra)
+
+    monkeypatch.setattr(rx.subprocess, "run",
+                        lambda cmd, **k: seen.append(cmd[-1]) or sp.CompletedProcess(cmd, 0, stdout="", stderr=""))
+    monkeypatch.setattr(rx, "run_command",
+                        lambda *a, **k: sp.CompletedProcess(["x"], 0, stdout="", stderr=""))
+    monkeypatch.setattr(rx, "_read_remote", lambda *a, **k: GOOD)
+
+    class FsStub:
+        def join(self, *p):
+            return "/".join(p)
+
+        def read(self, p):
+            return ""
+
+    rx.run_case(rx.Case("snap/snap.Ta06A", "/t/examples/snap", "in.snap.Ta06A", {}), Inst(),
+                procs=1, time_limit=5, run_root="/home/u/runs", fs=FsStub())
+    prep = " ".join(seen)
+    assert "cp -rL" in prep, prep

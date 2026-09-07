@@ -2,6 +2,20 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.5 — 2026-09-07
+
+Two misclassifications the first full `examples/` sweep made, both found by reading its output
+rather than its exit status.
+
+- **N-24:** upstream's examples link their potentials *relatively* --
+  `examples/snap/Ta06A.snap -> ../../potentials/Ta06A.snap`. `cp -r` copied the link, whose target
+  does not exist under the scratch root, so 12 snap/mliap cases failed with "Cannot open input
+  script Ta06A.snap" while `ls` showed the name sitting right there. The copy is `cp -rL` now, and
+  those cases report what is actually true of the build: `missing-package: ML-SNAP`.
+- **N-23:** not every case opens a thermo block. `examples/voronoi` checks itself with `print`,
+  runs no dynamics, finishes in 6 s -- and was scored `no-run`, which reads as a failure. A log that
+  reached LAMMPS's `Total wall time:` line with no error is now `ok-no-thermo`.
+
 ## 0.1.4 — 2026-09-06
 
 Fixes the `$LAMMPS_POTENTIALS` prefix 0.1.3 introduced, and adds the guard that would have caught it.
