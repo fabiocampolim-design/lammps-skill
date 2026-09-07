@@ -2,6 +2,18 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.4 — 2026-09-06
+
+Fixes the `$LAMMPS_POTENTIALS` prefix 0.1.3 introduced, and adds the guard that would have caught it.
+
+- **N-22:** the prefix was a bare `LAMMPS_POTENTIALS=... lmp`, but `build_command` runs the
+  executable under `timeout`, which execs its argument directly -- so the assignment became the
+  program name ("timeout: failed to execute process") and 191 consecutive cases were scored
+  `no-run` before anyone looked. It is `env LAMMPS_POTENTIALS=... lmp` now. Verified on the four
+  `vashishta` cases, which failed with "cannot open vashishta potential file" before and pass now.
+- New `early_abort_reason`: a sweep whose first five cases are *all* `no-run` stops with an
+  explanation and exit code 3, instead of writing hundreds of rows of nothing.
+
 ## 0.1.3 — 2026-09-06
 
 - `scripts/run_examples.py` exports **`$LAMMPS_POTENTIALS`** into the run (new `--potentials`,

@@ -261,5 +261,19 @@ def test_potentials_directory_is_exported_into_the_run(monkeypatch):
     case = rx.Case("melt/melt", "/t/examples/melt", "in.melt", {})
     rx.run_case(case, Inst(), procs=1, time_limit=5, potentials="/t/potentials", run_root="/home/u/runs",
                 fs=FsStub())
-    assert seen["exe"].startswith("LAMMPS_POTENTIALS='/t/potentials' ")
+    # `env VAR=...`, never a bare `VAR=... prog`: build_command runs the executable under `timeout`,
+    # which execs its argument directly, so a shell assignment there becomes the program name and
+    # every case fails with "timeout: failed to execute process" (N-22, 191 cases scored no-run).
+    assert seen["exe"].startswith("env LAMMPS_POTENTIALS='/t/potentials' ")
     assert seen["exe"].endswith("/home/u/.local/bin/lmp_core")
+
+
+def test_early_abort_when_the_first_cases_all_fail_the_same_way():
+    """A broken command line (N-22: `timeout N VAR=x prog`) produced 191 consecutive no-run rows
+    before anyone looked. A sweep that starts with nothing but no-run is not data, it is a bug."""
+    assert rx.early_abort_reason([{"outcome": "no-run"}] * 5) is not None
+    assert "no-run" in rx.early_abort_reason([{"outcome": "no-run"}] * 5)
+    # fewer than the probe count, or any case that actually ran, is not a reason to stop
+    assert rx.early_abort_reason([{"outcome": "no-run"}] * 4) is None
+    assert rx.early_abort_reason([{"outcome": "no-run"}] * 4 + [{"outcome": "ok"}]) is None
+    assert rx.early_abort_reason([{"outcome": "missing-package"}] * 9) is None

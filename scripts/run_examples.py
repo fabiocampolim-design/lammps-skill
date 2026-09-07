@@ -248,6 +248,25 @@ def compare_final_thermo(ours_text, theirs_text):
             "ignored": ignored}
 
 
+ABORT_PROBE = 5
+
+
+def early_abort_reason(rows, probe=ABORT_PROBE):
+    """A sweep whose first cases are *all* `no-run` is reporting a broken command line, not data.
+
+    N-22: `timeout N VAR=x prog` makes the assignment the program name, and 191 consecutive no-run
+    rows were written before anyone looked. Stop at the probe instead and say so.
+    """
+    if len(rows) < probe:
+        return None
+    first = rows[:probe]
+    if all(r["outcome"] == "no-run" for r in first):
+        return ("the first %d cases were all `no-run` -- LAMMPS produced no thermo output at all, "
+                "which usually means the command line is broken rather than the cases. Run one by "
+                "hand with --only <case> and read log.run before trusting a full sweep." % probe)
+    return None
+
+
 def _scratch_root(fs):
     """Where a copy of the case runs. Never the installed tree, never /mnt when the host is WSL,
     and always an absolute path -- see WslFs.home (N-17)."""
@@ -274,7 +293,10 @@ def run_case(case, installation, procs=1, time_limit=120, potentials=None, run_r
     # Both prefixes go in front of the executable because build_command interpolates it into one
     # shell string that runs on the case's own host. A Windows `env=` never crosses wsl.exe, which
     # is why the first sweep reported 20+ cases as "cannot open sw potential file Si.sw" (N-20).
-    prefix = "LAMMPS_POTENTIALS=%s " % _q(potentials) if potentials else ""
+    # `env VAR=...`, not a bare `VAR=... prog`: build_command puts `timeout N` in front of the
+    # executable, and `timeout` execs its argument directly -- a shell assignment there becomes the
+    # program name ("timeout: failed to execute process"), which scored 191 cases as no-run (N-22).
+    prefix = "env LAMMPS_POTENTIALS=%s " % _q(potentials) if potentials else ""
     if procs > 1:
         prefix += "mpirun -np %d " % procs
     exe = installation
@@ -388,8 +410,12 @@ def main(argv=None):
             rec = run_case(c, inst, procs=n, time_limit=a.time_limit, run_root=run_root, fs=fs,
                            potentials=potentials)
             rows.append(rec)
-            print("  %-28s %d proc  %-16s %6ss  %s" % (c.name, n, rec["outcome"], rec["wall"],
+            print("  %-28s %d proc  %-20s %6ss  %s" % (c.name, n, rec["outcome"], rec["wall"],
                                                        rec["detail"][:60]))
+        stop = early_abort_reason(rows)
+        if stop:
+            print("ABORTED: " + stop)
+            return 3
     os.makedirs(a.outdir, exist_ok=True)
     stem = "%s-%s" % (inst.route, a.which)
     with open(os.path.join(a.outdir, stem + ".json"), "w", encoding="utf-8") as f:

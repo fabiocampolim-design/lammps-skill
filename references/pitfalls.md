@@ -88,3 +88,8 @@ with its manual page) and the operational pitfalls met while building this produ
   Unrecognized pair style 'reaxff' is part of the REAXFF package which is not enabled in this LAMMPS
   binary.` Record it as its own outcome, with the package named, or a route comparison turns into a
   list of false failures.
+- **2026-09-06 — `timeout N VAR=value prog` does not work.** `timeout` execs its argument directly
+  instead of going through a shell, so the assignment becomes the program name: `timeout: failed to
+  execute process: No such file or directory`. Use `timeout N env VAR=value prog`. This is how an
+  examples sweep scored 191 consecutive cases as "no thermo output" (finding N-22) — and note that
+  the failure is silent in the usual way, because the exit status was still 0 (N-15).
