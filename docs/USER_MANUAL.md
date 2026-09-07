@@ -115,9 +115,21 @@ and the optional backends. `--state-dir`, `--outdir`, `--log-dir`, `--upstream-d
 change where it reads and writes; `-q` prints one line. Every source is wrapped, so a forum outage
 produces a report that says the forum was unreachable rather than a traceback.
 
-On Windows, `scriptsegister_watch_task.ps1 [-DryRun] [-Remove] [-Day Monday] [-At 09:00]
+On Windows, `scripts
+egister_watch_task.ps1 [-DryRun] [-Remove] [-Day Monday] [-At 09:00]
 [-Pull] [-Python PATH] [-TaskName NAME]` registers it as a hidden weekly Scheduled Task that logs
 to a file.
+
+## 7c. The chapters
+
+`chapters/LAMMPS_NN_Slug.ipynb` are generated, never hand-written: the source is `build/chapterNN_*.py`
+and `python build/assemble.py [--which KEY] [--outdir DIR] [--log-dir DIR] [--list] [-v|--verbose]`
+writes them; `python build/execute.py [--which KEY] [--chapters-dir DIR] [--timeout S]
+[--kernel NAME] [--check-size] [--log-dir DIR] [-q|--quiet]` runs them on the `lammps-mc` kernel and
+stores the outputs. Each chapter opens with a contents header and a Setup cell and closes with a
+generated tally cell that asserts what the chapter claimed, so a chapter that stops being true
+fails loudly. Chapters 00, 07, 08 and 09 need **no LAMMPS installation** -- deliberately, so the
+book can be reviewed before anything is installed.
 
 ## 8. Tests
 

@@ -128,6 +128,37 @@ may appear on the owner's screen; the task logs to a file).
 | `-Remove` | unregister the task |
 | `-DryRun` | print the plan and change nothing |
 
+## `build/assemble.py` and `build/execute.py`
+
+The chapters are **generated**: edit `build/chapterNN_*.py`, never a `.ipynb`. `assemble.py` writes
+the notebook source (header + contents, Setup cell, the module's cells, a generated tally cell that
+asserts what the chapter claimed); `execute.py` runs them on the `lammps-mc` kernel and writes the
+outputs back. Chapters marked "runs anywhere" must not touch the runner -- `tests/test_chapters.py`
+enforces it, so a reviewer with no LAMMPS can still execute them.
+
+| `assemble.py` flag | meaning |
+|---|---|
+| `--which KEY` | one chapter (e.g. `00`) or `all` (default) |
+| `--outdir DIR` | where the notebooks go (default `chapters/`) |
+| `--log-dir DIR` | audit log directory (default `<outdir>/logs`) |
+| `--list` | show chapters and cell counts, write nothing |
+| `-v`, `--verbose` | chatty |
+| `--version` | print the version and exit |
+
+| `execute.py` flag | meaning |
+|---|---|
+| `--which KEY` | one chapter or `all` |
+| `--chapters-dir DIR` | where the assembled notebooks are |
+| `--timeout S` | per-cell timeout in seconds (default 1800) |
+| `--kernel NAME` | Jupyter kernel (default `lammps-mc`) |
+| `--check-size` | fail when an executed notebook exceeds the rule-25 cap |
+| `--log-dir DIR` | audit log directory |
+| `-q`, `--quiet` | one line per notebook |
+| `--version` | print the version and exit |
+
+Exit codes: 0 all executed, 1 a chapter failed (or `--check-size` and one is oversized), 2 the
+notebooks or nbclient are missing.
+
 ## `docs/build_manual.py`
 
 | flag | meaning |

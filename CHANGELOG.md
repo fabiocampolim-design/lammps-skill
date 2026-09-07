@@ -2,6 +2,23 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.7 — 2026-09-07
+
+The chapter build system and the first chapter (plan 1b, task 1-2).
+
+- `build/nbbuild.py`, `build/assemble.py`, `build/execute.py`: chapters are **generated** from
+  `build/chapterNN_*.py` -- a correction is made once, in Python, and re-assembled. Each notebook
+  gets a contents header, a Setup cell, and a **generated tally cell that asserts what the chapter
+  claimed**, so a chapter that stops being true fails when executed rather than quietly misleading.
+- `chapters/LAMMPS_00_Orientation.ipynb`: the two release lines and why the update number is part
+  of the version; **package list, never package count** -- demonstrated live on this machine, where
+  the 52-package Ubuntu build lacks EXTRA-FIX and the 11-package source build has it; what the
+  toolkit adds; and **how `mdlite` differs from pylj**, which `docs/09` identified as its closest
+  neighbour. Runs with no LAMMPS installed.
+- `tests/test_chapters.py` guards the generator: chapter shape, the pinned `lammps-mc` kernel, the
+  rule-25 size cap, no committed outputs from `assemble`, every `##` section listed in the contents,
+  and that a chapter marked "runs anywhere" never reaches for the runner.
+
 ## 0.1.6 — 2026-09-07
 
 The weekly upstream watch (playbook S8 / rule 23).
