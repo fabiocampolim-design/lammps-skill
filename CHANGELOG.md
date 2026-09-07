@@ -2,6 +2,19 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.3 — 2026-09-06
+
+- `scripts/run_examples.py` exports **`$LAMMPS_POTENTIALS`** into the run (new `--potentials`,
+  default `<root>/potentials`). Without it, 20+ cases of the first full sweep came back as
+  `error: cannot open sw potential file Si.sw` -- which reads like a broken example but was a
+  missing environment variable (finding N-20). The variable is prefixed to the executable, because
+  a Windows `env=` never crosses the `wsl.exe` boundary; the `mpirun` prefix now takes the same path.
+- `classify` distinguishes **`timeout-after-start`** from `timeout`: a case that wrote thermo rows
+  before the sweep's cap does run on that route, it is only longer than a sweep allows.
+- `references/platforms.md` and `docs/USER_MANUAL.md` corrected: the reference machine has **16 GB**
+  of host RAM (15.9 usable), of which the WSL2 VM is given 7.7 GB -- earlier notes reported the VM's
+  share as the host's. The manual now also lists `multi` among the thermo styles `read_log` parses.
+
 ## 0.1.2 — 2026-09-06
 
 LAMMPS's own `bench/` cases now run here on both live routes and are compared against the reference

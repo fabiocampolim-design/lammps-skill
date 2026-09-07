@@ -97,7 +97,7 @@ def test_classify_does_not_trust_the_return_code():
 
 def test_classify_reports_a_timeout():
     assert rx.classify(124, "")[0] == "timeout"
-    assert rx.classify(124, GOOD)[0] == "timeout"
+    assert rx.classify(124, "LAMMPS (22 Jul 2025)\nSetting up run ...\n")[0] == "timeout"
 
 
 def test_classify_flags_a_log_with_no_run_at_all():
@@ -209,3 +209,57 @@ def test_wsl_discovery_uses_one_round_trip_not_one_per_directory():
     assert sorted(c.name for c in cases) == ["melt/melt", "min/min", "min/min2d"]
     assert len(calls) == 1, calls
     assert dict(next(c for c in cases if c.name == "min/min").reference) == {1: "/t/examples/min/log.1Jan25.min.g++.1"}
+
+
+def test_classify_separates_a_timeout_that_had_already_started_running():
+    """A sweep needs a cap, but "hit the cap" and "produced nothing" are different facts: a case
+    that wrote thermo rows before the cap does run on this route, it is just longer than the sweep
+    allows. Reporting both as `timeout` would hide that (2026-09-06)."""
+    assert rx.classify(124, GOOD)[0] == "timeout-after-start"
+    assert rx.classify(124, "LAMMPS (22 Jul 2025)\n")[0] == "timeout"
+    assert rx.classify(124, MISSING_PKG)[0] == "missing-package"
+
+
+def test_potentials_directory_is_exported_into_the_run(monkeypatch):
+    """N-20 (PROVEN 2026-09-06): LAMMPS finds a shipped potential through $LAMMPS_POTENTIALS, and
+    the first full sweep never set it -- 20+ cases came back as `error: cannot open sw potential
+    file Si.sw`, which reads like a broken example but is a missing environment variable. The
+    variable must reach the shell *inside* WSL, so it goes in front of the executable: a Windows
+    `env=` never crosses the wsl.exe boundary."""
+    import subprocess as sp
+
+    seen = {}
+
+    class Inst:
+        host, route, mpi, omp = "wsl", "wsl-source", True, True
+        launch = ("wsl.exe", "-d", "Ubuntu", "-e", "bash", "-lc")
+        executable = "/home/u/.local/bin/lmp_core"
+        version, packages, library, python_module, distro, python = "x", (), None, True, "Ubuntu", "python3"
+        extra = {}
+
+        def as_dict(self):
+            return dict(host=self.host, route=self.route, mpi=self.mpi, omp=self.omp, launch=self.launch,
+                        executable=self.executable, version=self.version, packages=self.packages,
+                        library=self.library, python_module=self.python_module, distro=self.distro,
+                        python=self.python, extra=self.extra)
+
+    def fake_run_command(inst, args, cwd, timeout=600, env=None, log=None):
+        seen["exe"] = inst.executable
+        return sp.CompletedProcess(["x"], 0, stdout="", stderr="")
+
+    monkeypatch.setattr(rx, "run_command", fake_run_command)
+    monkeypatch.setattr(rx, "_read_remote", lambda *a, **k: GOOD)
+
+    class FsStub:
+        def join(self, *p):
+            return "/".join(p)
+
+        def read(self, p):
+            return ""
+
+    monkeypatch.setattr(rx.subprocess, "run", lambda *a, **k: sp.CompletedProcess(["x"], 0, stdout="", stderr=""))
+    case = rx.Case("melt/melt", "/t/examples/melt", "in.melt", {})
+    rx.run_case(case, Inst(), procs=1, time_limit=5, potentials="/t/potentials", run_root="/home/u/runs",
+                fs=FsStub())
+    assert seen["exe"].startswith("LAMMPS_POTENTIALS='/t/potentials' ")
+    assert seen["exe"].endswith("/home/u/.local/bin/lmp_core")

@@ -1,6 +1,8 @@
 # Platforms — the measured table
 
-Machine (2026-09-06): Windows 10 host, 8 cores, 7 GB RAM, **no GPU**; WSL2 Ubuntu 26.04 (`resolute`,
+Machine (2026-09-06): Windows 10 host, 8 cores, **16 GB RAM** (15.9 GB usable; the WSL2 VM is given
+7.7 GB of it — an earlier version of this line reported the VM's share as the host's), **no GPU**;
+WSL2 Ubuntu 26.04 (`resolute`,
 kernel 6.18 microsoft-standard), GNU C++ 15.2, Open MPI 5.0.10, Python 3.14; conda env `lammps`
 (Python 3.12, numpy 2.5.2, scipy 1.18.0, matplotlib 3.11.1) on the Windows side. GPU, KOKKOS-CUDA and
 the GPU package are studied from the manual and the source, never run here.

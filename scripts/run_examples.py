@@ -203,9 +203,16 @@ def reference_logs(directory, name, fs=None):
 
 
 def classify(returncode, log_text):
-    """(outcome, detail). The return code only ever tells us about a timeout (N-15)."""
+    """(outcome, detail). The return code only ever tells us about a timeout (N-15).
+
+    A sweep needs a cap, but "hit the cap" and "produced nothing" are different facts: a case that
+    wrote thermo rows before the cap does run on this route, it is only longer than the sweep
+    allows. That is `timeout-after-start`, and it is not a problem with the case or the build.
+    """
     if returncode == 124:
-        return "timeout", ""
+        if MISSING_PKG_RE.search(log_text):
+            return "missing-package", MISSING_PKG_RE.search(log_text).group(1)
+        return ("timeout-after-start", "") if parse_log(log_text).runs else ("timeout", "")
     m = MISSING_PKG_RE.search(log_text)
     if m:
         return "missing-package", m.group(1)
@@ -264,16 +271,19 @@ def run_case(case, installation, procs=1, time_limit=120, potentials=None, run_r
         shutil.copytree(case.directory, workdir)
 
     args = ["-in", case.input_name, "-log", "log.run", "-screen", "none"]
-    exe = installation
+    # Both prefixes go in front of the executable because build_command interpolates it into one
+    # shell string that runs on the case's own host. A Windows `env=` never crosses wsl.exe, which
+    # is why the first sweep reported 20+ cases as "cannot open sw potential file Si.sw" (N-20).
+    prefix = "LAMMPS_POTENTIALS=%s " % _q(potentials) if potentials else ""
     if procs > 1:
+        prefix += "mpirun -np %d " % procs
+    exe = installation
+    if prefix:
         from lammpskill.install.base import Installation
         exe = Installation(**{**installation.as_dict(),
-                              "executable": "mpirun -np %d %s" % (procs, installation.executable)})
-    env = None
-    if potentials:
-        env = dict(os.environ)
+                              "executable": prefix + installation.executable})
     t0 = time.perf_counter()
-    p = run_command(exe, args, cwd=workdir, timeout=time_limit, env=env)
+    p = run_command(exe, args, cwd=workdir, timeout=time_limit)
     wall = time.perf_counter() - t0
 
     text = _read_remote(installation, workdir, "log.run")
@@ -345,6 +355,8 @@ def build_parser():
     ap.add_argument("--only", help="substring filter on the case name")
     ap.add_argument("--outdir", default="out/examples", help="where the JSON record and table are written")
     ap.add_argument("--run-root", help="scratch directory for the copies (default ~/runs/examples)")
+    ap.add_argument("--potentials", help="directory exported as $LAMMPS_POTENTIALS "
+                                        "(default <root>/potentials)")
     return ap
 
 
@@ -363,6 +375,9 @@ def main(argv=None):
     fs = fs_for(inst)
     run_root = a.run_root or _scratch_root(fs)
 
+    # LAMMPS resolves a shipped potential name through $LAMMPS_POTENTIALS; without it a case that
+    # names Si.sw fails with "cannot open sw potential file", which looks like a broken example.
+    potentials = a.potentials or fs.join(root, "potentials")
     cases = discover(root, a.which, only=a.only, fs=fs)
     print("%d case(s) in %s/%s on %s (%s)" % (len(cases), root, a.which, inst.route, inst.version))
     rows = []
@@ -370,7 +385,8 @@ def main(argv=None):
         for n in procs:
             if n > 1 and not inst.mpi:
                 continue
-            rec = run_case(c, inst, procs=n, time_limit=a.time_limit, run_root=run_root, fs=fs)
+            rec = run_case(c, inst, procs=n, time_limit=a.time_limit, run_root=run_root, fs=fs,
+                           potentials=potentials)
             rows.append(rec)
             print("  %-28s %d proc  %-16s %6ss  %s" % (c.name, n, rec["outcome"], rec["wall"],
                                                        rec["detail"][:60]))
