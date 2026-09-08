@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this skill, please cite it as below, and cite LAMMPS (Thompson et al. 2022; Plimpton 1995) and the reference data listed in references/benchmarks.md."
 title: "lammps-skill: an AI-agent skill, verified toolkit, teaching engine and course for molecular dynamics with LAMMPS"
 type: software
-version: "0.1.7"
-date-released: "2026-09-06"
+version: "0.1.8"
+date-released: "2026-09-08"
 license: Apache-2.0
 authors:
   - family-names: Campolim

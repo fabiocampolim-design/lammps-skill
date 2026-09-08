@@ -2,6 +2,26 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.8 — 2026-09-08
+
+Chapters 08 and 09 — the rest of the no-LAMMPS chapters (plan 1b, task 2 complete).
+
+- `build/chapter08_reading.py` → `chapters/LAMMPS_08_Reading_What_LAMMPS_Writes.ipynb`: data, dump,
+  log (`one`/`multi`/`yaml`) and restart-header formats, each demonstrated from a fixture already in
+  the test suite, plus the four pitfalls that cost this project time -- N-4 (`thermo_modify norm`
+  defaults to per-atom in `units lj`), N-5 (the dump's default 6-digit float format capped a force
+  cross-check at 5e-5; `dump_modify ... format float %20.15g` took it to 3e-13), N-6 (the restart
+  magic string's on-disk field is one byte longer than the string itself -- a NUL terminator that
+  has to be consumed even though it isn't compared), N-18 (`parse_log` learned the `multi` thermo
+  style block). Runs with no LAMMPS installed.
+- `build/chapter09_choosing_build.py` → `chapters/LAMMPS_09_Choosing_A_Build.ipynb`: the 314-case
+  `docs/04` examples sweep, as data the chapter and its tally both read -- both builds match
+  upstream's own reference logs; **package list beats package count** (ten cases run on the
+  11-package source build that the 52-package apt build cannot); the POEMS package removed upstream
+  the same day as the `stable_22Jul2025` tag, so the same style is `missing-package` on one route and
+  `no longer available` on the other. Runs with no LAMMPS installed.
+- `build/assemble.py`: `_SPEC` now lists three chapters (00, 08, 09).
+
 ## 0.1.7 — 2026-09-07
 
 The chapter build system and the first chapter (plan 1b, task 1-2).
