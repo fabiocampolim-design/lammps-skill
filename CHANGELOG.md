@@ -2,6 +2,25 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.10 — 2026-09-08
+
+Chapters 05 and 06 -- EAM and structure/analysis (plan 1b, task 4 partial: 04 still open, it needs
+a new mdlite NPT sketch first).
+
+- `build/chapter05_potentials_eam.py` → `chapters/LAMMPS_05_Potentials_EAM.ipynb`: why the
+  potential file is fetched, never shipped (rule 7); `mdlite.eam.EAM` forces vs a numerical
+  derivative and the cubic-fit-of-E(a) lattice-constant method, both on `synthetic_setfl` so the
+  chapter runs with no real potential file present; the real-copper `eam_cu_lattice` record
+  (da=3.46e-5, de=2.75e-5 against LAMMPS) read back to close the loop.
+- `build/chapter06_structure_analysis.py` → `chapters/LAMMPS_06_Structure_And_Analysis.ipynb`:
+  g(r), S(k) computed from it, MSD and the diffusion coefficient, VACF, and a block-averaged
+  temperature, all from one dumped trajectory. **Record `lj_structure_ch06`, run live** (wsl-apt,
+  864 atoms, 101 frames) -- redesigned mid-task after the first version stored the raw trajectory
+  (8.8 MB of committed JSON for no benefit a plot doesn't already give); the analysis now runs
+  inside `compute()` and only the reduced arrays (12.8 KB) leave it.
+- `build/assemble.py`: `_SPEC` now lists eight chapters (00, 01, 02, 03, 05, 06, 08, 09); 04 is the
+  one gap in the 00-10 range until the NPT sketch lands.
+
 ## 0.1.9 — 2026-09-08
 
 Chapters 01, 02, 03 — the core physics, with live records (plan 1b, task 3 complete).
