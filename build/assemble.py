@@ -34,6 +34,12 @@ from lammpskill import __version__                # noqa: E402
 # key -> module name, slug, title, whether the chapter needs a LAMMPS installation.
 _SPEC = [
     ("00", "chapter00_orientation", "Orientation", "Orientation: LAMMPS, the routes, and this toolkit", False),
+    ("01", "chapter01_first_simulation", "First_Simulation",
+     "First Simulation: a LAMMPS melt end to end, through the checker's fourteen rules", True),
+    ("02", "chapter02_forces_integration", "Forces_And_Integration",
+     "Forces and Integration: velocity Verlet in mdlite, forces vs a numerical derivative, and LAMMPS at 3e-13", True),
+    ("03", "chapter03_thermostats", "Thermostats",
+     "Thermostats: Berendsen, Langevin and Nose-Hoover in mdlite, the NIST record, and LAMMPS's fix nvt", True),
     ("08", "chapter08_reading", "Reading_What_LAMMPS_Writes",
      "Reading What LAMMPS Writes: data, dump, log and restart formats, and four pitfalls", False),
     ("09", "chapter09_choosing_build", "Choosing_A_Build",

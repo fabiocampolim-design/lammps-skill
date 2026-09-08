@@ -1,0 +1,11 @@
+{
+ "T_final": 1.0553101,
+ "T_mean_last_quarter": 1.008398196,
+ "date": "2026-09-08T04:16Z",
+ "installation": null,
+ "lammps_skill": "0.1.8",
+ "lammps_version": "10 Dec 2025",
+ "natoms": 864,
+ "route": "wsl-apt",
+ "source": "run"
+}

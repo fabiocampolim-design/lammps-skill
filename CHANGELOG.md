@@ -2,6 +2,27 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.9 — 2026-09-08
+
+Chapters 01, 02, 03 — the core physics, with live records (plan 1b, task 3 complete).
+
+- `build/chapter01_first_simulation.py` → `chapters/LAMMPS_01_First_Simulation.ipynb`: an LJ melt
+  end to end -- `Spec` → `render` → `check` → `run_or_load` → plot. All 14 checker rules are each
+  triggered by their own minimal, deliberately-broken snippet before the clean preset (which draws
+  only its two documented `info` findings) is run for real. **Record `lj_melt_ch01`, run live**
+  (wsl-apt, 10 Dec 2025, 4000 atoms, 250 steps, 0.68 s) -- the same case `tests/fixtures/log_lj_melt.lammps`
+  already carries.
+- `build/chapter02_forces_integration.py` → `chapters/LAMMPS_02_Forces_And_Integration.ipynb`:
+  `mdlite` forces vs a numerical derivative, energy-drift scaling with the timestep, then the
+  existing `lj_energy_vs_lammps` record (dF=3.16e-13) read through the same `run_or_load` path.
+- `build/chapter03_thermostats.py` → `chapters/LAMMPS_03_Thermostats.ipynb`: Berendsen, Langevin
+  and Nosé–Hoover side by side (what each conserves, what each distorts), the Nosé–Hoover
+  extended-energy check, the `lj_nvt_nist` record read back, and LAMMPS's own `fix nvt`.
+  **Record `lj_nvt_ch03`, run live** (wsl-apt, 864 atoms, 1000 steps: <T> over the last quarter
+  1.008 against a target of 1.0).
+- `build/assemble.py`: `_SPEC` now lists six chapters (00, 01, 02, 03, 08, 09).
+- Compute claimed under KEEP rules/13 (2 cores, 4 GB) for the two live LAMMPS runs this task made.
+
 ## 0.1.8 — 2026-09-08
 
 Chapters 08 and 09 — the rest of the no-LAMMPS chapters (plan 1b, task 2 complete).
