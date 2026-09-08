@@ -1,0 +1,11 @@
+{
+ "date": "2026-09-08T04:42Z",
+ "installation": null,
+ "lammps_skill": "0.1.10",
+ "route": "wsl-apt",
+ "source": "run",
+ "step_a_final": 300.0,
+ "step_b_final": 600.0,
+ "temp_a_final": 1.035689,
+ "temp_b_final": 1.018817
+}

@@ -1,0 +1,11 @@
+{
+ "P_end_mean": 1.1970907114285712,
+ "V_end_mean": 1066.640642857143,
+ "V_start": 454.54545,
+ "date": "2026-09-08T04:37Z",
+ "installation": null,
+ "lammps_skill": "0.1.10",
+ "natoms": 500,
+ "route": "wsl-apt",
+ "source": "run"
+}

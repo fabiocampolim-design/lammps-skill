@@ -40,6 +40,8 @@ _SPEC = [
      "Forces and Integration: velocity Verlet in mdlite, forces vs a numerical derivative, and LAMMPS at 3e-13", True),
     ("03", "chapter03_thermostats", "Thermostats",
      "Thermostats: Berendsen, Langevin and Nose-Hoover in mdlite, the NIST record, and LAMMPS's fix nvt", True),
+    ("04", "chapter04_ensembles_restarts", "Ensembles_And_Restarts",
+     "Ensembles and Restarts: an NPT sketch in mdlite, LAMMPS's fix npt, and restart continuation", True),
     ("05", "chapter05_potentials_eam", "Potentials_EAM",
      "Potentials: EAM from a real setfl/funcfl file, and why the potential is never shipped", True),
     ("06", "chapter06_structure_analysis", "Structure_And_Analysis",

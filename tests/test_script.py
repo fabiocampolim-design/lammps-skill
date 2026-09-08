@@ -69,6 +69,20 @@ def test_checker_flags_missing_data_file(tmp_path):
     assert "C14" in codes
 
 
+def test_units_none_omits_the_whole_initialization_block_for_a_read_restart_spec():
+    """A restart-continuation script (`pre=["read_restart x.restart"]`) must not re-assert units,
+    dimension, boundary or atom_style afterward -- LAMMPS refuses each once the box is defined, and
+    read_restart defines it. Spec carries units=None to say so; render() then omits all four lines."""
+    s = Spec(units=None, pre=["read_restart x.restart"], pair_style="lj/cut 2.5",
+             pair_coeffs=["1 1 1.0 1.0 2.5"], fixes=["1 all nve"], stages=[Stage("run", "300")])
+    text = render(s)
+    assert "read_restart x.restart" in text
+    first_words = {ln.split()[0] for ln in text.splitlines() if ln.strip() and not ln.startswith("#")}
+    assert not first_words & {"units", "dimension", "boundary", "atom_style"}
+    # the checker's own C01 (no `units`) still applies -- it cannot know read_restart supplied one.
+    assert "C01" in {f.code for f in check(text)}
+
+
 def test_eam_preset_uses_funcfl_or_setfl_by_extension():
     funcfl = render(eam_fcc(potential="Cu_u3.eam"))
     assert "pair_style eam\n" in funcfl and "pair_coeff 1 1 Cu_u3.eam" in funcfl

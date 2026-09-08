@@ -2,6 +2,31 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.11 — 2026-09-08
+
+Chapter 04 -- ensembles and restarts, and the mdlite NPT sketch (plan 1b, task 4 complete: 00-06,
+08, 09 all written; only 07 and 10 remain).
+
+- New `mdlite/npt.py`: `BerendsenBarostat` + `velocity_verlet_npt`, an NPT *sketch* by weak coupling
+  on temperature and pressure (Berendsen et al. 1984) -- explicitly not a fluctuating-cell method,
+  documented as not sampling the isothermal-isobaric ensemble correctly. `tests/test_mdlite_npt.py`:
+  a compressed system expands toward a lower target pressure and vice versa, particle count and
+  output stay finite, and the barostat's `mu()` moves the right direction at both signs of `P0-P`.
+- `lammpskill/script.py`: `Spec.units` accepts `None` to omit the whole initialization block (units,
+  dimension, boundary, atom_style) -- found live while writing this chapter: LAMMPS refuses each of
+  those once `read_restart` has already defined the box (`ERROR: Units command after simulation box
+  is defined`, then the same for `dimension`). `tests/test_script.py` pins the new behaviour and
+  that the checker's C01 ("no units") still fires, honestly, since it cannot know a restart supplied
+  one.
+- `build/chapter04_ensembles_restarts.py` → `chapters/LAMMPS_04_Ensembles_And_Restarts.ipynb`: the
+  mdlite NPT sketch (with its limits stated in the chapter text) next to LAMMPS's own `fix npt`;
+  restart continuation through a `Spec` with `read_restart` in `pre` and `units=None`. **Records
+  `lj_npt_ch04` and `lj_restart_ch04`, both run live** (wsl-apt): `fix npt` expanded a compressed
+  500-atom system from V=455 toward V=1067 (target P=1.0, reached P=1.20); the restart continued
+  cleanly from step 300 (T=1.036) to step 600 (T=1.019).
+- `build/assemble.py`: `_SPEC` now lists nine chapters (00-06, 08, 09) -- every chapter in the plan
+  except 07 (minimisation) and 10 (scaling), both still open.
+
 ## 0.1.10 — 2026-09-08
 
 Chapters 05 and 06 -- EAM and structure/analysis (plan 1b, task 4 partial: 04 still open, it needs
