@@ -2,6 +2,26 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.12 — 2026-09-08
+
+Chapters 07 and 10 -- minimisation and scaling. **Plan 1b's chapter set is now complete: all
+eleven chapters, 00 through 10.**
+
+- `build/chapter07_minimisation.py` → `chapters/LAMMPS_07_Minimisation.ipynb`: N-7 reproduced on
+  purpose (two atoms at r=0.3 sigma, `dmax` effectively disabled -- `fmax` explodes, matching the
+  original bug), then the fix (the default `dmax=0.05` cap) on the same geometry; steepest descent
+  vs FIRE on a perturbed FCC lattice. Runs with no LAMMPS installed.
+- `build/chapter10_scaling_limits.py` → `chapters/LAMMPS_10_Scaling_And_Limits.ipynb`: MPI (1 vs 2
+  ranks) and OpenMP (2 threads) speed-up on the chapter-01 LJ melt case, with the chapter stating
+  upfront that the measurement itself is bounded by this session's KEEP compute-sharing claim (2
+  cores) rather than the host's full core count; no GPU and no `-partition` methods, said plainly.
+  **Record `lj_scaling_ch10`, run live** (wsl-apt): 2 MPI ranks 1.73x, 2 OpenMP threads 2.09x --
+  sub-ideal MPI scaling on a small (4000-atom) case is the honest result, not a bug.
+- `build/assemble.py`: `_SPEC` now lists all eleven chapters, 00-10.
+
+343 tests green (335 -> 343), 5 skipped, pyflakes clean, all eleven notebooks executed on the
+lammps-mc kernel and stay well under the rule-25 size cap, conformance PASS=23 FAIL=0.
+
 ## 0.1.11 — 2026-09-08
 
 Chapter 04 -- ensembles and restarts, and the mdlite NPT sketch (plan 1b, task 4 complete: 00-06,

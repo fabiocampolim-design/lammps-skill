@@ -1,0 +1,14 @@
+{
+ "date": "2026-09-08T04:49Z",
+ "installation": null,
+ "lammps_skill": "0.1.11",
+ "lammps_version": "10 Dec 2025",
+ "loop_time_1proc": 2.35726,
+ "loop_time_2proc": 1.36319,
+ "loop_time_omp2": 1.13002,
+ "mpi_available": true,
+ "route": "wsl-apt",
+ "source": "run",
+ "speedup_2proc": 1.7292233657817329,
+ "speedup_omp2": 2.086033875506628
+}

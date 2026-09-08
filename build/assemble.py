@@ -46,10 +46,14 @@ _SPEC = [
      "Potentials: EAM from a real setfl/funcfl file, and why the potential is never shipped", True),
     ("06", "chapter06_structure_analysis", "Structure_And_Analysis",
      "Structure and Analysis: RDF, MSD/diffusion, VACF and S(k) from a dump, with block-average error bars", True),
+    ("07", "chapter07_minimisation", "Minimisation",
+     "Minimisation: steepest descent vs FIRE, and why an uncapped step explodes on a steep wall", False),
     ("08", "chapter08_reading", "Reading_What_LAMMPS_Writes",
      "Reading What LAMMPS Writes: data, dump, log and restart formats, and four pitfalls", False),
     ("09", "chapter09_choosing_build", "Choosing_A_Build",
      "Choosing a Build: what the 314-case examples sweep says about package list vs package count", False),
+    ("10", "chapter10_scaling_limits", "Scaling_And_Limits",
+     "Scaling and Limits: MPI and OpenMP speed-up, and what this machine honestly cannot do", True),
 ]
 
 CHAPTERS = {}
