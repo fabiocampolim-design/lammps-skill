@@ -161,6 +161,100 @@ else:
 '''),
 
     md("""
+## Watching the melt happen
+
+Every plot so far has been a *derived* quantity -- temperature, energy -- read out of LAMMPS's
+thermo output. This section shows the atoms themselves: the same physical case
+(`lj_melt()`'s FCC lattice, `rho=0.8442`, reduced units), run once more with a trajectory dump
+added, so the checker's fourteen rules, the rendered script, and the thermo curves above all
+describe something you can also just look at.
+"""),
+
+    code('''\
+import os
+import tempfile
+
+import numpy as np
+
+from lammpskill.io.dump import read_dump
+from lammpskill.run import run, run_or_load
+from lammpskill.script import Spec, Stage
+
+DUMP_EVERY = 25
+N_ATOMS_SHOWN = 200   # a subsample of the real 4000-atom run, not the whole trajectory -- chapter
+                       # 06 already found (and fixed) that storing a full raw trajectory in a
+                       # committed record costs megabytes for no benefit a rendered figure needs
+N_FRAMES = 10
+
+traj_spec = Spec(
+    units="lj", atom_style="atomic", lattice="fcc 0.8442", region="box block 0 10 0 10 0 10",
+    create_box=1, create_atoms="1 box", masses={1: 1.0}, pair_style="lj/cut 2.5", pair_coeffs=["1 1 1.0 1.0 2.5"],
+    neighbor="0.3 bin", neigh_modify="every 20 delay 0 check no",
+    velocity=["all create 3.0 87287 loop geom"], timestep=0.005, fixes=["1 all nve"],
+    dumps=["1 all custom %d traj.dump id type xu yu zu" % DUMP_EVERY],
+    thermo=50, thermo_style="custom step temp epair emol etotal press",
+    stages=[Stage("run", "250")], comment="the same LJ melt as above, with a trajectory dump for the atom views",
+)
+
+
+def compute_traj():
+    workdir = tempfile.mkdtemp(prefix="ch01_traj_")
+    result = run(traj_spec, workdir, time_limit=300)
+    if not result.ok:
+        raise RuntimeError("trajectory run failed (rc=%s): %s" % (result.returncode, "; ".join(result.errors) or result.stderr))
+    traj = read_dump(os.path.join(workdir, "traj.dump"))
+    rng = np.random.default_rng(0)
+    natoms = traj.frames[0].natoms
+    idx = rng.choice(natoms, size=min(N_ATOMS_SHOWN, natoms), replace=False)
+    step = max(1, len(traj) // N_FRAMES)
+    frames = [f.positions[idx].tolist() for f in traj.frames[::step]]
+    return {"natoms_shown": len(idx), "nframes": len(frames), "frames": frames,
+            "cell": traj.box.lengths.tolist(),
+            "route": result.installation.route if result.installation else None}
+
+
+traj_rec = run_or_load("lj_melt_traj_ch01", compute_traj, records_dir="../data/records")
+print("source:", traj_rec["source"], "| atoms shown:", traj_rec.get("natoms_shown"), "| frames:", traj_rec.get("nframes"))
+'''),
+
+    code('''\
+import matplotlib.pyplot as plt
+
+from lammpskill import viz
+
+if traj_rec["source"] != "skip":
+    pos0 = np.array(traj_rec["frames"][0])
+    cell = np.array(traj_rec["cell"])
+    fig = viz.snapshot(pos0, cell, symbols=["Ar"] * len(pos0))
+    plt.show()
+    caption("The starting FCC lattice lj_melt() builds (a 200-atom subsample of the real "
+            "4000-atom run, shown for clarity) -- every atom at its lattice site, before any "
+            "dynamics. Rendered as argon-like spheres: reduced LJ units carry no real element, "
+            "argon is the conventional reference fluid a reduced system is understood to stand "
+            "in for, used here only to pick a rendering radius and colour, not asserted as the "
+            "substance.")
+else:
+    print("no LAMMPS and no record: nothing to show")
+'''),
+
+    code('''\
+from IPython.display import Image, display
+
+if traj_rec["source"] != "skip":
+    frames = [np.array(f) for f in traj_rec["frames"]]
+    cell = np.array(traj_rec["cell"])
+    gif_workdir = tempfile.mkdtemp(prefix="ch01_gif_")
+    gif_path = viz.animate_gif(frames, cell, os.path.join(gif_workdir, "melt.gif"),
+                               symbols=["Ar"] * len(frames[0]), fps=4)
+    display(Image(filename=gif_path))
+    caption("The same subsample of atoms, animated across the run: the lattice disordering as "
+            "the melt proceeds -- the same trajectory the temperature and energy curves above "
+            "were read from, seen directly rather than only through its derived thermo output.")
+else:
+    print("no LAMMPS and no record: nothing to animate")
+'''),
+
+    md("""
 ## Where this leaves the next chapters
 
 The `Spec -> check -> run_or_load -> thermo` path used here is exactly what chapters 02-06 and 10
