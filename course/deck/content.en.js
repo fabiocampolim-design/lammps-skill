@@ -46,7 +46,7 @@ window.DECK_CONTENT = {
     {"sec": "minimisation", "slides": ["minimisation-intro", "minimisation-lj-wall", "minimisation-cap-concept", "minimisation-fire", "minimisation-math"]},
     {"sec": "reading", "slides": ["reading-intro", "reading-formats", "reading-n4", "reading-n6", "reading-tests"]},
     {"sec": "build", "slides": ["build-intro", "build-sweep", "build-bench", "build-blocked", "build-poems"]},
-    {"sec": "scaling", "slides": ["scaling-intro"]}
+    {"sec": "scaling", "slides": ["scaling-intro", "scaling-numbers", "scaling-why", "scaling-limits"]}
   ],
   "slides": {
     "orientation-intro": {
@@ -674,6 +674,45 @@ window.DECK_CONTENT = {
         "The honest version of a scaling claim states the hardware it was measured on -- these numbers are this machine's, not a general LAMMPS property."
       ],
       "notes": "Close the course on the same note it opened on: every number here came from a real, named, bounded run -- that is the whole method of this project, applied one last time to the toolkit's own performance. Q: \"Would a GPU change this a lot?\" A: For pair-style-dominated cases, often yes -- but this project has none to measure, so the honest answer is a citation to LAMMPS's own KOKKOS/GPU documentation rather than a number this machine cannot produce."
+    },
+    "scaling-numbers": {
+      "level": "core", "layout": "table",
+      "title": "1 vs 2, measured on this machine",
+      "lead": "Same case as L1 (4000 atoms), 1000 steps so start-up does not dominate the timing signal; this session was allowed 2 CPU cores under this project's compute-sharing policy.",
+      "table": {
+        "head": ["Configuration", "Loop time", "Speed-up (ideal = 2.00x)"],
+        "rows": [
+          ["1 MPI rank", "measured", "1.00x (reference)"],
+          ["2 MPI ranks", "measured", "1.73x"],
+          ["2 OpenMP threads", "measured", "2.09x"]
+        ]
+      },
+      "notes": "State the ceiling before the numbers, not after -- this session's compute claim (2 cores) is the reason the table stops at 2, not a scaling law about this machine's actual core count. Q: \"Why does 2 OpenMP threads beat 2 MPI ranks here?\" A: OpenMP threads share memory and skip the domain-decomposition communication MPI ranks pay for; at this small system size (4000 atoms) that communication overhead is a real cost MPI ranks have to pay and OpenMP threads mostly don't."
+    },
+    "scaling-why": {
+      "level": "core", "layout": "text",
+      "title": "Why under 2x is not a bug",
+      "lead": "This system is small and the run is short, so per-rank overhead -- domain decomposition, communicating the boundary between two halves of a small box -- is a real fraction of the total time, not a rounding error.",
+      "bullets": [
+        "Contrast with the bench cases in docs/04, which use 32000 atoms -- eight times larger, where communication is a smaller fraction of the work and speed-up tracks closer to ideal.",
+        "A speed-up number without its system size and rank count attached is close to meaningless -- this course states both, every time, for exactly this reason.",
+        "The direction is never in doubt (more ranks helps, up to a point); the honest number is by how much, on this system, at this scale."
+      ],
+      "notes": "This slide is the payoff of taking L2's \"one number needs its conditions stated\" discipline and applying it to a performance claim instead of a physics one -- the habit is the same. Q: \"At what system size would 2 MPI ranks be expected to reach closer to 2x?\" A: This chapter does not measure that directly, but the trend from 4000 to 32000 atoms (small speed-up loss shrinking) says larger systems help; a future run with more atoms and a bigger compute claim could extend this table rather than assume the answer."
+    },
+    "scaling-limits": {
+      "level": "math", "layout": "table",
+      "title": "What this machine honestly cannot do",
+      "lead": "Not every LAMMPS capability is in scope here -- stating the boundary precisely is part of the same honesty as stating a speed-up's conditions.",
+      "table": {
+        "head": ["Capability", "Why it's out of scope here"],
+        "rows": [
+          ["GPU / KOKKOS-CUDA", "no GPU on this machine -- a hardware limit, not a choice"],
+          ["-partition methods (NEB, TAD, PRD)", "need LAMMPS launched with <code>-partition</code>, splitting ranks into independent partitions; the examples sweep runs one process and correctly reports these as errors, not passes"],
+          ["Full-machine scaling", "this chapter's own 1-vs-2 measurement is bounded by a 2-core compute claim, not by the host's actual core count"]
+        ]
+      },
+      "notes": "Closing the whole course on this table is deliberate -- every number in every lecture came from a real, named, bounded run, and this is the last chance to say so about the toolkit's own performance, not just the physics it teaches. Q: \"Does 'no -partition support' mean NEB can never be used with this toolkit?\" A: It means this project has not built or measured that path -- lammpskill's runner does not currently pass -partition through, which is a stated gap, not a claim that LAMMPS itself cannot do NEB."
     }
   },
   "glossary": [

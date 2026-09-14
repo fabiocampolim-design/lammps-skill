@@ -70,8 +70,8 @@ def test_every_slide_listed_exactly_once_and_every_stack_has_one(deck):
     listed = [s for st in deck["stacks"] for s in st["slides"]]
     assert len(listed) == len(set(listed)), "a slide id appears in two stacks"
     assert set(listed) == set(deck["slides"]), set(listed) ^ set(deck["slides"])
-    # Plan B, task 10 of 11 (L9 Choosing a Build): 48 -> 52
-    assert len(listed) == 52
+    # Plan B, task 11 of 11 (L10 Scaling and Limits): 52 -> 55 -- the plan's final total
+    assert len(listed) == 55
 
 
 def test_levels_run_intro_core_math_inside_each_stack(deck):

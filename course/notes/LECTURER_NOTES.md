@@ -294,3 +294,18 @@ _MPI and OpenMP speed-up on eight cores, where it stops, and what this machine h
 Slide `#scaling-intro`.
 
 Close the course on the same note it opened on: every number here came from a real, named, bounded run -- that is the whole method of this project, applied one last time to the toolkit's own performance. Q: "Would a GPU change this a lot?" A: For pair-style-dominated cases, often yes -- but this project has none to measure, so the honest answer is a citation to LAMMPS's own KOKKOS/GPU documentation rather than a number this machine cannot produce.
+
+### 1 vs 2, measured on this machine  `[core]`
+Slide `#scaling-numbers`.
+
+State the ceiling before the numbers, not after -- this session's compute claim (2 cores) is the reason the table stops at 2, not a scaling law about this machine's actual core count. Q: "Why does 2 OpenMP threads beat 2 MPI ranks here?" A: OpenMP threads share memory and skip the domain-decomposition communication MPI ranks pay for; at this small system size (4000 atoms) that communication overhead is a real cost MPI ranks have to pay and OpenMP threads mostly don't.
+
+### Why under 2x is not a bug  `[core]`
+Slide `#scaling-why`.
+
+This slide is the payoff of taking L2's "one number needs its conditions stated" discipline and applying it to a performance claim instead of a physics one -- the habit is the same. Q: "At what system size would 2 MPI ranks be expected to reach closer to 2x?" A: This chapter does not measure that directly, but the trend from 4000 to 32000 atoms (small speed-up loss shrinking) says larger systems help; a future run with more atoms and a bigger compute claim could extend this table rather than assume the answer.
+
+### What this machine honestly cannot do  `[math]`
+Slide `#scaling-limits`.
+
+Closing the whole course on this table is deliberate -- every number in every lecture came from a real, named, bounded run, and this is the last chance to say so about the toolkit's own performance, not just the physics it teaches. Q: "Does 'no -partition support' mean NEB can never be used with this toolkit?" A: It means this project has not built or measured that path -- lammpskill's runner does not currently pass -partition through, which is a stated gap, not a claim that LAMMPS itself cannot do NEB.
