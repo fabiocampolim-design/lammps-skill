@@ -41,7 +41,7 @@ window.DECK_CONTENT = {
     {"sec": "forces", "slides": ["forces-intro", "forces-numerical", "forces-conservation", "forces-crosscheck", "forces-verlet"]},
     {"sec": "thermostats", "slides": ["thermostats-intro", "thermostats-table", "thermostats-nh-check", "thermostats-nist", "thermostats-math"]},
     {"sec": "ensembles", "slides": ["ensembles-intro", "ensembles-fixnpt", "ensembles-restart-code", "ensembles-restart-numbers", "ensembles-math"]},
-    {"sec": "eam", "slides": ["eam-intro", "eam-form", "eam-forces-check", "eam-fit", "eam-cu"]},
+    {"sec": "eam", "slides": ["eam-intro", "eam-form", "eam-forces-check", "eam-fit", "eam-vacancy", "eam-cu"]},
     {"sec": "structure", "slides": ["structure-intro", "structure-gr-sk", "structure-diffusive-regime", "structure-blockavg", "structure-msd-vacf"]},
     {"sec": "minimisation", "slides": ["minimisation-intro", "minimisation-lj-wall", "minimisation-cap-concept", "minimisation-fire", "minimisation-math"]},
     {"sec": "reading", "slides": ["reading-intro", "reading-formats", "reading-n4", "reading-n6", "reading-tests"]},
@@ -409,6 +409,16 @@ window.DECK_CONTENT = {
         "Run on the synthetic potential, the fit is self-consistent -- its own derivative at the fitted minimum is under <span class='math'>10<sup>-6</sup></span> -- which is everything checkable without a reference value to compare against."
       ],
       "notes": "This slide is deliberately about the method, not the answer -- the synthetic potential has no \"correct\" lattice constant to check against, only internal consistency; the next slide is where a real reference value enters. Q: \"Why a cubic fit and not just take the grid minimum?\" A: The grid is coarse (12 points here); a cubic interpolates between grid points and gives a lattice constant more precise than the grid spacing, at the cost of assuming the energy curve is well-approximated by a cubic near the minimum -- true near equilibrium, not far from it."
+    },
+    "eam-vacancy": {
+      "level": "core", "layout": "two-figs", "fig": "ch05-f1", "fig2": "ch05-f2",
+      "title": "Removing an atom, and watching it relax",
+      "lead": "The same fit gives one more property: remove the lattice site nearest the supercell's centre and relax the rest with FIRE (L7's other minimiser) -- the perfect supercell (left) and the relaxed vacancy configuration (right).",
+      "bullets": [
+        "Formation energy is the energy cost of the hole: <span class='math'>E<sub>vac</sub> = E<sub>relaxed</sub>(N-1) - (N-1)/N × E<sub>perfect</sub>(N)</span>, positive for a bound crystal and under its cohesive energy per atom.",
+        "On the real Cu_u3.eam potential, mdlite's FIRE-relaxed value and LAMMPS's <code>delete_atoms</code> + <code>minimize</code> agree to within their recorded tolerance -- and land close to a real experimental measurement (1.29 eV, positron annihilation)."
+      ],
+      "notes": "The two renders look almost identical at this scale -- that is the honest result, not a rendering failure: one missing atom in a 256-atom supercell relaxes its handful of nearest neighbours inward by a small fraction of the lattice spacing, not something dramatic. Q: \"Why compare to a real measurement here but not for the lattice constant and cohesive energy slide?\" A: Those are matched to LAMMPS on the identical potential, a completely controlled comparison; the vacancy formation energy is the first place in this course where the same computed quantity is also checked, as context, against an independent real-world number."
     },
     "eam-cu": {
       "level": "math", "layout": "table",

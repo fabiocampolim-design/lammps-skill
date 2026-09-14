@@ -153,7 +153,7 @@
         <p class="kicker">L5 · notebook ch05</p>
         <h1>Potentials: EAM</h1>
         <p class="hero-sub">An embedded-atom potential read from a real setfl file: copper&#x27;s lattice constant and cohesive energy against the recorded 3e-5 -- and why the potential file is never shipped.</p>
-        <ol class="agenda"><li class="lv-intro">A real potential, from a real file</li><li class="lv-core">One embedding term, one pairwise term</li><li class="lv-core">The same force check, on any potential</li><li class="lv-core">Lattice constant and cohesive energy from a cubic fit</li><li class="lv-math">Copper, against LAMMPS&#x27;s own minimisation</li></ol>
+        <ol class="agenda"><li class="lv-intro">A real potential, from a real file</li><li class="lv-core">One embedding term, one pairwise term</li><li class="lv-core">The same force check, on any potential</li><li class="lv-core">Lattice constant and cohesive energy from a cubic fit</li><li class="lv-core">Removing an atom, and watching it relax</li><li class="lv-math">Copper, against LAMMPS&#x27;s own minimisation</li></ol>
         <aside class="notes">Divider — one breath: say in a sentence where the previous lecture ended and what this one adds. The list mirrors the slide order; colours mark intro / core / math.</aside>
       </section>
       <section id="eam-intro" data-sec="eam" data-level="intro">
@@ -171,6 +171,10 @@
       <section id="eam-fit" data-sec="eam" data-level="core">
         <h2 data-t="eam-fit.title"></h2><p data-t="eam-fit.lead"></p><div class="panel code" data-t="eam-fit.code"></div><ul class="small"><li data-t="eam-fit.bullets.0"></li></ul>
         <aside class="notes" data-notes="eam-fit"></aside>
+      </section>
+      <section id="eam-vacancy" data-sec="eam" data-level="core">
+        <h2 data-t="eam-vacancy.title"></h2><p data-t="eam-vacancy.lead"></p><div class="grid-2 two-figs"><figure class="fig "><img src="figs/ch05-f1.png" alt="The perfect fcc supercell (n=4, this section&#x27;s own fitted a0) before the atom nearest the box centre is removed."><figcaption class="caption">The perfect fcc supercell (n=4, this section&#x27;s own fitted a0) before the atom nearest the box centre is removed. <span class="src">— Figure 1 · notebook §0 · chapter 5, cell 12</span></figcaption></figure><figure class="fig "><img src="figs/ch05-f2.png" alt="The same supercell after the vacancy is introduced and the remaining atoms are relaxed with FIRE (fmax &lt; 1e-4): the neighbours have relaxed inward around the missing site, visible as a locally denser region next to the gap."><figcaption class="caption">The same supercell after the vacancy is introduced and the remaining atoms are relaxed with FIRE (fmax &lt; 1e-4): the neighbours have relaxed inward around the missing site, visible as a locally denser region next to the gap. <span class="src">— Figure 2 · notebook §0 · chapter 5, cell 13</span></figcaption></figure></div><ul class="small"><li data-t="eam-vacancy.bullets.0"></li><li data-t="eam-vacancy.bullets.1"></li></ul>
+        <aside class="notes" data-notes="eam-vacancy"></aside>
       </section>
       <section id="eam-cu" data-sec="eam" data-level="math">
         <h2 data-t="eam-cu.title"></h2><p data-t="eam-cu.lead"></p><table><thead><tr><th data-t="eam-cu.table.head.0"></th><th data-t="eam-cu.table.head.1"></th><th data-t="eam-cu.table.head.2"></th><th data-t="eam-cu.table.head.3"></th></tr></thead><tbody><tr><td data-t="eam-cu.table.rows.0.0"></td><td data-t="eam-cu.table.rows.0.1"></td><td data-t="eam-cu.table.rows.0.2"></td><td data-t="eam-cu.table.rows.0.3"></td></tr><tr><td data-t="eam-cu.table.rows.1.0"></td><td data-t="eam-cu.table.rows.1.1"></td><td data-t="eam-cu.table.rows.1.2"></td><td data-t="eam-cu.table.rows.1.3"></td></tr></tbody></table>

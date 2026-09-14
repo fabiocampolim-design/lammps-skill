@@ -175,6 +175,11 @@ Slide `#eam-fit`.
 
 This slide is deliberately about the method, not the answer -- the synthetic potential has no "correct" lattice constant to check against, only internal consistency; the next slide is where a real reference value enters. Q: "Why a cubic fit and not just take the grid minimum?" A: The grid is coarse (12 points here); a cubic interpolates between grid points and gives a lattice constant more precise than the grid spacing, at the cost of assuming the energy curve is well-approximated by a cubic near the minimum -- true near equilibrium, not far from it.
 
+### Removing an atom, and watching it relax  `[core]`
+Slide `#eam-vacancy`; figures `ch05-f1` (§0 cell 12), `ch05-f2` (§0 cell 13).
+
+The two renders look almost identical at this scale -- that is the honest result, not a rendering failure: one missing atom in a 256-atom supercell relaxes its handful of nearest neighbours inward by a small fraction of the lattice spacing, not something dramatic. Q: "Why compare to a real measurement here but not for the lattice constant and cohesive energy slide?" A: Those are matched to LAMMPS on the identical potential, a completely controlled comparison; the vacancy formation energy is the first place in this course where the same computed quantity is also checked, as context, against an independent real-world number.
+
 ### Copper, against LAMMPS's own minimisation  `[math]`
 Slide `#eam-cu`.
 

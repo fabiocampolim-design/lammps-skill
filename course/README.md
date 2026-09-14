@@ -5,7 +5,7 @@ notebooks (`chapters/`) — L0 is chapter 00, L10 is chapter 10, in order. **Eve
 notebooks generate appears in the course, in the slides and in the PDF fallback alike, under its
 full notebook caption**; a test fails if a figure drifts from the notebook output or goes unused.
 
-Every lecture runs its full intro → core → math depth (56 slides across the 11 lectures, sized to
+Every lecture runs its full intro → core → math depth (57 slides across the 11 lectures, sized to
 each chapter's own material — Plan A built the mechanism, Plan B filled in the content; both are
 done). A further roadmap (atom snapshots and animations per physical case, more physical cases) is
 in progress one piece at a time — see

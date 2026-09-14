@@ -2,6 +2,36 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.17 — 2026-09-14
+
+The Cu vacancy case (atom-visuals roadmap item 1: `docs/superpowers/specs/2026-09-14-lammps-skill-
+atom-visuals-design.md`), landed in three pieces:
+
+- `lammpskill.script.Spec` gains `regions` (auxiliary regions beyond the box `region`) and
+  `delete_atoms`, rendered in manual order (`region` → `regions` → `create_box` → ... → `groups`
+  → `delete_atoms` → `velocity`).
+- `scripts/run_benchmarks.py` gains `eam_cu_vacancy`: fcc Cu vacancy formation energy, mdlite
+  (FIRE-relaxed, fixed volume) vs LAMMPS (`delete_atoms` + `minimize`), on the same potential file
+  and fitted lattice constant `eam_cu` already uses; `_fit_a0_ecoh` factored out so both share one
+  implementation. New `tests/test_run_benchmarks.py` exercises the mdlite half offline on
+  `synthetic_setfl()` — no real potential file needed for these tests, matching chapter 05's own
+  convention (the grid is deliberately wider than chapter 05's demo grid: that one violates the
+  minimum-image convention for this comparison, confirmed by direct measurement).
+- Chapter 05 gets three new cells: the same vacancy method on the synthetic potential (a
+  self-contained, min-image-safe refit — reusing the chapter's own 1.0..1.6 grid would carry the
+  same minimum-image bug into a shipped notebook), two `lammpskill.viz.snapshot` figures
+  (before/after FIRE relaxation), and the real-Cu cross-check reading
+  `data/records/eam_cu_vacancy.json` (generated for real this release, using the same `Cu_u3.eam`
+  file `eam_cu_lattice.json` already used: 1.2847 eV mdlite vs 1.2847 eV LAMMPS, agreeing to
+  6×10⁻⁷ eV). Literature context (not a hard test value) via a real `scitech-librarian` search:
+  the experimental copper monovacancy formation energy is 1.29 ± 0.02 eV (positron annihilation;
+  Triftshäuser & McGervey, *Applied Physics* **6**, 177 (1975), doi:10.1007/BF00883748) — the
+  computed value sits within its error bar. Folded into course lecture L5 as a new slide
+  (`eam-vacancy`, two-figs layout); deck 56 → 57 slides, PDF fallback 66 → 67 pages, figures 8 →
+  10.
+
+Whole suite: 402 passed / 3 skipped, pyflakes clean, conformance PASS=23 FAIL=0.
+
 ## 0.1.16 — 2026-09-14
 
 Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of the prior three
