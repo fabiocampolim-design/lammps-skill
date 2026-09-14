@@ -2,6 +2,24 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.15 — 2026-09-14
+
+Atom visuals, Phase 1 of the roadmap in
+`docs/superpowers/specs/2026-09-14-lammps-skill-atom-visuals-design.md`: `lammpskill/viz.py`
+(headless atom snapshots and animated GIFs, ASE + matplotlib, no new dependency; OVITO stays
+pinned) and the course pipeline's extension to carry GIF figures with the same provenance/caption
+discipline as PNGs. Chapter 01 gets a real snapshot and a real animation of its own LJ melt (a
+200-atom, 10-frame subsample of the real 4000-atom run -- kept small the way chapter 6 already
+learned to, not the full trajectory), rendered as argon-like spheres since reduced LJ units carry
+no real element. Folded into course lecture L1 as a new slide (56 slides now, was 55).
+`tests/test_chapters.py`'s caption guard now recognises `display(Image(filename=...))` (a GIF
+embed) alongside `plt.show()`. Fixed three more hardcoded `.png` lookups the new GIF figure
+exposed, beyond the one built for it: `build_deck.py`'s `render_handout()` and `render_notes()`,
+and two tests in `test_course.py` -- all four now resolve the real extension. The other five
+roadmap items (a Cu vacancy in chapter 05, new chapters for water and a polymer chain, four more
+chapter retrofits, two new course lectures) remain future work, each its own brainstorm-and-spec
+pass.
+
 ## 0.1.14 — 2026-09-14
 
 Course content (rule 22, Plan B of
