@@ -30,7 +30,7 @@ atom-visuals-design.md`), landed in three pieces:
   (`eam-vacancy`, two-figs layout); deck 56 → 57 slides, PDF fallback 66 → 67 pages, figures 8 →
   10.
 
-Whole suite: 402 passed / 3 skipped, pyflakes clean, conformance PASS=23 FAIL=0.
+Whole suite: 403 passed / 3 skipped, pyflakes clean, conformance PASS=23 FAIL=0.
 
 ## 0.1.16 — 2026-09-14
 
