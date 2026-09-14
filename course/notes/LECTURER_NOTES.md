@@ -43,6 +43,26 @@ Slide `#first-sim-intro`; figures `ch01-f1` (§0 cell 12).
 
 This is the one lecture to slow down on if the audience has never seen a molecular dynamics input before: walk the four steps as a loop they will use for the rest of the course. Q: "Why not just write the LAMMPS script directly?" A: You can -- Spec generates exactly the script the manual describes; the checker is what catches the mistakes (wrong units, a missing pair_coeff, an unset timestep) before a run silently does the wrong thing.
 
+### Fourteen rules, each pointing at a manual page  `[core]`
+Slide `#first-sim-checker`.
+
+Six of fourteen is enough to show the range -- from a missing keyword to a file that will not be there when LAMMPS looks for it. Q: "Does the checker run LAMMPS to find these?" A: No -- it is a static check of the rendered script text against rules read from the manual; that is why it also works with no LAMMPS installed.
+
+### All fourteen, confirmed at once  `[core]`
+Slide `#first-sim-checker-result`.
+
+This is the difference between documenting fourteen rules and demonstrating them -- the assertion the chapter's tally cell checks is exactly len(missed) == 0. Q: "What happens if a fifteenth rule is added later?" A: It needs its own deliberately-broken snippet in this same dictionary, or this cell's count silently stays at fourteen while the checker knows fifteen -- the chapter's own discipline applies to itself.
+
+### A Spec, rendered -- not a script typed by hand  `[core]`
+Slide `#first-sim-script`.
+
+Contrast this with copying an example script -- nothing here is text a human typed and might have gotten subtly wrong; it is generated from the same Spec object the checker and the runner also see. Q: "Could I edit the rendered text directly?" A: You could, but then the checker and the runner are checking and running text that no longer corresponds to any Spec -- the pattern this course teaches is to change the Spec and re-render, the same discipline as never hand-editing a generated notebook.
+
+### run_or_load: the pattern every later lecture uses  `[math]`
+Slide `#first-sim-recordrun`.
+
+This is worth stating precisely because it is the single mechanism that makes the whole course reviewable without installing anything -- every later lecture's run_or_load call is exactly this shape. Q: "What stops a stale record from silently going unnoticed?" A: Nothing inside run_or_load itself -- the discipline is that compute() is also what regenerates the record when it needs to change, and the notebook's tally cell asserts on the record's own numbers, so a record that quietly went wrong fails a visible assertion, not a silent one.
+
 ## L2 · Forces and Integration (notebook ch02)
 _Velocity Verlet in mdlite, forces checked against a numerical derivative, and energy conservation against the timestep, cross-checked with LAMMPS at 3e-13._
 

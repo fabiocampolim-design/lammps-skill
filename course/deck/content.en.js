@@ -37,7 +37,7 @@ window.DECK_CONTENT = {
   },
   "stacks": [
     {"sec": "orientation", "slides": ["orientation-intro", "orientation-releases", "orientation-toolkit", "orientation-pylj", "orientation-packages", "orientation-validation"]},
-    {"sec": "first-sim", "slides": ["first-sim-intro"]},
+    {"sec": "first-sim", "slides": ["first-sim-intro", "first-sim-checker", "first-sim-checker-result", "first-sim-script", "first-sim-recordrun"]},
     {"sec": "forces", "slides": ["forces-intro"]},
     {"sec": "thermostats", "slides": ["thermostats-intro"]},
     {"sec": "ensembles", "slides": ["ensembles-intro"]},
@@ -132,6 +132,44 @@ window.DECK_CONTENT = {
         "The same four steps -- build, check, run, read -- reappear in every later chapter."
       ],
       "notes": "This is the one lecture to slow down on if the audience has never seen a molecular dynamics input before: walk the four steps as a loop they will use for the rest of the course. Q: \"Why not just write the LAMMPS script directly?\" A: You can -- Spec generates exactly the script the manual describes; the checker is what catches the mistakes (wrong units, a missing pair_coeff, an unset timestep) before a run silently does the wrong thing."
+    },
+    "first-sim-checker": {
+      "level": "core", "layout": "table",
+      "title": "Fourteen rules, each pointing at a manual page",
+      "lead": "lammpskill.script.check() does not trust a description of what a mistake looks like -- each rule is confirmed against one minimal snippet built to trigger exactly it.",
+      "table": {
+        "head": ["Rule", "What it catches"],
+        "rows": [
+          ["C01", "no <code>units</code> command"],
+          ["C02", "<code>coul/long</code> in the pair style with no <code>kspace_style</code>"],
+          ["C05", "<code>run</code> before a <code>pair_style</code> is set"],
+          ["C07", "a fix ID reused without <code>unfix</code>"],
+          ["C11", "<code>velocity create</code> before <code>mass</code> is set"],
+          ["C14", "<code>read_data</code> naming a file that does not exist"]
+        ]
+      },
+      "notes": "Six of fourteen is enough to show the range -- from a missing keyword to a file that will not be there when LAMMPS looks for it. Q: \"Does the checker run LAMMPS to find these?\" A: No -- it is a static check of the rendered script text against rules read from the manual; that is why it also works with no LAMMPS installed."
+    },
+    "first-sim-checker-result": {
+      "level": "core", "layout": "code",
+      "title": "All fourteen, confirmed at once",
+      "lead": "The chapter does not just list the rules -- it runs all fourteen deliberately-broken snippets through the checker and confirms every one is caught.",
+      "code": "triggered, missed = [], []\nfor code_, snippet in SNIPPETS.items():\n    findings = check(snippet, workdir=...)\n    codes = [f.code for f in findings]\n    (triggered if code_ in codes else missed).append(code_)\n\nprint(len(triggered), \"/\", len(SNIPPETS), \"rules triggered by their own minimal snippet\")\n# 14 / 14 rules triggered by their own minimal snippet",
+      "notes": "This is the difference between documenting fourteen rules and demonstrating them -- the assertion the chapter's tally cell checks is exactly len(missed) == 0. Q: \"What happens if a fifteenth rule is added later?\" A: It needs its own deliberately-broken snippet in this same dictionary, or this cell's count silently stays at fourteen while the checker knows fifteen -- the chapter's own discipline applies to itself."
+    },
+    "first-sim-script": {
+      "level": "core", "layout": "code",
+      "title": "A Spec, rendered -- not a script typed by hand",
+      "lead": "lammpskill.script.lj_melt() is a preset Spec: reduced units, an FCC lattice at the melt density rho=0.8442, 4000 atoms by default. render() turns it into the actual input text, in the order the manual's Commands_structure page prescribes.",
+      "code": "from lammpskill.script import lj_melt, render\n\nspec = lj_melt()          # rho=0.8442, T=3.0, steps=250\ntext = render(spec)       # the real LAMMPS input, in manual order",
+      "notes": "Contrast this with copying an example script -- nothing here is text a human typed and might have gotten subtly wrong; it is generated from the same Spec object the checker and the runner also see. Q: \"Could I edit the rendered text directly?\" A: You could, but then the checker and the runner are checking and running text that no longer corresponds to any Spec -- the pattern this course teaches is to change the Spec and re-render, the same discipline as never hand-editing a generated notebook."
+    },
+    "first-sim-recordrun": {
+      "level": "math", "layout": "code",
+      "title": "run_or_load: the pattern every later lecture uses",
+      "lead": "The one call that makes a chapter work whether or not LAMMPS is installed.",
+      "code": "def compute():\n    result = run(spec, workdir, time_limit=300)\n    return {...}          # only plain, JSON-safe data\n\nrec = run_or_load(\"lj_melt_ch01\", compute, records_dir=\"../data/records\")\n# with LAMMPS: compute() runs, its result is written to the record\n# without LAMMPS: the record is loaded, compute() never runs\n# with neither: rec[\"source\"] == \"skip\", visibly",
+      "notes": "This is worth stating precisely because it is the single mechanism that makes the whole course reviewable without installing anything -- every later lecture's run_or_load call is exactly this shape. Q: \"What stops a stale record from silently going unnoticed?\" A: Nothing inside run_or_load itself -- the discipline is that compute() is also what regenerates the record when it needs to change, and the notebook's tally cell asserts on the record's own numbers, so a record that quietly went wrong fails a visible assertion, not a silent one."
     },
     "forces-intro": {
       "level": "intro", "layout": "text",
