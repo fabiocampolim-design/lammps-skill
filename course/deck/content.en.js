@@ -44,7 +44,7 @@ window.DECK_CONTENT = {
     {"sec": "eam", "slides": ["eam-intro", "eam-form", "eam-forces-check", "eam-fit", "eam-cu"]},
     {"sec": "structure", "slides": ["structure-intro", "structure-gr-sk", "structure-diffusive-regime", "structure-blockavg", "structure-msd-vacf"]},
     {"sec": "minimisation", "slides": ["minimisation-intro", "minimisation-lj-wall", "minimisation-cap-concept", "minimisation-fire", "minimisation-math"]},
-    {"sec": "reading", "slides": ["reading-intro"]},
+    {"sec": "reading", "slides": ["reading-intro", "reading-formats", "reading-n4", "reading-n6", "reading-tests"]},
     {"sec": "build", "slides": ["build-intro"]},
     {"sec": "scaling", "slides": ["scaling-intro"]}
   ],
@@ -549,6 +549,54 @@ window.DECK_CONTENT = {
         ]
       },
       "notes": "Every row here is a finding this project recorded the hard way (N-4, N-5, N-6, N-18) -- tell the class that up front, it is more convincing than presenting them as textbook facts. Q: \"Where is this documented?\" A: Some of it is in the LAMMPS manual if you know to look; the restart magic number specifically was not documented anywhere this project found and had to be read directly from a hex dump."
+    },
+    "reading-formats": {
+      "level": "core", "layout": "table",
+      "title": "What each file actually contains",
+      "lead": "Every parser in lammpskill/io/ was written from the manual's description of the format plus files LAMMPS actually wrote on this machine.",
+      "table": {
+        "head": ["File", "What DataFile/Trajectory/etc. returns"],
+        "rows": [
+          ["data", "a box, per-type masses, one array per atom column (id, type, x, y, z, ...)"],
+          ["dump", "a Trajectory of Frames; positions resolved correctly whether the columns are unscaled, unwrapped or scaled (xs ys zs)"],
+          ["log", "a ThermoRun per run block: columns, the full series, loop_time, nprocs, natoms"],
+          ["restart", "only the header (magic string, endianness, version) -- everything else stays LAMMPS's own binary format, read back via read_restart"]
+        ]
+      },
+      "notes": "Say plainly why the restart row is different from the other three -- the manual itself says the restart body format is undocumented and not portable, so this toolkit deliberately reads only the header and leaves the rest to LAMMPS. Q: \"Why not write a full restart-file parser?\" A: Because the manual explicitly does not guarantee the format is stable across versions -- reading only the header (which is stable enough to sanity-check) and delegating everything else to read_restart avoids building on a foundation LAMMPS itself does not promise to keep."
+    },
+    "reading-n4": {
+      "level": "core", "layout": "code",
+      "title": "N-4: per-atom by default, in lj units",
+      "lead": "The very first LJ cross-check compared -6.04 (LAMMPS) with -1545.7 (mdlite) for the same 256 atoms -- nothing was wrong with either number.",
+      "code": "per_atom_energy = -6.04      # LAMMPS default: units lj normalises thermo per atom\nnatoms = 256\ntotal = per_atom_energy * natoms\nprint(total)                 # -1546.24 -- within rounding of mdlite's -1545.7",
+      "notes": "The arithmetic is trivial once you know which convention you're reading -- the actual finding is that nothing tells you which convention a given number uses unless the script says thermo_modify norm no explicitly. Q: \"Does this affect units other than lj?\" A: No -- thermo_modify norm's default depends on the unit style; lj is the one where per-atom normalisation is the default, which is exactly why every case this toolkit builds now sets the option explicitly rather than relying on which units happen to be in force."
+    },
+    "reading-n6": {
+      "level": "core", "layout": "text",
+      "title": "N-6: a 15-byte string in a 16-byte field",
+      "lead": "The restart magic string is the 15 printable characters LammpS RestartT -- but LAMMPS writes it as a 16-byte NUL-terminated field on disk.",
+      "bullets": [
+        "The first header reader read exactly 15 bytes, matched the string correctly, and never consumed the terminator.",
+        "The next field (the endianness flag) then started one byte early, and decoded as garbage on every restart file this toolkit tried to read.",
+        "The fix reads <code>len(MAGIC) + 1</code> bytes -- compares the 15 printable bytes, then steps past the 16th -- so the next field starts aligned."
+      ],
+      "notes": "This is a good example of a bug that is invisible until the very next field is read -- the string comparison itself succeeded every time, which is why the bug survived until someone looked at the endianness flag's decoded value. Q: \"Was this documented anywhere?\" A: No -- the manual says the restart format is not documented for a reason; this toolkit read the 16-byte field directly from a hex dump of a real LAMMPS-written restart file, which is why it's recorded here as an observation, not a citation."
+    },
+    "reading-tests": {
+      "level": "math", "layout": "table",
+      "title": "What this cost, and where each fix is pinned",
+      "lead": "Four findings, four file kinds, four tests that now make sure none of them comes back silently.",
+      "table": {
+        "head": ["Finding", "File", "The wrong assumption", "The fix"],
+        "rows": [
+          ["N-4", "log", "<code>units lj</code> thermo output is already a total", "<code>thermo_modify norm no</code> in every case script"],
+          ["N-5", "dump", "the default 6-digit float format is precise enough", "<code>dump_modify ... format float %20.15g</code>; 5e-5 → round-off"],
+          ["N-6", "restart", "reading 15 bytes consumes the string but not its terminator", "read 16 bytes so the next field starts aligned"],
+          ["N-18", "log", "<code>parse_log</code> understood <code>one</code> and <code>yaml</code>", "added the <code>multi</code> block reader"]
+        ]
+      },
+      "notes": "This table is the chapter's own closing table, reused here at math level because it is the most precise, most traceable content in the lecture -- every row names a real test file. Q: \"How do you know a fifth format pitfall like this isn't still lurking?\" A: You don't, with certainty -- what these four tests buy is that these four specific ways of being wrong can't come back unnoticed; a fifth would need its own bug, its own test, the same way these four did."
     },
     "build-intro": {
       "level": "intro", "layout": "text",

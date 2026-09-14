@@ -239,6 +239,26 @@ Slide `#reading-intro`.
 
 Every row here is a finding this project recorded the hard way (N-4, N-5, N-6, N-18) -- tell the class that up front, it is more convincing than presenting them as textbook facts. Q: "Where is this documented?" A: Some of it is in the LAMMPS manual if you know to look; the restart magic number specifically was not documented anywhere this project found and had to be read directly from a hex dump.
 
+### What each file actually contains  `[core]`
+Slide `#reading-formats`.
+
+Say plainly why the restart row is different from the other three -- the manual itself says the restart body format is undocumented and not portable, so this toolkit deliberately reads only the header and leaves the rest to LAMMPS. Q: "Why not write a full restart-file parser?" A: Because the manual explicitly does not guarantee the format is stable across versions -- reading only the header (which is stable enough to sanity-check) and delegating everything else to read_restart avoids building on a foundation LAMMPS itself does not promise to keep.
+
+### N-4: per-atom by default, in lj units  `[core]`
+Slide `#reading-n4`.
+
+The arithmetic is trivial once you know which convention you're reading -- the actual finding is that nothing tells you which convention a given number uses unless the script says thermo_modify norm no explicitly. Q: "Does this affect units other than lj?" A: No -- thermo_modify norm's default depends on the unit style; lj is the one where per-atom normalisation is the default, which is exactly why every case this toolkit builds now sets the option explicitly rather than relying on which units happen to be in force.
+
+### N-6: a 15-byte string in a 16-byte field  `[core]`
+Slide `#reading-n6`.
+
+This is a good example of a bug that is invisible until the very next field is read -- the string comparison itself succeeded every time, which is why the bug survived until someone looked at the endianness flag's decoded value. Q: "Was this documented anywhere?" A: No -- the manual says the restart format is not documented for a reason; this toolkit read the 16-byte field directly from a hex dump of a real LAMMPS-written restart file, which is why it's recorded here as an observation, not a citation.
+
+### What this cost, and where each fix is pinned  `[math]`
+Slide `#reading-tests`.
+
+This table is the chapter's own closing table, reused here at math level because it is the most precise, most traceable content in the lecture -- every row names a real test file. Q: "How do you know a fifth format pitfall like this isn't still lurking?" A: You don't, with certainty -- what these four tests buy is that these four specific ways of being wrong can't come back unnoticed; a fifth would need its own bug, its own test, the same way these four did.
+
 ## L9 · Choosing a Build (notebook ch09)
 _What a 314-case sweep of the examples says: package list beats package count, and how to read Installation.packages before choosing styles._
 
