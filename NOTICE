@@ -27,6 +27,10 @@ python module, ASE, pymatgen, MDAnalysis and OVITO backends are separate
 packages under their own licences that you install yourself; they are never
 required.
 
+Third-party software vendored for the course slides (course/shared/reveal/):
+reveal.js 5.2.0, Copyright (C) 2011-2024 Hakim El Hattab and reveal.js
+contributors, MIT License (course/shared/reveal/LICENSE).
+
 This project is independent and not affiliated with or endorsed by Sandia
 National Laboratories, National Technology & Engineering Solutions of Sandia,
 LLC (NTESS), Temple University or the LAMMPS developers.

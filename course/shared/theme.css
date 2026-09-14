@@ -1,0 +1,156 @@
+/* SPDX-License-Identifier: Apache-2.0
+   Copyright 2026 Fabio Campolim
+   ==========================================================================
+   lammps-skill course theme — dark, figure-first (derived from the AILECTURE
+   deck theme). Every colour flows from these tokens; slide markup never
+   hard-codes a colour.
+   ========================================================================== */
+:root {
+  --bg: #0d1117;
+  --bg-deep: #010409;
+  --panel: #161b22;
+  --panel-edge: #30363d;
+  --ink: #e6edf3;
+  --muted: #8b949e;
+  --faint: #484f58;
+
+  --acc: #58a6ff;       /* primary - blue   */
+  --acc-2: #f778ba;     /* secondary - pink */
+  --acc-3: #3fb950;     /* green            */
+  --acc-hot: #ffa657;   /* emphasis         */
+  --acc-warn: #d29922;
+  --acc-violet: #bc8cff;
+
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Code", Consolas, monospace;
+  --font-serif: Georgia, "Times New Roman", serif;
+}
+
+/* ---- reveal overrides ---- */
+.reveal-viewport { background: radial-gradient(ellipse at 50% -20%, #131a26 0%, var(--bg) 55%, var(--bg-deep) 100%); }
+.reveal { font-family: var(--font-sans); font-size: 36px; color: var(--ink); }
+.reveal .slides section { text-align: left; padding: 40px 70px 96px; box-sizing: border-box; }  /* bottom band: DeckNav */
+.reveal h1, .reveal h2, .reveal h3 { font-family: var(--font-sans); color: var(--ink); text-transform: none; letter-spacing: -0.01em; }
+.reveal h1 { font-size: 2.4em; font-weight: 650; }
+.reveal h2 { font-size: 1.5em; font-weight: 600; margin-bottom: 0.5em; }
+.reveal h3 { font-size: 1.05em; font-weight: 600; color: var(--muted); }
+.reveal p, .reveal li { line-height: 1.4; }
+.reveal ul { margin-left: 0.8em; }
+.reveal li { margin: 0.3em 0; }
+.reveal strong { color: var(--acc-hot); font-weight: 600; }
+.reveal em { color: var(--acc); font-style: normal; }
+.reveal code { font-family: var(--font-mono); background: var(--panel); padding: 0.05em 0.3em; border-radius: 6px; font-size: 0.85em; }
+.reveal a { color: var(--acc); }
+.reveal .controls { color: var(--faint); }
+.reveal img { max-width: 100%; border: 0; box-shadow: none; background: transparent; }
+
+/* ---- utility layout ---- */
+.hero-wrap { display: flex; flex-direction: column; justify-content: center; min-height: 940px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; align-items: center; }
+.grid-2.wide-fig { grid-template-columns: 3fr 2fr; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 36px; align-items: start; }
+.center-col { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.caption { font-size: 0.6em; color: var(--muted); line-height: 1.35; }
+.hero-sub { font-size: 1.1em; color: var(--muted); font-weight: 300; }
+.kicker { font-size: 0.6em; text-transform: uppercase; letter-spacing: 0.25em; color: var(--acc); font-weight: 600; }
+.small { font-size: 0.8em; }
+
+/* figures: every image on a slide comes from a notebook cell (course/deck/figs) */
+.fig { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.fig img { box-sizing: border-box; width: 100%; height: 640px; object-fit: contain; border-radius: 10px; background: #fff; padding: 6px; }
+.fig-tall img { height: 600px; }
+.grid-2 .fig img { height: 540px; }
+.two-figs .fig img { height: 420px; }
+.two-figs + ul { margin-top: 0.4em; }
+.fig .caption { max-width: 1560px; text-align: left; font-size: 0.5em; }
+.two-figs .fig .caption { font-size: 0.46em; }
+.fig .src { color: var(--faint); font-family: var(--font-mono); font-size: 0.92em; white-space: nowrap; }
+.reveal .slides section h2 + p { margin-bottom: 0.4em; }
+
+/* restore sub/sup (reveal's reset flattens vertical-align) */
+.reveal sup { vertical-align: super; font-size: 0.7em; }
+.reveal sub { vertical-align: sub; font-size: 0.7em; }
+
+/* math set by hand: italic serif variables, roman functions */
+.math { font-family: var(--font-serif); font-style: italic; }
+.math .fn, .math .num, .math .op { font-style: normal; }
+.math sup, .math sub { font-size: 0.65em; }
+.eq-hero { font-size: 1.35em; text-align: center; margin: 0.6em 0; }
+.eq-box { background: var(--panel); border: 1px solid var(--panel-edge); border-left: 6px solid var(--acc-violet);
+          border-radius: 12px; padding: 18px 30px; margin: 20px 0; font-size: 0.95em; }
+.eq-box .math { font-size: 1.1em; }
+
+/* panels */
+.panel { background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 16px; padding: 26px 34px; }
+.panel.warn { border-left: 6px solid var(--acc-warn); }
+.panel.good { border-left: 6px solid var(--acc-3); }
+.panel.code { font-family: var(--font-mono); font-size: 0.62em; white-space: pre; line-height: 1.5; }
+
+/* colour helpers */
+.c-1 { color: var(--acc); } .c-2 { color: var(--acc-2); } .c-3 { color: var(--acc-3); }
+.c-hot { color: var(--acc-hot); } .c-muted { color: var(--muted); }
+
+/* tables */
+.reveal table { font-size: 0.7em; }
+.reveal table th { color: var(--muted); font-weight: 600; padding: 10px 16px; border-bottom: 2px solid var(--panel-edge); text-align: left; }
+.reveal table td { padding: 10px 16px; border-top: 1px solid var(--panel-edge); vertical-align: top; line-height: 1.35; }
+
+/* level chip: each vertical stack runs intro -> core -> math (rule 22) */
+.reveal section[data-level]::after {
+  position: absolute; top: 22px; right: 70px; font-size: 0.45em; letter-spacing: 0.25em;
+  text-transform: uppercase; font-weight: 600; padding: 4px 14px; border-radius: 999px;
+  border: 1px solid var(--panel-edge); color: var(--muted); background: var(--panel);
+}
+.reveal section[data-level="intro"]::after { content: "intro"; color: var(--acc-3); border-color: var(--acc-3); }
+.reveal section[data-level="core"]::after  { content: "core";  color: var(--acc); border-color: var(--acc); }
+.reveal section[data-level="math"]::after  { content: "math";  color: var(--acc-violet); border-color: var(--acc-violet); }
+
+/* syllabus list on the opening section */
+.syllabus { list-style: none; margin: 0.6em 0 0 0; font-size: 0.95em; columns: 2; column-gap: 60px; }
+.syllabus li { break-inside: avoid; margin: 0.25em 0; }
+.syllabus b { color: var(--acc); font-weight: 600; margin-right: 0.5em; }
+
+/* divider slides: an ordinary slide opens each lecture (nothing overlays
+   navigation, so arrows are never interrupted by an animation) */
+.divider-slide { display: flex; flex-direction: column; justify-content: center;
+                 min-height: 980px; }
+.divider-slide h1 { font-size: 2.6em; margin: 0.15em 0 0.2em 0; }
+.divider-slide .hero-sub { max-width: 1500px; }
+.agenda { list-style: none; margin: 1.1em 0 0 0; font-size: 0.62em; columns: 2;
+          column-gap: 80px; max-width: 1500px; counter-reset: ag; }
+.agenda li { break-inside: avoid; margin: 0.3em 0; padding-left: 2.2em; position: relative;
+             counter-increment: ag; color: var(--muted); }
+.agenda li::before { content: counter(ag); position: absolute; left: 0; top: 0.1em;
+                     font-size: 0.8em; font-weight: 600; color: var(--faint);
+                     border: 1px solid var(--panel-edge); border-radius: 6px;
+                     min-width: 1.5em; text-align: center; padding: 0 0.2em; }
+.agenda li.lv-intro::before { color: var(--acc-3); border-color: var(--acc-3); }
+.agenda li.lv-core::before  { color: var(--acc); border-color: var(--acc); }
+.agenda li.lv-math::before  { color: var(--acc-violet); border-color: var(--acc-violet); }
+
+/* single-row navigator (DeckNav): label + lecture-jump buttons; plain arrows
+   are handled by reveal.js alone */
+.deck-nav { position: fixed; right: 20px; bottom: 16px; z-index: 40; display: flex;
+            align-items: center; gap: 8px; font-family: var(--font-sans); user-select: none; }
+.deck-nav button { background: var(--panel); color: var(--muted); border: 1px solid var(--panel-edge);
+                   border-radius: 8px; width: 34px; height: 28px; font-size: 16px; line-height: 1;
+                   cursor: pointer; padding: 0; }
+.deck-nav button:hover:not(:disabled) { border-color: var(--acc); color: var(--ink); }
+.deck-nav button:disabled { opacity: 0.25; cursor: default; }
+.deck-nav span { color: var(--ink); font-size: 14px; font-weight: 600; min-width: 260px; text-align: center; }
+
+/* segmented progress bar (DeckNav): one segment per section */
+.deck-progress { position: fixed; left: 0; right: 0; bottom: 0; height: 6px; z-index: 39;
+                 display: flex; gap: 3px; }
+.deck-progress .dp-seg { flex: 1 1 0; background: var(--panel); cursor: pointer; }
+.deck-progress .dp-seg:hover { background: var(--panel-edge); }
+.deck-progress .dp-fill { height: 100%; width: 0; background: var(--acc); transition: width 0.3s; }
+
+/* PDF fallback (make_slides_pdf.py renders index.html?print-pdf) */
+@media print {
+  .deck-nav, .deck-progress { display: none !important; }
+  /* reveal's print sheet drops the slide padding; restore it so nothing
+     touches the page edge */
+  /* must match reveal's own print selector to win the cascade */
+  html.reveal-print .reveal .slides section { padding: 36px 70px 48px !important; }
+}

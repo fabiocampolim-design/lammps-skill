@@ -28,3 +28,22 @@ def test_every_figure_has_the_caption_from_the_notebook():
     for r in records:
         assert r["figure"] == 1 or r["figure"] is not None, r["file"]   # each chapter's own count
         assert len(r["caption"]) > 40, r["file"]
+
+
+def _read(*parts):
+    with open(os.path.join(ROOT, *parts), encoding="utf-8") as f:
+        return f.read()
+
+
+def test_vendored_reveal_keeps_its_mit_licence_and_notice_names_it():
+    lic = _read("course", "shared", "reveal", "LICENSE")
+    assert "Permission is hereby granted, free of charge" in lic and "Hakim El Hattab" in lic
+    notice = open(os.path.join(ROOT, "NOTICE"), encoding="utf-8").read()
+    assert "reveal.js" in notice and "MIT" in notice
+    for f in ("dist/reset.css", "dist/reveal.css", "dist/reveal.js", "plugin/notes/notes.js"):
+        assert os.path.exists(os.path.join(COURSE, "shared", "reveal", f)), f
+
+
+def test_course_shared_assets_carry_spdx_headers():
+    for name in ("theme.css", "nav.js", "loader.js"):
+        assert "SPDX-License-Identifier: Apache-2.0" in _read("course", "shared", name)[:400]
