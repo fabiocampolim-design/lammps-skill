@@ -267,6 +267,26 @@ Slide `#build-intro`.
 
 Be candid about the open question here rather than skipping it -- it is a real, stated gap in this project's coverage, not a rhetorical one. Q: "How do I know if a package I need is in my build?" A: Run `lmp -h` and read the package list it prints, or use `lammpskill.install.detect_all()` -- never assume from the build's name or from how many packages were compiled in.
 
+### 314 cases, both routes, scored from the log  `[core]`
+Slide `#build-sweep`.
+
+"Started" is a deliberately narrow claim -- it does not mean "passed" or "produced correct physics", only that the case got past setup and began stepping; correctness is the next slide's question, kept separate on purpose. Q: "Why break 'started' into three sub-outcomes (ok, ok-no-thermo, timeout-after-start)?" A: Because they mean different things -- ok-no-thermo cases ran but never printed a thermo line worth reading, and timeout-after-start cases were genuinely progressing when the 20-second cap ended them; folding all three into one number would hide that distinction.
+
+### Correctness first, then coverage  `[core]`
+Slide `#build-bench`.
+
+This slide exists so "more packages is not more coverage" (the next slide) never reads as "one build is more correct than the other" -- both builds are exact-match against upstream wherever they can even be compared. Q: "What would 4.0e-9 in TotEng mean if it were larger?" A: It would suggest a real numerical difference between the two builds (different compiler, different summation order); at 4e-9 it is the last printed digit of double precision, i.e. print precision, not a physics difference.
+
+### What blocks the rest, by package  `[core]`
+Slide `#build-blocked`.
+
+Read this table the right way round: it is not an argument for "install everything" -- some of these packages actively conflict with others' build requirements, which is exactly why no single build here has all of them. Q: "Could one build be compiled with every package listed?" A: Not trivially -- some packages need extra external libraries or model downloads (KIM, MDI) that this project deliberately did not set up, staged for later per the owner's scope decision, not blocked by a technical incompatibility between the packages themselves.
+
+### The same package name can mean two different things  `[math]`
+Slide `#build-poems`.
+
+This is the most advanced point in the lecture precisely because it undermines the easy fix to every other row in the blocked-package table -- "just recompile with the package" stops being true the moment the package no longer exists in the source tree at all. Q: "How would you tell 'not built' from 'removed upstream' without git log access?" A: The error text itself usually says -- LAMMPS's deprecated-style mechanism prints "no longer available", a distinct message from the generic "unrecognized style" a genuinely-omitted-but-still-existing package produces; reading the error text carefully is the fast path, git log is the way to confirm it.
+
 ## L10 · Scaling and Limits (notebook ch10)
 _MPI and OpenMP speed-up on eight cores, where it stops, and what this machine honestly cannot do -- no GPU, no -partition methods._
 

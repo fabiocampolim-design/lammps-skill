@@ -45,7 +45,7 @@ window.DECK_CONTENT = {
     {"sec": "structure", "slides": ["structure-intro", "structure-gr-sk", "structure-diffusive-regime", "structure-blockavg", "structure-msd-vacf"]},
     {"sec": "minimisation", "slides": ["minimisation-intro", "minimisation-lj-wall", "minimisation-cap-concept", "minimisation-fire", "minimisation-math"]},
     {"sec": "reading", "slides": ["reading-intro", "reading-formats", "reading-n4", "reading-n6", "reading-tests"]},
-    {"sec": "build", "slides": ["build-intro"]},
+    {"sec": "build", "slides": ["build-intro", "build-sweep", "build-bench", "build-blocked", "build-poems"]},
     {"sec": "scaling", "slides": ["scaling-intro"]}
   ],
   "slides": {
@@ -608,6 +608,61 @@ window.DECK_CONTENT = {
         "The Windows installer is the single most-viewed installation thread of the year on the LAMMPS forum -- and the one route this project cannot yet speak to from its own measurements (open question Q-1)."
       ],
       "notes": "Be candid about the open question here rather than skipping it -- it is a real, stated gap in this project's coverage, not a rhetorical one. Q: \"How do I know if a package I need is in my build?\" A: Run `lmp -h` and read the package list it prints, or use `lammpskill.install.detect_all()` -- never assume from the build's name or from how many packages were compiled in."
+    },
+    "build-sweep": {
+      "level": "core", "layout": "table",
+      "title": "314 cases, both routes, scored from the log",
+      "lead": "Every case is scored from its log, never its exit status -- LAMMPS exits 0 after a fatal input error (N-15), so the exit code alone would call failures successes.",
+      "table": {
+        "head": ["Route", "Packages", "Started (ok + ok-no-thermo + timeout-after-start)"],
+        "rows": [
+          ["wsl-source (stable)", "11", "137 / 314"],
+          ["wsl-apt (10 Dec 2025)", "52", "184 / 314"]
+        ]
+      },
+      "notes": "\"Started\" is a deliberately narrow claim -- it does not mean \"passed\" or \"produced correct physics\", only that the case got past setup and began stepping; correctness is the next slide's question, kept separate on purpose. Q: \"Why break 'started' into three sub-outcomes (ok, ok-no-thermo, timeout-after-start)?\" A: Because they mean different things -- ok-no-thermo cases ran but never printed a thermo line worth reading, and timeout-after-start cases were genuinely progressing when the 20-second cap ended them; folding all three into one number would hide that distinction."
+    },
+    "build-bench": {
+      "level": "core", "layout": "table",
+      "title": "Correctness first, then coverage",
+      "lead": "bench/'s five canonical cases ship a reference log from the LAMMPS developers themselves -- the sweep's numbers here are exact-match or explained, not merely close.",
+      "table": {
+        "head": ["Case", "Result"],
+        "rows": [
+          ["lj, chain, eam", "identical on both routes, both process counts"],
+          ["chute", "identical (apt only -- the source build has no GRANULAR package)"],
+          ["rhodo", "1 proc: worst 4.0×10<sup>-9</sup> in TotEng (last printed digit); 4 procs: identical"]
+        ]
+      },
+      "notes": "This slide exists so \"more packages is not more coverage\" (the next slide) never reads as \"one build is more correct than the other\" -- both builds are exact-match against upstream wherever they can even be compared. Q: \"What would 4.0e-9 in TotEng mean if it were larger?\" A: It would suggest a real numerical difference between the two builds (different compiler, different summation order); at 4e-9 it is the last printed digit of double precision, i.e. print precision, not a physics difference."
+    },
+    "build-blocked": {
+      "level": "core", "layout": "table",
+      "title": "What blocks the rest, by package",
+      "lead": "ML-SNAP, ML-IAP, AMOEBA, REAXFF and MDI are missing from both builds -- exactly the machine-learning and reactive packages this project staged for later.",
+      "table": {
+        "head": ["Package", "Cases blocked (source)", "Cases blocked (apt)"],
+        "rows": [
+          ["GRANULAR", "16", "0"],
+          ["ML-SNAP", "15", "15"],
+          ["EXTRA-FIX", "0", "15"],
+          ["ML-IAP", "14", "14"],
+          ["REAXFF", "5", "5"],
+          ["MDI", "5", "5"]
+        ]
+      },
+      "notes": "Read this table the right way round: it is not an argument for \"install everything\" -- some of these packages actively conflict with others' build requirements, which is exactly why no single build here has all of them. Q: \"Could one build be compiled with every package listed?\" A: Not trivially -- some packages need extra external libraries or model downloads (KIM, MDI) that this project deliberately did not set up, staged for later per the owner's scope decision, not blocked by a technical incompatibility between the packages themselves."
+    },
+    "build-poems": {
+      "level": "math", "layout": "text",
+      "title": "The same package name can mean two different things",
+      "lead": "Five POEMS examples come from the tree the source build was compiled from; the two release lines disagree about why POEMS is missing.",
+      "bullets": [
+        "The <strong>source</strong> build (an older stable line) reports <code>missing-package: POEMS</code> -- the <code>core</code> preset simply omits a package that exists.",
+        "The <strong>apt</strong> build (10 Dec 2025, months later on the feature line) answers <code>Fix style poems is no longer available.</code> -- LAMMPS's own deprecated-style mechanism.",
+        "<code>git log</code> on the upstream mirror shows <code>remove POEMS package, docs, and examples</code>, dated the same day as the <code>stable_22Jul2025</code> tag: POEMS was <em>removed upstream</em>, not merely unbuilt."
+      ],
+      "notes": "This is the most advanced point in the lecture precisely because it undermines the easy fix to every other row in the blocked-package table -- \"just recompile with the package\" stops being true the moment the package no longer exists in the source tree at all. Q: \"How would you tell 'not built' from 'removed upstream' without git log access?\" A: The error text itself usually says -- LAMMPS's deprecated-style mechanism prints \"no longer available\", a distinct message from the generic \"unrecognized style\" a genuinely-omitted-but-still-existing package produces; reading the error text carefully is the fast path, git log is the way to confirm it."
     },
     "scaling-intro": {
       "level": "intro", "layout": "text",
