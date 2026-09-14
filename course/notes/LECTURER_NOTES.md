@@ -178,7 +178,7 @@ This slide is deliberately about the method, not the answer -- the synthetic pot
 ### Removing an atom, and watching it relax  `[core]`
 Slide `#eam-vacancy`; figures `ch05-f1` (§0 cell 12), `ch05-f2` (§0 cell 13).
 
-The two renders look almost identical at this scale -- that is the honest result, not a rendering failure: one missing atom in a 256-atom supercell relaxes its handful of nearest neighbours inward by a small fraction of the lattice spacing, not something dramatic. Q: "Why compare to a real measurement here but not for the lattice constant and cohesive energy slide?" A: Those are matched to LAMMPS on the identical potential, a completely controlled comparison; the vacancy formation energy is the first place in this course where the same computed quantity is also checked, as context, against an independent real-world number.
+The two renders look almost identical at this scale -- that is the honest result, not a rendering failure: one missing atom in a 256-atom supercell relaxes its handful of nearest neighbours inward by a small fraction of the lattice spacing, not something dramatic. Q: "Does the agreement with the 1.29 eV measurement validate the potential?" A: Not independently -- the Foiles/Baskes/Daw "universal 3" potential was fit to reproduce copper's vacancy formation energy among other properties, so this slide's agreement confirms the mdlite/LAMMPS pipeline reproduces the potential's own fit target correctly, which is a real and useful check, but a different claim from predicting a property the potential never saw.
 
 ### Copper, against LAMMPS's own minimisation  `[math]`
 Slide `#eam-cu`.

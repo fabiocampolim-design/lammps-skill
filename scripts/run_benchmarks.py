@@ -222,23 +222,30 @@ def _vacancy_formation_energy_mdlite(eam, a0, n=4):
 
 
 def eam_cu_vacancy(inst, workdir, potential):
+    n = 4   # the one supercell size both engines below build -- passed to _vacancy_formation_energy_mdlite
+             # and both LAMMPS specs, never re-literalled, so the two systems cannot silently drift apart
     eam = _read_eam(potential)
     a0_md, _ = _fit_a0_ecoh(eam)
-    md = _vacancy_formation_energy_mdlite(eam, a0_md, n=4)
+    md = _vacancy_formation_energy_mdlite(eam, a0_md, n=n)
 
     os.makedirs(workdir, exist_ok=True)
     shutil.copy(potential, os.path.join(workdir, os.path.basename(potential)))
     pot_name = os.path.basename(potential)
     setfl = pot_name.endswith((".eam.alloy", ".eam.fs"))
-    n = 4
     cx, cy, cz = md["removed_position"]
+    # LAMMPS's default thermo float format prints ~8 significant digits -- far coarser than the
+    # ~1e-9 eV the FIRE relaxation actually converges to, and coarse enough that two configurations
+    # differing in the 7th-8th digit can round to identical thermo output (silently inflating the
+    # apparent agreement). `%.15g` matches full double precision, the same fix `lj_vs_lammps` above
+    # already applies to forces via dump_modify.
+    thermo_fmt = "format float %.15g"
 
     perfect_spec = Spec(
         units="metal", atom_style="atomic", lattice="fcc %.10g" % a0_md, region="box block 0 %d 0 %d 0 %d" % (n, n, n),
         create_box=1, create_atoms="1 box", masses={1: 63.546},
         pair_style="eam/alloy" if setfl else "eam", pair_coeffs=["* * %s Cu" % pot_name if setfl else "1 1 %s" % pot_name],
         neighbor="2.0 bin", neigh_modify="delay 10 check yes",
-        thermo=10, thermo_style="custom step pe atoms",
+        thermo=10, thermo_style="custom step pe atoms", thermo_modify=thermo_fmt,
         stages=[Stage("run", "0")], comment="perfect fcc Cu supercell, single point (same a0 as the vacancy run)",
     )
     res_perfect = lrun(render(perfect_spec), os.path.join(workdir, "perfect"), installation=inst)
@@ -253,7 +260,7 @@ def eam_cu_vacancy(inst, workdir, potential):
         neighbor="2.0 bin", neigh_modify="delay 10 check yes",
         regions=["vacsite sphere %.10g %.10g %.10g 0.5 units box" % (cx, cy, cz)],
         groups=["vacatom region vacsite"], delete_atoms=["group vacatom compress yes"],
-        thermo=10, thermo_style="custom step pe atoms",
+        thermo=10, thermo_style="custom step pe atoms", thermo_modify=thermo_fmt,
         stages=[Stage("minimize", "1.0e-10 1.0e-10 1000 10000")],
         comment="the identical supercell with one atom removed near the box centre, relaxed",
     )
@@ -261,18 +268,24 @@ def eam_cu_vacancy(inst, workdir, potential):
     if not res_vac.ok:
         raise RuntimeError("LAMMPS vacancy run failed: %s" % res_vac.errors)
     natoms_l = res_vac.thermo.last["Atoms"]
+    if natoms_l != md["natoms_perfect"] - 1:
+        raise RuntimeError("LAMMPS deleted %d atoms from the region, expected exactly 1 (natoms_l=%d, "
+                            "natoms_perfect=%d) -- the 0.5 A selection sphere may not be catching a "
+                            "single lattice site" % (md["natoms_perfect"] - natoms_l, natoms_l, md["natoms_perfect"]))
     e_formation_l = res_vac.thermo.last["PotEng"] - natoms_l * e_perfect_per_atom_l
 
     dE = abs(md["e_formation"] - e_formation_l)
     return {"e_formation_mdlite": md["e_formation"], "e_formation_lammps": float(e_formation_l),
             "a0": a0_md, "natoms_perfect": md["natoms_perfect"], "natoms_vacancy_lammps": int(natoms_l),
             "cell": md["cell"], "removed_position": md["removed_position"],
-            "positions_before": md["positions_before"], "positions_after": md["positions_after"],
             "fmax_after_mdlite": md["fmax_after"], "potential": pot_name,
             "measured": {"dE": dE}, "tolerance_E": _tol(dE),
-            "provenance": _prov(inst, "mdlite: FIRE-relaxed (N-1)-atom supercell at the fitted a0, fixed volume; "
-                                      "LAMMPS: minimize on the identical delete_atoms-built supercell; "
-                                      "both compared to the same LAMMPS perfect-lattice single-point reference")}
+            "provenance": _prov(inst, "mdlite: FIRE-relaxed (N-1)-atom supercell at the fitted a0, fixed volume, "
+                                      "compared to mdlite's own perfect-lattice energy; LAMMPS: minimize on the "
+                                      "identical delete_atoms-built supercell, compared to LAMMPS's own "
+                                      "perfect-lattice single-point run on the same a0 -- each engine against its "
+                                      "own reference, not a value shared across engines, so the comparison stays "
+                                      "like-for-like")}
 
 
 def main(argv=None):

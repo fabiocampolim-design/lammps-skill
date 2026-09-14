@@ -40,7 +40,14 @@ def test_eam_cu_lattice_record():
     assert abs(r["ecoh_mdlite"] - r["ecoh_lammps"]) <= r["tolerance_ecoh"]
 
 
+def test_eam_cu_vacancy_record():
+    r = _rec("eam_cu_vacancy")
+    assert abs(r["e_formation_mdlite"] - r["e_formation_lammps"]) <= r["tolerance_E"]
+    # exactly one atom removed on each side, or the two engines built different systems
+    assert r["natoms_vacancy_lammps"] == r["natoms_perfect"] - 1
+
+
 def test_records_carry_measured_residue_and_a_reason():
-    for name in ("lj_energy_vs_lammps", "lj_nvt_nist", "eam_cu_lattice"):
+    for name in ("lj_energy_vs_lammps", "lj_nvt_nist", "eam_cu_lattice", "eam_cu_vacancy"):
         r = _rec(name)
         assert "measured" in r and "why" in r["provenance"] and r["provenance"]["date"]

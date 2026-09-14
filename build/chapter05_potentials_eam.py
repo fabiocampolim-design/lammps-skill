@@ -72,13 +72,21 @@ The method this toolkit uses for any EAM element: place an FCC lattice at a grid
 constants, compute the energy per atom at each, fit a cubic, and take the minimum. Run here on the
 synthetic potential -- the minimum exists and the fit is self-consistent (its own derivative is
 zero there), which is everything that can be checked *without* a reference value to compare to.
+
+The grid (`a` in 2.8..3.3, `n=4` cells) keeps the box side comfortably larger than twice the
+potential's cutoff throughout (measured: 12% margin at the narrow end) -- the minimum-image
+convention every periodic energy calculation in this toolkit depends on. A narrower, undersized
+box would still fit a cubic and find *a* minimum, but the energy it evaluated at each point would
+be wrong, and the fit below would confidently report a wrong answer -- the fit's own
+self-consistency check cannot tell the difference, which is why the grid itself has to be right,
+not just checked after the fact.
 """),
 
     code('''\
-a_grid = np.linspace(1.0, 1.6, 12)
+a_grid = np.linspace(2.8, 3.3, 12)
 energies = []
 for a in a_grid:
-    p, b = fcc(3, 4.0 / a ** 3)
+    p, b = fcc(4, 4.0 / a ** 3)
     tt = np.ones(len(p), int)
     v = VerletList(b, s.cutoff)
     v.update(p)
@@ -93,6 +101,7 @@ e0 = np.polyval(c, a0)
 slope_at_min = np.polyval(np.polyder(c), a0)
 print("synthetic potential: a0=%.4f, E(a0)=%.4f, dE/da at the fitted minimum=%.2e (should be ~0)" % (a0, e0, slope_at_min))
 assert abs(slope_at_min) < 1e-6
+assert e0 < 0, "a bound crystal has negative cohesive energy per atom"
 '''),
 
     md("""
@@ -120,43 +129,21 @@ assert cu["measured"]["da"] < cu["tolerance_a0"] and cu["measured"]["de"] < cu["
     md("""
 ## Vacancy formation energy: remove an atom, relax, compare
 
-One more property from the same synthetic potential: remove the lattice site nearest an FCC
-supercell's centre, relax the remaining atoms with FIRE (chapter 07's other minimiser, fixed box
-volume -- the standard single-vacancy approximation), and read off
+One more property from the same synthetic potential, and the same fit above: remove the lattice
+site nearest the `n=4` FCC supercell's centre, relax the remaining atoms with FIRE (chapter 07's
+other minimiser, fixed box volume -- the standard single-vacancy approximation), and read off
 
 `E_vacancy = E_relaxed(N-1 atoms) - (N-1)/N * E_perfect(N atoms)`
 
-This refits `a0` on its own, wider grid (`a` in 2.6..3.6, `n=4` cells) rather than reusing the
-`a0` found above: that fit's `a` in 1.0..1.6 with `n=3` cells puts the box side under twice the
-potential's cutoff, which breaks the minimum-image convention for a comparison this sensitive to
-absolute energies (measured directly: it gives a *positive*, i.e. unbound, cohesive energy --
-fine for checking the fit is self-consistent, not for anything that needs a real bound crystal).
-The wider grid here keeps the box comfortably larger than 2x the cutoff throughout, so the
-vacancy's own sanity check below is checking something real.
+using `a0` and `e0` exactly as fitted above -- the fit's own grid was already made min-image-safe
+for this purpose, so nothing needs refitting here.
 """),
 
     code('''\
-a_grid_vac = np.linspace(2.6, 3.6, 12)
-energies_vac = []
-for a in a_grid_vac:
-    p, b = fcc(4, 4.0 / a ** 3)
-    tt = np.ones(len(p), int)
-    v = VerletList(b, s.cutoff)
-    v.update(p)
-    e, _, _ = eam.energy_forces(p, b, v.pairs, tt)
-    energies_vac.append(e / len(p))
-c_vac = np.polyfit(a_grid_vac, energies_vac, 3)
-roots_vac = np.roots(np.polyder(c_vac))
-cands_vac = [r.real for r in roots_vac if abs(r.imag) < 1e-9 and a_grid_vac[0] < r.real < a_grid_vac[-1]]
-a0_vac = min(cands_vac, key=lambda r: np.polyval(c_vac, r))
-e0_vac = np.polyval(c_vac, a0_vac)
-print("min-image-safe fit: a0=%.4f, E(a0)=%.4f (bound: %s)" % (a0_vac, e0_vac, e0_vac < 0))
-assert e0_vac < 0, "a bound crystal has negative cohesive energy per atom"
-
 from mdlite.integrate import State
 from mdlite.minimize import fire
 
-pos_full, box_full = fcc(4, 4.0 / a0_vac ** 3)
+pos_full, box_full = fcc(4, 4.0 / a0 ** 3)
 vl_full = VerletList(box_full, s.cutoff)
 vl_full.update(pos_full)
 types_full = np.ones(len(pos_full), int)
@@ -174,11 +161,12 @@ state = State(pos_vac_input.copy(), np.zeros_like(pos_vac_input), 63.546, box_fu
               types=np.ones(len(pos_vac_input), int))
 fire_result = fire(state, [eam], vl_vac, steps=2000, ftol=1e-8)
 pos_after = state.pos
+assert len(pos_after) == len(pos_full) - 1, "exactly one atom should have been removed"
 
 e_formation = fire_result["E"] - (len(pos_full) - 1) * e_perfect_per_atom
 print("synthetic potential: vacancy formation energy=%.4f, cohesive energy per atom=%.4f, FIRE fmax=%.2e"
-      % (e_formation, e0_vac, fire_result["fmax"]))
-assert 0 < e_formation < abs(e0_vac), "a bound crystal should cost energy for a hole, less than its cohesive energy"
+      % (e_formation, e0, fire_result["fmax"]))
+assert 0 < e_formation < abs(e0), "a bound crystal should cost energy for a hole, less than its cohesive energy"
 assert fire_result["fmax"] < 1e-4
 '''),
 
@@ -224,35 +212,29 @@ else:
 
 `data/records/eam_cu_vacancy.json` is the same method above -- FIRE-relaxed (N-1)-atom supercell,
 fixed volume -- run on a real `Cu_u3.eam` file, compared against LAMMPS building the identical
-supercell with `region`/`group`/`delete_atoms` and relaxing it with `minimize`. Generating this
-record needs both a real Cu potential file the project's owner obtained separately (never
-tracked) and a LAMMPS installation, so unlike the lattice-constant record above it may not exist
-yet: `python scripts/run_benchmarks.py --which eam-cu-vacancy --potential <your Cu EAM file>`.
+supercell with `region`/`group`/`delete_atoms` and relaxing it with `minimize`: `python
+scripts/run_benchmarks.py --which eam-cu-vacancy --potential <your Cu EAM file>` regenerates it.
 
-For scale, not as a pass/fail check: the experimentally measured copper monovacancy formation
-energy is **1.29 +/- 0.02 eV** (positron annihilation; Triftshauser & McGervey, *Applied Physics*
-**6**, 177-180 (1975), doi:10.1007/BF00883748) -- context for how the mdlite/LAMMPS cross-check
-below compares to a real measurement, not a value either engine is tuned or expected to reproduce
-exactly (a fixed-volume, single small supercell is a simplified model of the real defect).
+For scale, not as independent validation: the experimentally measured copper monovacancy
+formation energy is **1.29 +/- 0.02 eV** (positron annihilation; Triftshauser & McGervey, *Applied
+Physics* **6**, 177-180 (1975), doi:10.1007/BF00883748). `Cu_u3.eam` is the Foiles, Baskes & Daw
+"universal 3" potential (`references/benchmarks.md`), whose own fitting set includes the vacancy
+formation energy -- so close agreement below confirms this pipeline reproduces the potential's own
+fit target correctly, which is a real and useful check, but not the same claim as an independent
+measurement predicting a property the potential was never fit to.
 """),
 
     code('''\
 import json
-import os
 
-VAC_RECORD = "../data/records/eam_cu_vacancy.json"
-if os.path.exists(VAC_RECORD):
-    with open(VAC_RECORD, encoding="utf-8") as f:
-        cuvac = json.load(f)
-    print("vacancy formation energy: mdlite=%.4f eV  LAMMPS=%.4f eV  |diff|=%.2e  (tolerance %.0e)"
-          % (cuvac["e_formation_mdlite"], cuvac["e_formation_lammps"], cuvac["measured"]["dE"], cuvac["tolerance_E"]))
-    print("literature (positron annihilation, Triftshauser & McGervey 1975): 1.29 +/- 0.02 eV")
-    print(cuvac["provenance"]["why"])
-else:
-    cuvac = None
-    print("no eam_cu_vacancy.json yet -- run `python scripts/run_benchmarks.py --which eam-cu-vacancy "
-          "--potential <your Cu EAM file>` to generate it (needs a real Cu potential file and a "
-          "LAMMPS installation, neither of which this project ships)")
+with open("../data/records/eam_cu_vacancy.json", encoding="utf-8") as f:
+    cuvac = json.load(f)
+
+print("vacancy formation energy: mdlite=%.4f eV  LAMMPS=%.4f eV  |diff|=%.2e  (tolerance %.0e)"
+      % (cuvac["e_formation_mdlite"], cuvac["e_formation_lammps"], cuvac["measured"]["dE"], cuvac["tolerance_E"]))
+print("literature (positron annihilation, Triftshauser & McGervey 1975): 1.29 +/- 0.02 eV -- a fitting target of this potential, not an independent check")
+print(cuvac["provenance"]["why"])
+assert cuvac["measured"]["dE"] < cuvac["tolerance_E"]
 '''),
 
     md("""
@@ -263,8 +245,9 @@ else:
   formation energy) is implemented correctly.
 - The real Cu numbers close the loop: the same lattice-constant method, on a real fit, agrees with
   LAMMPS's own `box/relax` minimisation to five decimal places; the vacancy formation energy
-  agrees with LAMMPS's `delete_atoms` + `minimize` within its own recorded tolerance, and sits in
-  the right ballpark next to a real experimental measurement.
+  agrees with LAMMPS's `delete_atoms` + `minimize` within its own recorded tolerance -- and lands
+  close to a real experimental measurement, though that number is one of this potential's own
+  fitting targets, so the agreement confirms the pipeline, not the potential's transferability.
 - The two potentials are read by the same parser (chapter 08): `synthetic_setfl` and
   `read_eam_setfl` return the same `EAMSetfl` shape, so `mdlite.eam.EAM` never needs to know which
   kind of file it was handed.
@@ -274,11 +257,12 @@ else:
 TALLY = [
     ("worst < 1e-3", "the synthetic EAM potential's forces match a numerical derivative"),
     ("abs(slope_at_min) < 1e-6", "the cubic fit's own minimum is self-consistent (zero derivative there)"),
+    ("e0 < 0", "the min-image-safe fit gives a bound (negative cohesive energy) synthetic crystal"),
     ("cu['measured']['da'] < cu['tolerance_a0'] and cu['measured']['de'] < cu['tolerance_ecoh']",
      "the real-copper lattice constant and cohesive energy agree with LAMMPS within their recorded tolerance"),
-    ("e0_vac < 0", "the min-image-safe fit gives a bound (negative cohesive energy) synthetic crystal"),
-    ("0 < e_formation < abs(e0_vac)", "the synthetic-potential vacancy formation energy is positive and under the cohesive energy magnitude"),
+    ("len(pos_after) == len(pos_full) - 1", "exactly one atom was removed from the synthetic-potential supercell"),
+    ("0 < e_formation < abs(e0)", "the synthetic-potential vacancy formation energy is positive and under the cohesive energy magnitude"),
     ("fire_result['fmax'] < 1e-4", "FIRE relaxed the synthetic-potential vacancy configuration to low residual force"),
-    ("cuvac is None or cuvac['measured']['dE'] < cuvac['tolerance_E']",
-     "when the real-copper vacancy record exists, mdlite and LAMMPS agree on its formation energy within their recorded tolerance"),
+    ("cuvac['measured']['dE'] < cuvac['tolerance_E']",
+     "the real-copper vacancy record: mdlite and LAMMPS agree on its formation energy within their recorded tolerance"),
 ]

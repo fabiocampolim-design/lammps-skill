@@ -2,6 +2,47 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.18 — 2026-09-14
+
+Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of 0.1.17's Cu
+vacancy case. Verdict was SHIP WITH FIXES; all six important findings addressed:
+
+- `eam_cu_vacancy()`'s `tolerance_E` (1e-6 eV) was below the resolution of the LAMMPS thermo
+  print it measured against (~8 significant digits, ~1e-5 eV here) — the first run's suspiciously
+  exact 6.2e-7 eV agreement was a print-rounding artefact, not real precision, and a genuinely
+  differing run could have violated its own tolerance. Both LAMMPS specs now carry
+  `thermo_modify="format float %.15g"` (the same fix `lj_vs_lammps` already applies to forces via
+  `dump_modify`); the regenerated record now shows a real 1.2e-8 eV residue.
+- `eam_cu_vacancy.json` was the only cross-check record with no `tests/test_crosscheck.py` guard
+  and no `references/benchmarks.md` row — both added.
+- The record's `provenance.why` claimed mdlite and LAMMPS were "compared to the same LAMMPS
+  perfect-lattice single-point reference"; each engine actually computes its own reference (the
+  correct, like-for-like design) — the string now says so.
+- The supercell size (`n=4`) was written as two independent literals in `eam_cu_vacancy()`, and
+  nothing checked that LAMMPS's `delete_atoms` removed exactly one atom. Fixed: a single `n`
+  variable, plus a `RuntimeError` if `natoms_l != natoms_perfect - 1`.
+- Chapter 05's original EAM fit cell (`a` in 1.0..1.6, `n=3`) violates the minimum-image
+  convention and reports a *positive* ("unbound") cohesive energy two sections before the vacancy
+  cells corrected it on their own separate grid — a student reads the wrong number first, with no
+  warning at the point of use. Fixed at the source: the original cell's grid is now `a` in
+  2.8..3.3, `n=4` (min-image-safe, and a *better* fit — local numerical slope at the minimum
+  improves from ~0.3 to ~0.005), and the vacancy cells reuse that one corrected fit directly
+  instead of carrying a second, slightly different implementation. `tests/test_run_benchmarks.py`
+  uses the same grid and tightens its self-consistency check from `<0.5` to `<0.05` accordingly.
+- The chapter and course slide framed the 1.29 eV literature agreement as validation against "an
+  independent real-world number" — but `Cu_u3.eam`'s own fitting set (Foiles, Baskes & Daw 1986)
+  includes the vacancy formation energy, so the agreement confirms the pipeline reproduces the
+  potential's own fit target, not that the potential predicts an unseen property. Reworded in the
+  chapter, the course slide's bullet and lecturer notes, and `references/benchmarks.md`.
+- Minor: `positions_before`/`positions_after` (per-atom coordinate arrays) dropped from the
+  record written to disk — legitimate for `_vacancy_formation_energy_mdlite()`'s own return value
+  (and still tested there) but unused once inside the record, against this project's own
+  established "records hold only derived numbers" discipline.
+
+Whole suite: 404 passed / 3 skipped (the raw count is machine-dependent -- three tests skip on
+environment state such as a private rules file this repository does not ship; a "0 failures"
+claim is the release fact, not the pass count), pyflakes clean, conformance PASS=23 FAIL=0.
+
 ## 0.1.17 — 2026-09-14
 
 The Cu vacancy case (atom-visuals roadmap item 1: `docs/superpowers/specs/2026-09-14-lammps-skill-

@@ -70,8 +70,8 @@
    "cell": 12,
    "figure": 1,
    "caption": "The perfect fcc supercell (n=4, this section's own fitted a0) before the atom nearest the box centre is removed.",
-   "sha256": "91c463c6bdea3fc4a8da88d2a44f79e55a431bb985603b1e6e08a42e4f7a0f89",
-   "bytes": 64350
+   "sha256": "909a77f27368ad22dd4aa124722a223304435181257c1767735dde83bf1d3231",
+   "bytes": 64602
   },
   "ch05-f2.png": {
    "chapter": "LAMMPS_05_Potentials_EAM.ipynb",
@@ -80,8 +80,8 @@
    "cell": 13,
    "figure": 2,
    "caption": "The same supercell after the vacancy is introduced and the remaining atoms are relaxed with FIRE (fmax < 1e-4): the neighbours have relaxed inward around the missing site, visible as a locally denser region next to the gap.",
-   "sha256": "f167467f6c39ea6700a418527f59ae3c6e4d08c138d0c1657b299864e4ec65b0",
-   "bytes": 66793
+   "sha256": "f565f27718bf3a8e39fa53363e258a455a7bd4e922454f0b278f320842922ce6",
+   "bytes": 65063
   },
   "ch06-f1.png": {
    "chapter": "LAMMPS_06_Structure_And_Analysis.ipynb",
