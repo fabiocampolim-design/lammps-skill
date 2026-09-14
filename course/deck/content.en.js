@@ -41,7 +41,7 @@ window.DECK_CONTENT = {
     {"sec": "forces", "slides": ["forces-intro", "forces-numerical", "forces-conservation", "forces-crosscheck", "forces-verlet"]},
     {"sec": "thermostats", "slides": ["thermostats-intro", "thermostats-table", "thermostats-nh-check", "thermostats-nist", "thermostats-math"]},
     {"sec": "ensembles", "slides": ["ensembles-intro", "ensembles-fixnpt", "ensembles-restart-code", "ensembles-restart-numbers", "ensembles-math"]},
-    {"sec": "eam", "slides": ["eam-intro"]},
+    {"sec": "eam", "slides": ["eam-intro", "eam-form", "eam-forces-check", "eam-fit", "eam-cu"]},
     {"sec": "structure", "slides": ["structure-intro", "structure-msd-vacf"]},
     {"sec": "minimisation", "slides": ["minimisation-intro"]},
     {"sec": "reading", "slides": ["reading-intro"]},
@@ -369,6 +369,49 @@ window.DECK_CONTENT = {
         "This is the forum's other recurring beginner question -- wrong pair_coeff, a potential file that silently does not match the element -- answered by a case built the same checked way as chapter 1."
       ],
       "notes": "Tie this explicitly back to the licensing rule: the potential file is data the user's installer downloads, and that boundary matters for what this project is legally and practically allowed to redistribute. Q: \"Can I just copy a potential file from a tutorial into my project?\" A: You can use it (potential files are typically separately licensed for redistribution), but this project specifically never tracks one -- it is fetched fresh by the installer every time, so the source of truth is always the upstream file, not a possibly-stale copy."
+    },
+    "eam-form": {
+      "level": "core", "layout": "eq",
+      "title": "One embedding term, one pairwise term",
+      "lead": "The embedded-atom method adds a term that depends on the local electron density to an otherwise ordinary pairwise potential.",
+      "eqs": [
+        {"label": "total energy", "math": "<span class='math'>E = Σ<sub>i</sub> F(ρ<sub>i</sub>) + ½ Σ<sub>i≠j</sub> φ(r<sub>ij</sub>)</span>"},
+        {"label": "local density", "math": "<span class='math'>ρ<sub>i</sub> = Σ<sub>j≠i</sub> ρ(r<sub>ij</sub>)</span>"}
+      ],
+      "bullets": [
+        "<span class='math'>F</span>, <span class='math'>ρ</span> and <span class='math'>φ</span> are the three tables a setfl file stores -- everything mdlite.eam.EAM and LAMMPS's own pair_style eam both read is exactly these three functions on a grid."
+      ],
+      "notes": "This is the equation that explains why EAM needs a whole file rather than the two numbers (epsilon, sigma) Lennard-Jones needs -- three tabulated functions instead of a closed form. Q: \"Why does metallic bonding need a density-dependent term at all?\" A: A purely pairwise potential cannot capture that an atom's bond strength depends on how many neighbours it already has (metallic bonding is genuinely many-body); F(rho) is the cheapest way to add that without solving electronic structure."
+    },
+    "eam-forces-check": {
+      "level": "core", "layout": "code",
+      "title": "The same force check, on any potential",
+      "lead": "mdlite.eam.EAM's forces should match a numerical derivative of its energy on any potential, real or synthetic -- the identical discipline L2 applied to Lennard-Jones.",
+      "code": "s = synthetic_setfl()\neam = EAM(s, {1: 0})\nE, F, _ = eam.energy_forces(pos, box, vl.pairs, types)\n\n# central difference on 3 components\nworst = max(abs(F[k, c] - numeric) for k, c in samples)\nprint(worst)   # under 1e-3",
+      "notes": "The tolerance here (1e-3) is looser than Lennard-Jones's 1e-5 -- flag why rather than let it look like a weaker check: EAM's forces sum four terms (two embedding derivatives, two pairwise) per pair, so floating-point cancellation naturally costs more precision than a single pairwise term. Q: \"Does a looser tolerance mean EAM's forces are less trustworthy?\" A: No -- it means the check needed to be sized to the arithmetic actually being verified; the real-copper comparison two slides on agrees with LAMMPS to five decimal places, which is the number that matters for whether the physics is right."
+    },
+    "eam-fit": {
+      "level": "core", "layout": "code",
+      "title": "Lattice constant and cohesive energy from a cubic fit",
+      "lead": "Place an FCC lattice at a grid of lattice constants, compute the energy per atom at each, fit a cubic, take the minimum -- the method this toolkit uses for any EAM element.",
+      "code": "c = np.polyfit(a_grid, energies, 3)\nroots = np.roots(np.polyder(c))\na0 = min(real_roots_in_range, key=lambda r: np.polyval(c, r))\nslope_at_min = np.polyval(np.polyder(c), a0)   # should be ~0",
+      "bullets": [
+        "Run on the synthetic potential, the fit is self-consistent -- its own derivative at the fitted minimum is under <span class='math'>10<sup>-6</sup></span> -- which is everything checkable without a reference value to compare against."
+      ],
+      "notes": "This slide is deliberately about the method, not the answer -- the synthetic potential has no \"correct\" lattice constant to check against, only internal consistency; the next slide is where a real reference value enters. Q: \"Why a cubic fit and not just take the grid minimum?\" A: The grid is coarse (12 points here); a cubic interpolates between grid points and gives a lattice constant more precise than the grid spacing, at the cost of assuming the energy curve is well-approximated by a cubic near the minimum -- true near equilibrium, not far from it."
+    },
+    "eam-cu": {
+      "level": "math", "layout": "table",
+      "title": "Copper, against LAMMPS's own minimisation",
+      "lead": "The same method, on a real Cu_u3.eam file, compared to LAMMPS's own box/relax minimisation on the identical potential -- the record L0 cited as one of mdlite's three cross-checks.",
+      "table": {
+        "head": ["Quantity", "mdlite", "LAMMPS", "Agreement"],
+        "rows": [
+          ["Lattice constant a<sub>0</sub>", "measured", "measured", "to 3×10<sup>-5</sup>"],
+          ["Cohesive energy E<sub>coh</sub>", "measured", "measured", "to 3×10<sup>-5</sup>"]
+        ]
+      },
+      "notes": "This is the slide that closes the loop L0 opened: \"where mdlite teaches a number, that number has been checked\" -- here is the actual check, on a real element, five decimal places of agreement. Q: \"Where did the Cu_u3.eam file come from?\" A: Obtained separately by the project's owner and never tracked in the repository, exactly as rule 7 requires -- a reader following along fetches their own potential file through their LAMMPS installation or NIST's repository, never from this course."
     },
     "structure-intro": {
       "level": "intro", "layout": "fig-right", "fig": "ch06-f1",

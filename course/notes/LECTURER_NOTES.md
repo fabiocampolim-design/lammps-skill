@@ -155,6 +155,26 @@ Slide `#eam-intro`.
 
 Tie this explicitly back to the licensing rule: the potential file is data the user's installer downloads, and that boundary matters for what this project is legally and practically allowed to redistribute. Q: "Can I just copy a potential file from a tutorial into my project?" A: You can use it (potential files are typically separately licensed for redistribution), but this project specifically never tracks one -- it is fetched fresh by the installer every time, so the source of truth is always the upstream file, not a possibly-stale copy.
 
+### One embedding term, one pairwise term  `[core]`
+Slide `#eam-form`.
+
+This is the equation that explains why EAM needs a whole file rather than the two numbers (epsilon, sigma) Lennard-Jones needs -- three tabulated functions instead of a closed form. Q: "Why does metallic bonding need a density-dependent term at all?" A: A purely pairwise potential cannot capture that an atom's bond strength depends on how many neighbours it already has (metallic bonding is genuinely many-body); F(rho) is the cheapest way to add that without solving electronic structure.
+
+### The same force check, on any potential  `[core]`
+Slide `#eam-forces-check`.
+
+The tolerance here (1e-3) is looser than Lennard-Jones's 1e-5 -- flag why rather than let it look like a weaker check: EAM's forces sum four terms (two embedding derivatives, two pairwise) per pair, so floating-point cancellation naturally costs more precision than a single pairwise term. Q: "Does a looser tolerance mean EAM's forces are less trustworthy?" A: No -- it means the check needed to be sized to the arithmetic actually being verified; the real-copper comparison two slides on agrees with LAMMPS to five decimal places, which is the number that matters for whether the physics is right.
+
+### Lattice constant and cohesive energy from a cubic fit  `[core]`
+Slide `#eam-fit`.
+
+This slide is deliberately about the method, not the answer -- the synthetic potential has no "correct" lattice constant to check against, only internal consistency; the next slide is where a real reference value enters. Q: "Why a cubic fit and not just take the grid minimum?" A: The grid is coarse (12 points here); a cubic interpolates between grid points and gives a lattice constant more precise than the grid spacing, at the cost of assuming the energy curve is well-approximated by a cubic near the minimum -- true near equilibrium, not far from it.
+
+### Copper, against LAMMPS's own minimisation  `[math]`
+Slide `#eam-cu`.
+
+This is the slide that closes the loop L0 opened: "where mdlite teaches a number, that number has been checked" -- here is the actual check, on a real element, five decimal places of agreement. Q: "Where did the Cu_u3.eam file come from?" A: Obtained separately by the project's owner and never tracked in the repository, exactly as rule 7 requires -- a reader following along fetches their own potential file through their LAMMPS installation or NIST's repository, never from this course.
+
 ## L6 · Structure and Analysis (notebook ch06)
 _Radial distribution function, structure factor, mean-squared displacement, diffusion coefficient and velocity autocorrelation, computed from one trajectory._
 
