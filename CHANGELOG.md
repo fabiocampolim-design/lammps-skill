@@ -2,6 +2,42 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.16 — 2026-09-14
+
+Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of the prior three
+releases' 28 commits. Verdict was SHIP WITH FIXES; all critical and important findings addressed:
+
+- `render_slide()`'s `two-figs` layout never rendered a slide's `eqs` (the Einstein relation on
+  `structure-msd-vacf` was in the content and the handout but silently missing from the actual
+  deck), and its `table` layout never rendered `bullets` (`forces-conservation`,
+  `thermostats-nist`). New guard test (`test_declared_eqs_are_actually_rendered`) checks the
+  direction the existing key-resolution test couldn't: that declared content actually made it
+  into the generated HTML, not just that references already there resolve.
+- Chapter 01's `lammpskill.viz` calls were unconditional even on the record-loading path — a
+  reader with the cached record but no `ase` installed got a hard crash, contradicting the
+  chapter's own "works without LAMMPS" promise. Both calls now catch `ImportError` and skip the
+  figure with a note; `tests/test_viz.py` uses the project's own established skipif convention
+  instead of erroring when `ase` is absent.
+- The trajectory subsample was a uniform random 5% of 4000 atoms — a real FCC lattice sampled
+  that way renders indistinguishably from a disordered gas even before any dynamics, so the
+  "every atom at its lattice site" caption was true in the data and invisible in the picture.
+  Replaced with the bottom-most atomic layer (a real spatial slab, ~400 atoms) — verified by
+  viewing the regenerated figure directly, the order is now actually visible.
+- `traj_spec` hand-retyped every field of `lj_melt()` instead of deriving from it
+  (`dataclasses.replace`), risking silent drift from the preset it claims to match.
+- Five ported course tools still said "Usage (from pythtb-skill/)" in their own `--help` text,
+  and `build_deck.py`'s docstring still described figure keys with pythtb's numbered-section
+  scheme (`s14-f3`) instead of this project's chapter-key scheme (`ch01-f1`).
+- README.md, SKILL.md and `docs/USER_MANUAL.md` never mentioned `lammpskill.viz`, and README.md
+  and `course/README.md` still described a 0.1.0-era, pre-course, pre-Plan-B state.
+- The fast test suite couldn't see an oversized *executed* notebook (only manual
+  `build/execute.py --check-size` could) — new `test_every_committed_notebook_is_within_the_
+  rule25_hard_cap` closes that gap.
+- Minor: a stale comment, a dead half of an assertion, and a fully-vestigial `assemble.py
+  --verbose` flag (output was already unconditional) removed along with its two doc mentions.
+
+Whole suite: 397 passed / 3 skipped, pyflakes clean, conformance FAIL=0.
+
 ## 0.1.15 — 2026-09-14
 
 Atom visuals, Phase 1 of the roadmap in

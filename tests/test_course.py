@@ -9,10 +9,11 @@ and is byte-identical to the notebook's output (extract_figures --check); the ge
 handout and notes are up to date with the content (build_deck --check); every data-t key in
 index.html resolves; the vendored reveal.js keeps its licence and NOTICE names it.
 
-Numeric thresholds are calibrated to this project's actual scale (6 figures, 12 slides across 11
-lectures) rather than copied from pythtb-skill's reference implementation (69 figures, 50+
-slides); several of them are meant to grow once Plan B adds each lecture's intro -> core -> math
-depth (docs/superpowers/plans/2026-09-13-lammps-skill-course-infra.md)."""
+Numeric thresholds are calibrated to this project's actual scale (currently 8 figures, 56 slides
+across 11 lectures) rather than copied from pythtb-skill's reference implementation (69 figures,
+50+ slides); they are meant to keep growing as the atom-visuals roadmap adds more figures and
+lectures (docs/superpowers/specs/2026-09-14-lammps-skill-atom-visuals-design.md) -- update them
+here, not by loosening a check, whenever a real new figure or slide lands."""
 
 import glob
 import hashlib
@@ -117,7 +118,7 @@ def test_figures_are_named_by_chapter_key():
 def test_every_figure_has_the_caption_from_the_notebook():
     records = list(extract_figures.catalogue(extract_figures.NOTEBOOKS))
     for r in records:
-        assert r["figure"] == 1 or r["figure"] is not None, r["file"]   # each chapter's own count
+        assert isinstance(r["figure"], int) and r["figure"] >= 1, r["file"]   # each chapter's own count, from 1
         assert len(r["caption"]) > 40, r["file"]
 
 

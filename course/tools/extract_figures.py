@@ -29,7 +29,7 @@ import os
 import re
 import sys
 
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SKILL = os.path.abspath(os.path.join(HERE, "..", ".."))
@@ -38,7 +38,8 @@ from assemble import CHAPTERS  # noqa: E402
 
 _CHAPTER_KEY = re.compile(r"^LAMMPS_(\d\d)_")
 
-# every chapter that has a figure, in chapter order (00, 02, 05, 07, 08, 09, 10 have none)
+# every chapter notebook, in chapter order -- scanned to find which ones actually have a figure
+# (00, 02, 05, 07, 08, 09, 10 have none today; a chapter with none simply contributes no records)
 NOTEBOOKS = [os.path.join(SKILL, "chapters", "LAMMPS_%s_%s.ipynb" % (k, CHAPTERS[k]["slug"]))
              for k in sorted(CHAPTERS)]
 FIGDIR = os.path.join(SKILL, "course", "deck", "figs")

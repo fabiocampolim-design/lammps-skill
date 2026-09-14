@@ -4,7 +4,7 @@ description: Install, detect, drive and analyse LAMMPS molecular-dynamics simula
 license: Apache-2.0
 ---
 
-# lammps-skill 0.1.15
+# lammps-skill 0.1.16
 
 LAMMPS toolkit written from the manual and from files LAMMPS writes: install routes
 (`references/install-routes.md`, `references/platforms.md`), input scripts and the checker
@@ -86,8 +86,12 @@ Only where a route reports `python module: yes` for the python you are running
 (`references/platforms.md`).
 
 ## 10. Visualise
-Headless: `io.backends.ovito_pipeline(dump)` when OVITO is installed; matplotlib for everything else
-(`lammpskill rdf … --out png`). GUI walkthroughs: the course (plan 1b).
+Headless: `lammpskill.viz.snapshot` / `animate_gif` (needs the `[ase]` extra) render atom positions
+directly — a static PNG or an animated GIF, both from plain position arrays, never LAMMPS's own
+`Box` or `mdlite`'s. `io.backends.ovito_pipeline(dump)` is a designed, pinned bridge for when OVITO
+is installed (not yet built on); matplotlib for derived-quantity plots
+(`lammpskill rdf … --out png`). The eleven-lecture course (`course/`, `course/README.md`) embeds
+figures from both routes, extracted from executed chapter notebooks with full provenance.
 
 ## 11. Report a bug upstream
 Reproduce minimal (a `Spec`, the smallest `n`), run on two routes, check the GitHub tracker, the

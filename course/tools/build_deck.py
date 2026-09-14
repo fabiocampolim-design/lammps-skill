@@ -13,13 +13,13 @@ and lecturer notes. This script writes
     course/handout/handout.html     A4 companion handout (syllabus, key ideas, glossary)
     course/notes/LECTURER_NOTES.md  every slide's notes with its anticipated question
 
-Figures are referenced by provenance key (``s14-f3``) and resolved against
+Figures are referenced by provenance key (``ch06-f1``) and resolved against
 ``course/deck/figs/provenance.json`` written by ``extract_figures.py``; every
 figure carries the notebook's own full caption plus its figure number,
 section and cell. The committed PDF fallback (``course/slides.pdf``) is
 rendered from index.html by ``make_slides_pdf.py``.
 
-Usage (from pythtb-skill/):
+Usage (from lammps-skill/):
     python course/tools/build_deck.py             # write all three
     python course/tools/build_deck.py --check     # exit 1 if any output is stale
 """
@@ -31,7 +31,7 @@ import os
 import re
 import sys
 
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 COURSE = os.path.abspath(os.path.join(HERE, ".."))

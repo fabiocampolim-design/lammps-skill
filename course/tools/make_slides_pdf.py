@@ -11,7 +11,7 @@ Needs the optional tooling env (course/tools/requirements.txt: playwright +
 ``playwright install chromium``); the fast test-suite only checks that the
 committed PDF exists, is a PDF and has one page per slide.
 
-Usage (from pythtb-skill/):
+Usage (from lammps-skill/):
     python course/tools/make_slides_pdf.py [--out FILE.pdf]
 """
 
@@ -20,7 +20,7 @@ import os
 import re
 import sys
 
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 COURSE = os.path.abspath(os.path.join(HERE, ".."))

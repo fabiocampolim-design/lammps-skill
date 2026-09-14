@@ -5,16 +5,17 @@ notebooks (`chapters/`) — L0 is chapter 00, L10 is chapter 10, in order. **Eve
 notebooks generate appears in the course, in the slides and in the PDF fallback alike, under its
 full notebook caption**; a test fails if a figure drifts from the notebook output or goes unused.
 
-**Plan A** (this state) ships the full mechanism — deck, handout, lecturer notes, PDF fallback,
-PPTX export, the guard test suite — with one real slide per lecture (the four that already have
-a notebook figure show it; L6 gets a second slide, since it has three). **Plan B**, not yet
-started, adds each lecture's intro → core → math depth.
+Every lecture runs its full intro → core → math depth (56 slides across the 11 lectures, sized to
+each chapter's own material — Plan A built the mechanism, Plan B filled in the content; both are
+done). A further roadmap (atom snapshots and animations per physical case, more physical cases) is
+in progress one piece at a time — see
+`docs/superpowers/specs/2026-09-14-lammps-skill-atom-visuals-design.md`.
 
 ```
 course/
   deck/index.html         the slides (reveal.js, offline; open in a browser)   GENERATED
   deck/content.en.js      THE SOURCE: lectures, slide order, levels, figures, notes
-  deck/figs/*.png         figures extracted from the notebooks + provenance.json  GENERATED
+  deck/figs/*.png,*.gif    figures + animations extracted from the notebooks + provenance.json  GENERATED
   slides.pdf              PDF fallback of the whole deck, one page per slide   GENERATED, committed
   handout/handout.html    A4 companion handout (syllabus, key ideas, glossary)
                           handout.pdf via make_handout.py                     GENERATED
@@ -65,7 +66,7 @@ per slide and the notes as editable speaker notes.
 The content file is the only thing to edit. From `lammps-skill/`:
 
 ```bash
-python course/tools/extract_figures.py     # notebook outputs -> deck/figs/*.png + provenance.json
+python course/tools/extract_figures.py     # notebook outputs -> deck/figs/*.png,*.gif + provenance.json
 python course/tools/build_deck.py          # content.en.js -> index.html, handout.html, LECTURER_NOTES.md
 python course/tools/make_slides_pdf.py     # deck -> slides.pdf (committed; needs Playwright)
 python -m pytest tests/test_course.py      # provenance fresh, outputs fresh, PDF complete, slides well-formed

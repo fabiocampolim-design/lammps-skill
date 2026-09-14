@@ -95,6 +95,16 @@ comparing two routes stays honest; where upstream ships a reference log for that
 final thermo row is compared against it. The inputs themselves stay where LAMMPS installed them —
 this project never redistributes them.
 
+**Atom visuals.** `lammpskill.viz.snapshot(positions, cell, symbols=... | masses=...)` and
+`animate_gif(frames_positions, cell, path, ...)` render headless atom snapshots and animated GIFs
+via ASE + matplotlib (needs the `[ase]` extra — a `pip install ase` away, never required to import
+`lammpskill` itself). Both take plain numpy arrays, never `mdlite.box.Box` or
+`lammpskill.io.box.Box` directly. Pass `symbols` explicitly for a reduced-units system with no real
+element (e.g. `["Ar"] * n` for an LJ case — never a reduced mass value, which the `masses=`
+mass-to-symbol guess would misread as a real atomic mass); pass `masses` (real atomic mass in amu)
+when every atom is a genuine element, and the symbol is guessed the same way
+`io.backends.to_ase()` already guesses it.
+
 ## 7. mdlite
 
 `mdlite.box.Box`, `mdlite.neighbors.CellList / VerletList`, `mdlite.pair.LennardJones / HarmonicBond`,
@@ -123,13 +133,27 @@ to a file.
 ## 7c. The chapters
 
 `chapters/LAMMPS_NN_Slug.ipynb` are generated, never hand-written: the source is `build/chapterNN_*.py`
-and `python build/assemble.py [--which KEY] [--outdir DIR] [--log-dir DIR] [--list] [-v|--verbose]`
+and `python build/assemble.py [--which KEY] [--outdir DIR] [--log-dir DIR] [--list]`
 writes them; `python build/execute.py [--which KEY] [--chapters-dir DIR] [--timeout S]
 [--kernel NAME] [--check-size] [--log-dir DIR] [-q|--quiet]` runs them on the `lammps-mc` kernel and
 stores the outputs. Each chapter opens with a contents header and a Setup cell and closes with a
 generated tally cell that asserts what the chapter claimed, so a chapter that stops being true
 fails loudly. Chapters 00, 07, 08 and 09 need **no LAMMPS installation** -- deliberately, so the
 book can be reviewed before anything is installed.
+
+## 7d. The course
+
+`course/` is an eleven-lecture undergraduate course (L0..L10, locked 1:1 with the eleven chapters)
+built from them -- see `course/README.md` for the full syllabus and rebuild commands. The single
+source is `course/deck/content.en.js` (strict JSON); `python course/tools/extract_figures.py`
+pulls every notebook figure (`.png` static plots and `.gif` animations alike) into
+`course/deck/figs/` with full provenance (chapter, cell, caption, sha256); `python
+course/tools/build_deck.py` generates the reveal.js deck (`deck/index.html`), the A4 handout and
+the lecturer notes from the content file; `python course/tools/make_slides_pdf.py` renders the
+committed PDF fallback (`course/slides.pdf`, needs the optional `course/tools/requirements.txt`
+extras and `playwright install chromium`). `python -m pytest tests/test_course.py` guards the
+whole contract: every figure used exactly once, every declared slide field actually rendered,
+every generated file fresh, the vendored reveal.js licence intact.
 
 ## 8. Tests
 

@@ -72,6 +72,24 @@ def test_every_notebook_is_within_the_size_cap(tmp_path):
         assert os.path.getsize(path) < NB_MAX, "%s over the rule-25 cap before outputs" % key
 
 
+NB_HARD_CAP = 1_500_000   # rule 25's real gate: 1.5 MB, WITH outputs -- what build/execute.py
+                          # --check-size enforces manually; a heavy embedded figure (a GIF
+                          # animation) is invisible to the assembled-notebook check above, which
+                          # only sees the source before execute.py adds any output at all
+
+
+def test_every_committed_notebook_is_within_the_rule25_hard_cap():
+    """The cap that actually matters is on the EXECUTED notebook committed under chapters/, not
+    the pre-output source test_every_notebook_is_within_the_size_cap checks -- only manually
+    running `build/execute.py --check-size` caught an oversized executed notebook until now."""
+    chapters_dir = os.path.join(ROOT, "chapters")
+    for key, ch in asm.CHAPTERS.items():
+        path = os.path.join(chapters_dir, "LAMMPS_%s_%s.ipynb" % (key, ch["slug"]))
+        assert os.path.exists(path), "%s not found -- run build/assemble.py + build/execute.py" % path
+        size = os.path.getsize(path)
+        assert size < NB_HARD_CAP, "%s: %.2f MB exceeds the rule-25 hard cap" % (path, size / 1e6)
+
+
 def test_chapters_that_claim_no_lammps_do_not_call_the_runner():
     """Chapters 00, 07, 08 and 09 are the ones a reviewer can run without installing LAMMPS
     (plan 1b). If one of them reaches for the runner, that promise is broken."""

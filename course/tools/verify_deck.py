@@ -10,7 +10,7 @@ course/tools/screens/, gitignored). Exit 1 on any problem.
 Needs the optional tooling env (course/tools/requirements.txt: playwright +
 ``playwright install chromium``); the fast test-suite does not run it.
 
-Usage (from pythtb-skill/):
+Usage (from lammps-skill/):
     python course/tools/verify_deck.py [--screens DIR] [--no-screens]
 """
 
@@ -18,7 +18,7 @@ import argparse
 import os
 import sys
 
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 COURSE = os.path.abspath(os.path.join(HERE, ".."))

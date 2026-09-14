@@ -5,7 +5,7 @@ gitignored like docs/USER_MANUAL.pdf).
 
 Needs the optional tooling env (course/tools/requirements.txt: playwright).
 
-Usage (from pythtb-skill/):
+Usage (from lammps-skill/):
     python course/tools/make_handout.py [--out FILE.pdf]
 """
 
@@ -13,7 +13,7 @@ import argparse
 import os
 import sys
 
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 COURSE = os.path.abspath(os.path.join(HERE, ".."))

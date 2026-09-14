@@ -142,7 +142,6 @@ enforces it, so a reviewer with no LAMMPS can still execute them.
 | `--outdir DIR` | where the notebooks go (default `chapters/`) |
 | `--log-dir DIR` | audit log directory (default `<outdir>/logs`) |
 | `--list` | show chapters and cell counts, write nothing |
-| `-v`, `--verbose` | chatty |
 | `--version` | print the version and exit |
 
 | `execute.py` flag | meaning |

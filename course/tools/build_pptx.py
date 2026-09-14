@@ -6,7 +6,7 @@ fragment state) with the lecturer notes as editable speaker notes.
 Needs the optional tooling env (course/tools/requirements.txt: playwright +
 python-pptx). Output defaults to course/build/<deck title>.pptx (gitignored).
 
-Usage (from pythtb-skill/):
+Usage (from lammps-skill/):
     python course/tools/build_pptx.py [--out FILE.pptx]
 """
 
@@ -15,7 +15,7 @@ import os
 import sys
 import tempfile
 
-__version__ = "0.1.15"
+__version__ = "0.1.16"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 COURSE = os.path.abspath(os.path.join(HERE, ".."))
@@ -28,7 +28,7 @@ def export(index=INDEX, out=OUT, quiet=False):
     from pptx import Presentation
     from pptx.util import Inches
 
-    shots = tempfile.mkdtemp(prefix="pythtb-course-pptx-")
+    shots = tempfile.mkdtemp(prefix="lammps-course-pptx-")
     slides = []
     with sync_playwright() as p:
         browser = p.chromium.launch()

@@ -135,7 +135,6 @@ def build_parser():
     ap.add_argument("--outdir", default=os.path.join(ROOT, "chapters"), help="where the notebooks go")
     ap.add_argument("--log-dir", default=None, help="audit log directory (default <outdir>/logs)")
     ap.add_argument("--list", action="store_true", help="show chapters and cell counts, write nothing")
-    ap.add_argument("-v", "--verbose", action="store_true")
     ap.add_argument("--version", action="version", version="lammps-skill %s" % __version__)
     return ap
 
@@ -154,8 +153,7 @@ def main(argv=None):
             print("unknown chapter %r (try --list)" % key)
             return 2
         path = assemble_one(key, a.outdir)
-        if a.verbose or True:
-            print("%s -> %s (%d bytes)" % (key, path, os.path.getsize(path)))
+        print("%s -> %s (%d bytes)" % (key, path, os.path.getsize(path)))
     log_dir = a.log_dir or os.path.join(a.outdir, "logs")
     os.makedirs(log_dir, exist_ok=True)
     with open(os.path.join(log_dir, "assemble.log"), "a", encoding="utf-8", newline="\n") as f:

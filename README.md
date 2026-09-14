@@ -1,8 +1,8 @@
 # lammps-skill
 
-An AI-agent skill, verified Python toolkit, clean-room teaching engine (`mdlite`) and undergraduate
-course for molecular dynamics with LAMMPS (latest stable release primary; `develop` watched).
-Version 0.1.0 — foundation; see `CHANGELOG.md`.
+An AI-agent skill, verified Python toolkit, clean-room teaching engine (`mdlite`), eleven executed
+chapter notebooks and an eleven-lecture undergraduate course for molecular dynamics with LAMMPS
+(latest stable release primary; `develop` watched). See `CHANGELOG.md` for version history.
 
 ## What it does
 
@@ -15,14 +15,17 @@ Version 0.1.0 — foundation; see `CHANGELOG.md`.
   and writes data, dump, log, restart-header and EAM potential files with its own code — validated
   against files LAMMPS wrote. Analysis (block averages, RDF, MSD/diffusion, VACF, S(k), energy drift,
   elastic constants) and benchmark comparison are independent of the binary; ASE, pymatgen, MDAnalysis
-  and OVITO are optional bridges, never required.
+  and OVITO are optional bridges, never required. `lammpskill.viz` renders headless atom snapshots
+  and animated GIFs (ASE + matplotlib, needs the `[ase]` extra).
 - **`mdlite`** is a numpy molecular-dynamics engine written from the textbooks: cell and Verlet lists,
   Lennard-Jones, harmonic bonds, EAM from setfl/funcfl tables, velocity Verlet with Berendsen,
   Langevin and Nosé–Hoover-chain thermostats, steepest descent and FIRE. It is cross-checked against
   LAMMPS at measured precision and against NIST reference data (`references/benchmarks.md`).
 - **`SKILL.md`** holds the agent workflows; **`references/`** what the agent must know;
-  **`docs/USER_MANUAL.md`** the manual; **`AGENTS.md`** every flag. Chapters and the course arrive in
-  plan 1b.
+  **`docs/USER_MANUAL.md`** the manual; **`AGENTS.md`** every flag. **`chapters/`** holds eleven
+  executed notebooks (generated from `build/*.py`, never hand-edited); **`course/`** an
+  eleven-lecture undergraduate course built from them (a reveal.js deck, an A4 handout, lecturer
+  notes, a committed PDF fallback) — see `course/README.md`.
 
 ## Install
 
@@ -57,7 +60,7 @@ python scripts/run_benchmarks.py --potential <Cu_u3.eam from your installation> 
 
 ## What is verified
 
-- The suite (`python -m pytest tests -q`, 228 tests, pyflakes clean, conformance FAIL=0) runs everywhere; the tests that
+- The suite (`python -m pytest tests -q`, pyflakes clean, conformance FAIL=0) runs everywhere; the tests that
   need LAMMPS run against every detected route and skip otherwise. On the reference machine they ran
   against the Ubuntu 26.04 apt build (10 Dec 2025): data-file round trip through LAMMPS, dumps and
   restarts written by LAMMPS, a synthetic EAM file accepted by `pair_style eam/alloy`, SPC/E water with
@@ -72,8 +75,10 @@ python scripts/run_benchmarks.py --potential <Cu_u3.eam from your installation> 
 ## Layout
 
 ```
-lammpskill/   install/ (seven routes)  io/ (box, log, data, dump, restart, potential, backends)  script.py  run.py  post.py  cli.py
+lammpskill/   install/ (seven routes)  io/ (box, log, data, dump, restart, potential, backends)  script.py  run.py  post.py  viz.py  cli.py
 mdlite/       box  neighbors  pair  eam  integrate  thermostats  minimize  measure
+build/        chapterNN_*.py  assemble.py  execute.py       chapters/  eleven executed notebooks, generated
+course/       deck/ (content.en.js, index.html)  handout/  notes/  shared/  slides.pdf  tools/
 scripts/      verify_lammps.py  install_env.sh  install_env_windows.ps1  install_lammps_wsl.sh  run_benchmarks.py
 references/   install-routes  platforms  input-script  file-formats  packages  backends  benchmarks  analysis  pitfalls  ecosystem
 data/         benchmarks/ (NIST LJ, EAM Cu — with provenance)  records/ (measured cross-checks)
