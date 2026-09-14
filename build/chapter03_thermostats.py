@@ -71,6 +71,9 @@ ax.set_xlabel("step"); ax.set_ylabel("T (reduced)"); ax.set_title("cooling to th
 ax.legend(fontsize=8)
 fig.tight_layout()
 plt.show()
+caption("Temperature against step for the same fcc lattice, started hot (T~2) and cooled by "
+        "three thermostats -- Berendsen, Langevin, Nose-Hoover chain -- each converging toward "
+        "the target (dashed line) by its own route.")
 '''),
 
     md("""

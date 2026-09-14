@@ -66,6 +66,8 @@ SETUP = '''\
 import sys, os
 sys.path.insert(0, os.path.abspath(".."))          # the product root, when run from chapters/
 
+from IPython.display import display, HTML
+
 import lammpskill
 from lammpskill.install import detect_all
 
@@ -77,6 +79,17 @@ if INSTALLATIONS:
 else:
     print("  no LAMMPS installation detected -- chapters marked 'no LAMMPS needed' still run;")
     print("  the others load their recorded results instead (record-or-run).")
+
+_FIG = {"n": 0}                # this chapter's own figure count -- chapters are self-contained
+
+def caption(text):
+    """Numbered caption rendered directly below the figure it describes (rule 22: the course
+    shows this same text next to the figure)."""
+    _FIG["n"] += 1
+    display(HTML(
+        "<div style='max-width:780px;margin:2px 0 14px 12px;font-size:0.92em;"
+        "color:#444;border-left:3px solid #bbb;padding-left:10px'>"
+        "<b>Figure %d.</b> %s</div>" % (_FIG["n"], text)))
 '''
 
 

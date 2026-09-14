@@ -111,6 +111,9 @@ if rec["source"] != "skip":
     ax2.set_xlabel("k (reduced)"); ax2.set_ylabel("S(k)"); ax2.set_title("structure factor")
     fig.tight_layout()
     plt.show()
+    caption("The liquid's structure in real and reciprocal space from the same trajectory: the "
+            "radial distribution function g(r) (left) with its first-neighbour peak and decay "
+            "to the ideal-gas value of 1, and the structure factor S(k) (right) computed from it.")
     imax = int(np.argmax(g))
     print("g(r) first peak: r=%.3f, g=%.2f" % (r[imax], g[imax]))
 else:
@@ -132,6 +135,9 @@ if rec["source"] != "skip":
     ax.set_xlabel("t (reduced)"); ax.set_ylabel("MSD (reduced)"); ax.set_title("mean-squared displacement")
     fig.tight_layout()
     plt.show()
+    caption("Mean-squared displacement against time: the slope of its later, genuinely "
+            "diffusive part (not the early ballistic rise) is the Einstein-relation fit "
+            "lammpskill.post.diffusion_coefficient reports as D.")
     print("D = %.4f +/- %.4f (reduced units, Einstein relation, fit over the second half)" % (rec["D"], rec["D_err"]))
 '''),
 
@@ -151,6 +157,9 @@ if rec["source"] != "skip":
     ax.set_xlabel("lag time (reduced)"); ax.set_ylabel("VACF (normalised)"); ax.set_title("velocity autocorrelation")
     fig.tight_layout()
     plt.show()
+    caption("The velocity autocorrelation function, normalised to 1 at zero lag: a liquid "
+            "decays roughly monotonically toward zero rather than oscillating, which is itself "
+            "evidence the case really is a liquid.")
     print("VACF at lag 0:", rec["vacf_c"][0], "(must be 1 by construction)")
 '''),
 

@@ -152,6 +152,10 @@ if rec["source"] != "skip":
     ax2.set_xlabel("step"); ax2.set_ylabel("TotEng (reduced)"); ax2.set_title("total energy")
     fig.tight_layout()
     plt.show()
+    caption("The LJ melt's thermo history read back from the log: temperature falling away "
+            "from the T=3.0 start (left) while the total energy holds flat (right) -- the two "
+            "curves run() reads out of LAMMPS's own thermo output, whether this cell just ran "
+            "the case or loaded a stored record.")
 else:
     print("nothing to plot: no LAMMPS and no record")
 '''),

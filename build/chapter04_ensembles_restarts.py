@@ -72,6 +72,9 @@ ax2.axhline(1.0, color="k", ls="--", lw=0.8)
 ax2.set_xlabel("step"); ax2.set_ylabel("P (reduced)"); ax2.set_title("pressure toward the target")
 fig.tight_layout()
 plt.show()
+caption("The NPT run started denser than its target pressure: box volume expands (left) while "
+        "the instantaneous pressure relaxes down toward the target of 1.0 (right, dashed) under "
+        "the Berendsen barostat.")
 '''),
 
     md("""

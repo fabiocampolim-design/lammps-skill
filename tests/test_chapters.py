@@ -82,6 +82,21 @@ def test_chapters_that_claim_no_lammps_do_not_call_the_runner():
             assert forbidden not in body, "%s claims no LAMMPS but uses %s" % (key, forbidden)
 
 
+def test_every_plot_is_captioned():
+    """Rule 22: every figure the notebooks generate needs its caption for the course.
+    A caption() call must immediately follow every plt.show() in a chapter's code cells,
+    so extract_figures.py (course/tools/) always finds one to attach."""
+    for key, ch in asm.CHAPTERS.items():
+        body = "\n".join(src for kind, src in ch["module"].CELLS if kind == "code")
+        assert body.count("plt.show()") == body.count("caption("), (
+            "%s: %d plt.show() but %d caption() calls"
+            % (key, body.count("plt.show()"), body.count("caption(")))
+
+
+def test_setup_cell_defines_caption():
+    assert "def caption(" in asm.SETUP and "_FIG = {" in asm.SETUP
+
+
 def test_assemble_cli_lists_without_writing(tmp_path):
     p = subprocess.run([sys.executable, os.path.join(BUILD, "assemble.py"), "--list"],
                        capture_output=True, text=True, cwd=ROOT, timeout=120)
