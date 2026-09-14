@@ -36,7 +36,7 @@ window.DECK_CONTENT = {
       "summary": "MPI and OpenMP speed-up on eight cores, where it stops, and what this machine honestly cannot do -- no GPU, no -partition methods."}
   },
   "stacks": [
-    {"sec": "orientation", "slides": ["orientation-intro"]},
+    {"sec": "orientation", "slides": ["orientation-intro", "orientation-releases", "orientation-toolkit", "orientation-pylj", "orientation-packages", "orientation-validation"]},
     {"sec": "first-sim", "slides": ["first-sim-intro"]},
     {"sec": "forces", "slides": ["forces-intro"]},
     {"sec": "thermostats", "slides": ["thermostats-intro"]},
@@ -59,6 +59,68 @@ window.DECK_CONTENT = {
         "Every chapter follows <strong>record-or-run</strong>: with LAMMPS installed, the computation runs live; without it, a stored result loads instead -- the figures never lie about which happened."
       ],
       "notes": "Open by naming the two audiences this course actually has: someone with LAMMPS installed who will run every cell, and someone without it who still sees real numbers and real figures. Q: \"Do I need to install LAMMPS to follow this course?\" A: No -- every chapter runs and renders its figures either way; record-or-run loads a stored, provenance-checked result when no installation is detected."
+    },
+    "orientation-releases": {
+      "level": "core", "layout": "text",
+      "title": "Two release lines, and why the difference matters",
+      "lead": "LAMMPS ships two lines from the same repository, and a distribution package usually tracks one without saying so.",
+      "bullets": [
+        "A <strong>stable</strong> release is cut once a year and then <em>updated</em> for a long time -- <code>stable_22Jul2025</code> was still receiving updates fourteen months later, update 6, September 2026.",
+        "<strong>Feature</strong> (patch) releases follow every six to eight weeks, alongside the stable updates.",
+        "The Ubuntu 26.04 package is <code>20251210</code> -- the 10 December 2025 <em>feature</em> release, not the stable one it might be assumed to track."
+      ],
+      "notes": "Make the point concrete before naming any policy: ask the room what \"I installed LAMMPS\" tells you, then show that it doesn't even say which of two active lines you are running. Q: \"Which line should I use?\" A: Stable for anything you plan to keep running for months (fewer surprises between runs); develop or the newest feature release if you need a capability that only landed recently -- this project pins stable as primary and watches develop."
+    },
+    "orientation-toolkit": {
+      "level": "core", "layout": "text",
+      "title": "What lammpskill adds on top of LAMMPS itself",
+      "lead": "lammpskill is the part of this project that talks to LAMMPS -- five pieces behind one import.",
+      "bullets": [
+        "<code>install</code>: seven routes behind one contract, each measured on this machine rather than assumed to work.",
+        "<code>script</code>: build an input from a <code>Spec</code>, then a checker with fourteen rules, each pointing at the manual page it comes from.",
+        "<code>io</code>: read what LAMMPS writes -- data files, dumps, three log thermo styles, the restart header, EAM potential files.",
+        "<code>run</code>: a subprocess backend for any host, an in-process backend through the official python module -- both return the same <code>Result</code>.",
+        "<code>post</code>: RDF, MSD, diffusion, VACF, structure factor, block averages, checked against reference tables that carry their own provenance."
+      ],
+      "notes": "This is the map the rest of the course keeps referring back to -- naming the five pieces once here means later lectures can say \"the checker\" or \"post\" without re-explaining. Q: \"Is any of this required to use LAMMPS?\" A: No -- lammpskill drives a LAMMPS you already have; every optional bridge (ASE, pymatgen, MDAnalysis, OVITO) is exactly that, optional, and the core depends on numpy and scipy only."
+    },
+    "orientation-pylj": {
+      "level": "core", "layout": "text",
+      "title": "mdlite's closest neighbour, and how it differs",
+      "lead": "mdlite is a small molecular-dynamics engine written from scratch in numpy -- a teaching object, not an MD code; nobody should run research on it.",
+      "bullets": [
+        "Its closest relative is <strong>pylj</strong> (McCluskey, Morgan, Edler and Parker, <em>JOSE</em> 1, 19, 2018, MIT): a Lennard-Jones teaching engine in Jupyter, written for undergraduate exercises, with Monte Carlo as well as dynamics.",
+        "mdlite differs in two ways: it sits <em>next to</em> a toolkit that drives the production code, so a chapter can compute something in twenty lines of numpy and then compute the same thing in LAMMPS and subtract.",
+        "And its numbers are cross-checked against that production code, with the residues recorded -- not asserted, read from a file."
+      ],
+      "notes": "If anyone in the room already knows pylj, say so directly rather than let the comparison go unstated -- positioning against a known neighbour is more convincing than a comparison nobody in the room can check. Q: \"Why not just use pylj?\" A: pylj is the gentler first contact and a fine choice for that; mdlite trades some of that gentleness for living inside a project that also drives real LAMMPS, so every number it teaches has an independent check."
+    },
+    "orientation-packages": {
+      "level": "core", "layout": "table",
+      "title": "Package list, never package count",
+      "lead": "The most common way to be wrong about a LAMMPS build is to assume a bigger package set is a superset.",
+      "table": {
+        "head": ["Build", "Packages", "Examples cases that started (of 314)"],
+        "rows": [
+          ["Ubuntu package, 10 Dec 2025", "52", "184"],
+          ["This project's source build, core preset", "11", "137"]
+        ]
+      },
+      "notes": "Land the surprise before the explanation: the bigger build starts more cases overall, and still cannot run ten that the smaller one can (EXTRA-FIX, which the Ubuntu build omits). Q: \"So which build should I use?\" A: Neither dominates -- ask Installation.packages (read from lmp -h) for the specific style you need, never trust the package count alone; L9 (Choosing a Build) measures this in full."
+    },
+    "orientation-validation": {
+      "level": "math", "layout": "table",
+      "title": "What 'cross-checked against LAMMPS' actually means, in numbers",
+      "lead": "mdlite's claim is not that it is fast or complete -- it is that where it teaches a number, that number has been checked against the code it is teaching you to use.",
+      "table": {
+        "head": ["Quantity", "mdlite vs LAMMPS", "Where"],
+        "rows": [
+          ["Lennard-Jones forces, 256 atoms", "agree to 3×10<sup>-13</sup>", "L2, Forces and Integration"],
+          ["Copper lattice constant a<sub>0</sub> and cohesive energy", "agree to 3×10<sup>-5</sup>", "L5, Potentials: EAM"],
+          ["NVT state point (T*=0.85, ρ*=0.776)", "agrees with the NIST reference within 3σ", "L3, Thermostats"]
+        ]
+      },
+      "notes": "This is the slide to return to if anyone doubts a number mdlite reports later in the course -- every one of these three checks is a JSON file under data/records/, not a claim in a slide. Q: \"Couldn't these numbers have been chosen to make mdlite look good?\" A: They're read by the test suite from the record files, and the record files are regenerated by scripts this project's own local runs execute -- a session cannot quietly rewrite the tolerance without the test that reads it also changing."
     },
     "first-sim-intro": {
       "level": "intro", "layout": "fig-right", "fig": "ch01-f1",
