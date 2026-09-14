@@ -192,4 +192,6 @@ Exit codes: 0 success, 1 failure (no installation, an error-level finding, a fai
 `lammpskill.script.Spec / render / check / lj_melt / eam_fcc / spce_water`,
 `lammpskill.run.run / SubprocessBackend / LibraryBackend / run_or_load`,
 `lammpskill.io.{log,data,dump,restart,potential,backends}`, `lammpskill.post.*`,
+`lammpskill.viz.snapshot / animate_gif` (needs the `ase` extra — headless atom snapshots and GIF
+animation, ASE + matplotlib, no OVITO),
 `mdlite.{box,neighbors,pair,eam,integrate,thermostats,minimize,measure}`.
