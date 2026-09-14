@@ -1,0 +1,77 @@
+{
+ "notebooks": [
+  "LAMMPS_00_Orientation.ipynb",
+  "LAMMPS_01_First_Simulation.ipynb",
+  "LAMMPS_02_Forces_And_Integration.ipynb",
+  "LAMMPS_03_Thermostats.ipynb",
+  "LAMMPS_04_Ensembles_And_Restarts.ipynb",
+  "LAMMPS_05_Potentials_EAM.ipynb",
+  "LAMMPS_06_Structure_And_Analysis.ipynb",
+  "LAMMPS_07_Minimisation.ipynb",
+  "LAMMPS_08_Reading_What_LAMMPS_Writes.ipynb",
+  "LAMMPS_09_Choosing_A_Build.ipynb",
+  "LAMMPS_10_Scaling_And_Limits.ipynb"
+ ],
+ "figures": {
+  "ch01-f1.png": {
+   "chapter": "LAMMPS_01_First_Simulation.ipynb",
+   "section": 0,
+   "heading": "Reading the log, plotted",
+   "cell": 12,
+   "figure": 1,
+   "caption": "The LJ melt's thermo history read back from the log: temperature falling away from the T=3.0 start (left) while the total energy holds flat (right) -- the two curves run() reads out of LAMMPS's own thermo output, whether this cell just ran the case or loaded a stored record.",
+   "sha256": "6712c601db1ea0619c4cd77d074041004975ad2bf03eb1dd0e529e88349c5959",
+   "bytes": 25062
+  },
+  "ch03-f1.png": {
+   "chapter": "LAMMPS_03_Thermostats.ipynb",
+   "section": 0,
+   "heading": "Three thermostats, three different promises",
+   "cell": 4,
+   "figure": 1,
+   "caption": "Temperature against step for the same fcc lattice, started hot (T~2) and cooled by three thermostats -- Berendsen, Langevin, Nose-Hoover chain -- each converging toward the target (dashed line) by its own route.",
+   "sha256": "3f93f5098e7a21377877f6d8baf935d14d9c9d43c727745c61c613075cd0c28b",
+   "bytes": 47386
+  },
+  "ch04-f1.png": {
+   "chapter": "LAMMPS_04_Ensembles_And_Restarts.ipynb",
+   "section": 0,
+   "heading": "The mdlite NPT sketch, and its limits",
+   "cell": 5,
+   "figure": 1,
+   "caption": "The NPT run started denser than its target pressure: box volume expands (left) while the instantaneous pressure relaxes down toward the target of 1.0 (right, dashed) under the Berendsen barostat.",
+   "sha256": "188ac6822a70365437b2342c60629ae132adecb2b79e06aec9f635e5758efff5",
+   "bytes": 28838
+  },
+  "ch06-f1.png": {
+   "chapter": "LAMMPS_06_Structure_And_Analysis.ipynb",
+   "section": 0,
+   "heading": "Radial distribution function and structure factor",
+   "cell": 6,
+   "figure": 1,
+   "caption": "The liquid's structure in real and reciprocal space from the same trajectory: the radial distribution function g(r) (left) with its first-neighbour peak and decay to the ideal-gas value of 1, and the structure factor S(k) (right) computed from it.",
+   "sha256": "eb1b79f723334d4b964359d220be69bd19b070d49adce8063dcadc4696bbcf64",
+   "bytes": 24532
+  },
+  "ch06-f2.png": {
+   "chapter": "LAMMPS_06_Structure_And_Analysis.ipynb",
+   "section": 0,
+   "heading": "Mean-squared displacement and the diffusion coefficient",
+   "cell": 8,
+   "figure": 2,
+   "caption": "Mean-squared displacement against time: the slope of its later, genuinely diffusive part (not the early ballistic rise) is the Einstein-relation fit lammpskill.post.diffusion_coefficient reports as D.",
+   "sha256": "b1a40281874d4eca195f26833e999d194343eb8339605a446350a558c466a37d",
+   "bytes": 15811
+  },
+  "ch06-f3.png": {
+   "chapter": "LAMMPS_06_Structure_And_Analysis.ipynb",
+   "section": 0,
+   "heading": "Velocity autocorrelation",
+   "cell": 10,
+   "figure": 3,
+   "caption": "The velocity autocorrelation function, normalised to 1 at zero lag: a liquid decays roughly monotonically toward zero rather than oscillating, which is itself evidence the case really is a liquid.",
+   "sha256": "beb04ba43324d312d26f808ee26f5faa5c799abd0583e558a7a371de5cb63bb5",
+   "bytes": 15535
+  }
+ }
+}
