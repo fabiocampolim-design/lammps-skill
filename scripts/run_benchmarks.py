@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 Fabio Campolim
 """Cross-checks between mdlite and LAMMPS (and NIST), written as records with the MEASURED residue (S4).
-  lj-vs-lammps : one LJ configuration, energy and forces, mdlite vs LAMMPS (`run 0`, dump forces)
-  lj-nvt       : mdlite NVT (Nose-Hoover) at a NIST state point vs the NIST P*, U* (block errors)
-  eam-cu       : lattice constant + cohesive energy of fcc Cu on the SAME potential file (user-provided path), mdlite vs LAMMPS
+  lj-vs-lammps    : one LJ configuration, energy and forces, mdlite vs LAMMPS (`run 0`, dump forces)
+  lj-nvt          : mdlite NVT (Nose-Hoover) at a NIST state point vs the NIST P*, U* (block errors)
+  eam-cu          : lattice constant + cohesive energy of fcc Cu on the SAME potential file (user-provided path), mdlite vs LAMMPS
+  eam-cu-vacancy  : vacancy formation energy of fcc Cu (same potential, same fitted a0) -- mdlite (FIRE-relaxed) vs LAMMPS (minimize)
 Usage: run_benchmarks.py [--which a,b] [--outdir data/records] [--potential PATH] [--steps N] [--log-dir DIR] [--version]"""
 
 from __future__ import annotations
@@ -41,7 +42,7 @@ from mdlite.thermostats import NoseHooverChain  # noqa: E402
 
 def build_parser():
     p = argparse.ArgumentParser(prog="run_benchmarks.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--which", default="lj-vs-lammps,lj-nvt,eam-cu", help="comma-separated benchmarks to run")
+    p.add_argument("--which", default="lj-vs-lammps,lj-nvt,eam-cu,eam-cu-vacancy", help="comma-separated benchmarks to run")
     p.add_argument("--outdir", default=os.path.join(ROOT, "data", "records"), help="where the record JSON files are written")
     p.add_argument("--workdir", default=os.path.join(ROOT, "out", "benchmarks"), help="scratch directory for the LAMMPS runs")
     p.add_argument("--potential", default=None, help="path to a Cu EAM file (funcfl .eam or setfl .eam.alloy) you obtained yourself")
@@ -136,26 +137,38 @@ def lj_nvt(inst, workdir, steps, state_point=None):
             "provenance": _prov(None, "finite-size (500 atoms) and sampling; tolerance = max(decade above measured, 3 sigma combined)")}
 
 
-def eam_cu(inst, workdir, potential):
+def _read_eam(potential):
     if not potential or not os.path.exists(potential):
         raise RuntimeError("--potential must point at a Cu EAM file you obtained (e.g. from your LAMMPS installation's potentials directory)")
     s = read_eam_setfl(potential) if potential.endswith((".eam.alloy", ".eam.fs")) else read_eam_funcfl(potential)
-    eam = EAM(s, {1: 0})
-    a_grid = np.linspace(3.50, 3.72, 12)
+    return EAM(s, {1: 0})
+
+
+def _fit_a0_ecoh(eam, a_lo=3.50, a_hi=3.72, n_grid=12, n_cells=3):
+    """Lattice constant and cohesive energy from a cubic fit of E(a) on n_grid points -- the
+    method every EAM chapter/benchmark in this project uses, factored out so eam_cu() and
+    eam_cu_vacancy() (and their offline, synthetic-potential tests) share one implementation."""
+    a_grid = np.linspace(a_lo, a_hi, n_grid)
     energies = []
     for a in a_grid:
-        pos, L = _fcc(3, 4.0 / a ** 3)
+        pos, L = _fcc(n_cells, 4.0 / a ** 3)
         box = Box([L, L, L])
         types = np.ones(len(pos), int)
-        vl = VerletList(box, s.cutoff)
+        vl = VerletList(box, eam.s.cutoff)
         vl.update(pos)
         E, _, _ = eam.energy_forces(pos, box, vl.pairs, types)
         energies.append(E / len(pos))
     c = np.polyfit(a_grid, energies, 3)
     roots = np.roots(np.polyder(c))
-    cands = [r.real for r in roots if abs(r.imag) < 1e-9 and 3.4 < r.real < 3.8]
-    a0_md = float(min(cands, key=lambda r: np.polyval(c, r)))
-    ecoh_md = float(np.polyval(c, a0_md))
+    cands = [r.real for r in roots if abs(r.imag) < 1e-9 and a_lo - 0.1 < r.real < a_hi + 0.1]
+    a0 = float(min(cands, key=lambda r: np.polyval(c, r)))
+    ecoh = float(np.polyval(c, a0))
+    return a0, ecoh
+
+
+def eam_cu(inst, workdir, potential):
+    eam = _read_eam(potential)
+    a0_md, ecoh_md = _fit_a0_ecoh(eam)
     os.makedirs(workdir, exist_ok=True)
     shutil.copy(potential, os.path.join(workdir, os.path.basename(potential)))
     spec = eam_fcc(potential=os.path.basename(potential), n=3)
@@ -170,6 +183,96 @@ def eam_cu(inst, workdir, potential):
     return {"a0_mdlite": a0_md, "a0_lammps": a0_l, "ecoh_mdlite": ecoh_md, "ecoh_lammps": ecoh_l, "potential": os.path.basename(potential),
             "measured": {"da": da, "de": de}, "tolerance_a0": _tol(da), "tolerance_ecoh": _tol(de),
             "provenance": _prov(inst, "mdlite: cubic fit of E(a) on 12 points; LAMMPS: box/relax minimisation; spline vs LAMMPS's own table interpolation")}
+
+
+def _vacancy_formation_energy_mdlite(eam, a0, n=4):
+    """Remove the lattice site nearest the box centre from an n x n x n FCC supercell at lattice
+    constant a0, relax the (N-1)-atom system with FIRE (fixed volume -- the standard single-
+    vacancy approximation: one vacancy's volume-relaxation effect in a supercell this size is a
+    higher-order correction the fixed-volume comparison already ignores on both engines equally),
+    and return the formation energy plus the positions before/after for rendering.
+
+    E_vacancy = E_relaxed(N-1 atoms) - (N-1)/N * E_perfect(N atoms)
+    """
+    from mdlite.integrate import State
+    from mdlite.minimize import fire
+
+    pos, L = _fcc(n, 4.0 / a0 ** 3)
+    box = Box([L, L, L])
+    vl = VerletList(box, eam.s.cutoff)
+    vl.update(pos)
+    types_full = np.ones(len(pos), int)
+    E_perfect, _, _ = eam.energy_forces(pos, box, vl.pairs, types_full)
+    e_perfect_per_atom = E_perfect / len(pos)
+
+    center = np.array([L / 2.0, L / 2.0, L / 2.0])
+    removed = int(np.argmin(np.linalg.norm(pos - center, axis=1)))
+    removed_pos = pos[removed].tolist()
+    pos_vac = np.delete(pos, removed, axis=0)
+
+    vl_vac = VerletList(box, eam.s.cutoff)
+    st = State(pos_vac.copy(), np.zeros_like(pos_vac), 63.546, box, types=np.ones(len(pos_vac), int))
+    r_fire = fire(st, [eam], vl_vac, steps=2000, ftol=1e-8)
+
+    e_formation = r_fire["E"] - (len(pos) - 1) * e_perfect_per_atom
+    return {"e_formation": float(e_formation), "e_perfect_per_atom": float(e_perfect_per_atom),
+            "natoms_perfect": len(pos), "cell": [L, L, L],
+            "positions_before": pos.tolist(), "removed_index": removed, "removed_position": removed_pos,
+            "positions_after": st.pos.tolist(), "fmax_after": float(r_fire["fmax"])}
+
+
+def eam_cu_vacancy(inst, workdir, potential):
+    eam = _read_eam(potential)
+    a0_md, _ = _fit_a0_ecoh(eam)
+    md = _vacancy_formation_energy_mdlite(eam, a0_md, n=4)
+
+    os.makedirs(workdir, exist_ok=True)
+    shutil.copy(potential, os.path.join(workdir, os.path.basename(potential)))
+    pot_name = os.path.basename(potential)
+    setfl = pot_name.endswith((".eam.alloy", ".eam.fs"))
+    n = 4
+    cx, cy, cz = md["removed_position"]
+
+    perfect_spec = Spec(
+        units="metal", atom_style="atomic", lattice="fcc %.10g" % a0_md, region="box block 0 %d 0 %d 0 %d" % (n, n, n),
+        create_box=1, create_atoms="1 box", masses={1: 63.546},
+        pair_style="eam/alloy" if setfl else "eam", pair_coeffs=["* * %s Cu" % pot_name if setfl else "1 1 %s" % pot_name],
+        neighbor="2.0 bin", neigh_modify="delay 10 check yes",
+        thermo=10, thermo_style="custom step pe atoms",
+        stages=[Stage("run", "0")], comment="perfect fcc Cu supercell, single point (same a0 as the vacancy run)",
+    )
+    res_perfect = lrun(render(perfect_spec), os.path.join(workdir, "perfect"), installation=inst)
+    if not res_perfect.ok:
+        raise RuntimeError("LAMMPS perfect-lattice run failed: %s" % res_perfect.errors)
+    e_perfect_per_atom_l = res_perfect.thermo.last["PotEng"] / res_perfect.thermo.last["Atoms"]
+
+    vac_spec = Spec(
+        units="metal", atom_style="atomic", lattice="fcc %.10g" % a0_md, region="box block 0 %d 0 %d 0 %d" % (n, n, n),
+        create_box=1, create_atoms="1 box", masses={1: 63.546},
+        pair_style="eam/alloy" if setfl else "eam", pair_coeffs=["* * %s Cu" % pot_name if setfl else "1 1 %s" % pot_name],
+        neighbor="2.0 bin", neigh_modify="delay 10 check yes",
+        regions=["vacsite sphere %.10g %.10g %.10g 0.5 units box" % (cx, cy, cz)],
+        groups=["vacatom region vacsite"], delete_atoms=["group vacatom compress yes"],
+        thermo=10, thermo_style="custom step pe atoms",
+        stages=[Stage("minimize", "1.0e-10 1.0e-10 1000 10000")],
+        comment="the identical supercell with one atom removed near the box centre, relaxed",
+    )
+    res_vac = lrun(render(vac_spec), os.path.join(workdir, "vacancy"), installation=inst)
+    if not res_vac.ok:
+        raise RuntimeError("LAMMPS vacancy run failed: %s" % res_vac.errors)
+    natoms_l = res_vac.thermo.last["Atoms"]
+    e_formation_l = res_vac.thermo.last["PotEng"] - natoms_l * e_perfect_per_atom_l
+
+    dE = abs(md["e_formation"] - e_formation_l)
+    return {"e_formation_mdlite": md["e_formation"], "e_formation_lammps": float(e_formation_l),
+            "a0": a0_md, "natoms_perfect": md["natoms_perfect"], "natoms_vacancy_lammps": int(natoms_l),
+            "cell": md["cell"], "removed_position": md["removed_position"],
+            "positions_before": md["positions_before"], "positions_after": md["positions_after"],
+            "fmax_after_mdlite": md["fmax_after"], "potential": pot_name,
+            "measured": {"dE": dE}, "tolerance_E": _tol(dE),
+            "provenance": _prov(inst, "mdlite: FIRE-relaxed (N-1)-atom supercell at the fitted a0, fixed volume; "
+                                      "LAMMPS: minimize on the identical delete_atoms-built supercell; "
+                                      "both compared to the same LAMMPS perfect-lattice single-point reference")}
 
 
 def main(argv=None):
@@ -193,6 +296,11 @@ def main(argv=None):
                     raise RuntimeError("no LAMMPS")
                 rec = eam_cu(inst, os.path.join(a.workdir, name), a.potential)
                 out = "eam_cu_lattice"
+            elif name == "eam-cu-vacancy":
+                if inst is None:
+                    raise RuntimeError("no LAMMPS")
+                rec = eam_cu_vacancy(inst, os.path.join(a.workdir, name), a.potential)
+                out = "eam_cu_vacancy"
             else:
                 print("unknown benchmark", name)
                 rc = 2

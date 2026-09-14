@@ -50,10 +50,10 @@ Exit codes: 0 all checks passed or skipped, 1 a check failed.
 
 | flag | meaning |
 |---|---|
-| `--which a,b` | benchmarks to run: `lj-vs-lammps`, `lj-nvt`, `eam-cu` (default all three) |
+| `--which a,b` | benchmarks to run: `lj-vs-lammps`, `lj-nvt`, `eam-cu`, `eam-cu-vacancy` (default all four) |
 | `--outdir DIR` | where the record JSON files go (default data/records) |
 | `--workdir DIR` | scratch directory for the LAMMPS runs (default out/benchmarks) |
-| `--potential PATH` | a Cu EAM file you obtained (funcfl `.eam` or setfl `.eam.alloy`) — required for `eam-cu` |
+| `--potential PATH` | a Cu EAM file you obtained (funcfl `.eam` or setfl `.eam.alloy`) — required for `eam-cu` and `eam-cu-vacancy` |
 | `--steps N` | production steps for `lj-nvt` (default 20000) |
 | `--state-point KEY` | NIST key prefix for `lj-nvt`, e.g. `T0.85_rho0.776` (default: the first MC entry) |
 | `--log-dir DIR` | append a one-line log per invocation |
