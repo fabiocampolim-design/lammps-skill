@@ -183,6 +183,21 @@ Slide `#structure-intro`; figures `ch06-f1` (§0 cell 6).
 
 This lecture is the payoff for chapters 1-5: everything computed so far becomes a real analysis pipeline here. Q: "Why fit the diffusion coefficient from only the second half of the MSD curve?" A: The early part is ballistic, not diffusive -- Einstein's relation only holds in the diffusive regime, so fitting the whole curve would systematically bias D.
 
+### S(k), computed from g(r), not measured independently  `[core]`
+Slide `#structure-gr-sk`.
+
+The point worth landing is the dependency direction: S(k) never touches the trajectory again once g(r) exists -- a bug in g(r) would show up identically in S(k), which is why the chapter treats them as one measurement shown two ways, not two measurements that happen to agree. Q: "Could S(k) be computed directly from the trajectory instead?" A: Yes, by Fourier-transforming the instantaneous density -- lammpskill.post takes the g(r) route because it reuses the same binned histogram RDF already needed, at the cost of extra smoothing from the integral.
+
+### Ballistic first, diffusive later -- fit the right half  `[core]`
+Slide `#structure-diffusive-regime`.
+
+This is the same discipline as L2's "energy conservation is a rate statement, not a pass/fail" -- a physical quantity has a regime where a given formula applies, and using it outside that regime produces a number, just not the right one. Q: "How does lammpskill.post.diffusion_coefficient know where the diffusive regime starts?" A: It does not detect it automatically -- it fits from the second half of the recorded time series by default, which is a reasonable default for a run long enough to reach steady diffusion, not a universal rule for every system.
+
+### A single mean understates its own uncertainty  `[core]`
+Slide `#structure-blockavg`.
+
+The mechanism is worth stating precisely: the naive standard error over every sample would be far too small, because consecutive MD steps are correlated, not independent draws -- block averaging is the cheapest fix that does not require estimating a correlation time explicitly. Q: "Why 7 blocks and not some other number?" A: A practical trade-off -- too few blocks and the standard error itself is noisy; too many and each block is too short to be internally decorrelated. Seven is this chapter's choice for this run length, not a universal constant.
+
 ### From a trajectory to a diffusion coefficient  `[math]`
 Slide `#structure-msd-vacf`; figures `ch06-f2` (§0 cell 8), `ch06-f3` (§0 cell 10).
 

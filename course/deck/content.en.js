@@ -42,7 +42,7 @@ window.DECK_CONTENT = {
     {"sec": "thermostats", "slides": ["thermostats-intro", "thermostats-table", "thermostats-nh-check", "thermostats-nist", "thermostats-math"]},
     {"sec": "ensembles", "slides": ["ensembles-intro", "ensembles-fixnpt", "ensembles-restart-code", "ensembles-restart-numbers", "ensembles-math"]},
     {"sec": "eam", "slides": ["eam-intro", "eam-form", "eam-forces-check", "eam-fit", "eam-cu"]},
-    {"sec": "structure", "slides": ["structure-intro", "structure-msd-vacf"]},
+    {"sec": "structure", "slides": ["structure-intro", "structure-gr-sk", "structure-diffusive-regime", "structure-blockavg", "structure-msd-vacf"]},
     {"sec": "minimisation", "slides": ["minimisation-intro"]},
     {"sec": "reading", "slides": ["reading-intro"]},
     {"sec": "build", "slides": ["build-intro"]},
@@ -423,6 +423,43 @@ window.DECK_CONTENT = {
         "The velocity autocorrelation function distinguishes a liquid (decays monotonically) from a solid (oscillates, atoms caged) -- itself a check that the case behaved as intended."
       ],
       "notes": "This lecture is the payoff for chapters 1-5: everything computed so far becomes a real analysis pipeline here. Q: \"Why fit the diffusion coefficient from only the second half of the MSD curve?\" A: The early part is ballistic, not diffusive -- Einstein's relation only holds in the diffusive regime, so fitting the whole curve would systematically bias D."
+    },
+    "structure-gr-sk": {
+      "level": "core", "layout": "eq",
+      "title": "S(k), computed from g(r), not measured independently",
+      "lead": "The structure factor is the same structural information as the radial distribution function, in reciprocal space -- literally derived from it, in this toolkit and in general.",
+      "eqs": [
+        {"label": "isotropic structure factor", "math": "<span class='math'>S(k) = 1 + 4πρ ∫<sub>0</sub><sup>∞</sup> r² (g(r) − 1) sinc(kr) dr</span>"}
+      ],
+      "bullets": [
+        "A liquid's g(r) has a first-neighbour peak decaying to 1; the corresponding S(k) has its own first peak, at roughly <span class='math'>2π</span> over the first-neighbour spacing."
+      ],
+      "notes": "The point worth landing is the dependency direction: S(k) never touches the trajectory again once g(r) exists -- a bug in g(r) would show up identically in S(k), which is why the chapter treats them as one measurement shown two ways, not two measurements that happen to agree. Q: \"Could S(k) be computed directly from the trajectory instead?\" A: Yes, by Fourier-transforming the instantaneous density -- lammpskill.post takes the g(r) route because it reuses the same binned histogram RDF already needed, at the cost of extra smoothing from the integral."
+    },
+    "structure-diffusive-regime": {
+      "level": "core", "layout": "table",
+      "title": "Ballistic first, diffusive later -- fit the right half",
+      "lead": "Fitting D from the whole MSD(t) curve is a common way to get a confidently wrong number.",
+      "table": {
+        "head": ["Regime", "Early time", "Late time"],
+        "rows": [
+          ["Motion", "ballistic -- MSD grows as t², atoms still moving in straight lines", "diffusive -- MSD grows linearly in t"],
+          ["What a fit there gives", "a slope that is not a diffusion coefficient at all", "the Einstein-relation D, meaningfully"]
+        ]
+      },
+      "notes": "This is the same discipline as L2's \"energy conservation is a rate statement, not a pass/fail\" -- a physical quantity has a regime where a given formula applies, and using it outside that regime produces a number, just not the right one. Q: \"How does lammpskill.post.diffusion_coefficient know where the diffusive regime starts?\" A: It does not detect it automatically -- it fits from the second half of the recorded time series by default, which is a reasonable default for a run long enough to reach steady diffusion, not a universal rule for every system."
+    },
+    "structure-blockavg": {
+      "level": "core", "layout": "table",
+      "title": "A single mean understates its own uncertainty",
+      "lead": "block_average splits a correlated time series into blocks, averages within each, then takes the standard error across blocks -- correlated samples inside one block do not inflate the apparent precision.",
+      "table": {
+        "head": ["Quantity", "Method", "Result"],
+        "rows": [
+          ["Temperature over the run", "7-block average", "measured mean ± block-averaged standard error"]
+        ]
+      },
+      "notes": "The mechanism is worth stating precisely: the naive standard error over every sample would be far too small, because consecutive MD steps are correlated, not independent draws -- block averaging is the cheapest fix that does not require estimating a correlation time explicitly. Q: \"Why 7 blocks and not some other number?\" A: A practical trade-off -- too few blocks and the standard error itself is noisy; too many and each block is too short to be internally decorrelated. Seven is this chapter's choice for this run length, not a universal constant."
     },
     "structure-msd-vacf": {
       "level": "math", "layout": "two-figs", "fig": "ch06-f2", "fig2": "ch06-f3",
