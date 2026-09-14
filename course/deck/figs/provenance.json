@@ -23,6 +23,26 @@
    "sha256": "6712c601db1ea0619c4cd77d074041004975ad2bf03eb1dd0e529e88349c5959",
    "bytes": 25062
   },
+  "ch01-f2.png": {
+   "chapter": "LAMMPS_01_First_Simulation.ipynb",
+   "section": 0,
+   "heading": "Watching the melt happen",
+   "cell": 15,
+   "figure": 2,
+   "caption": "The starting FCC lattice lj_melt() builds (a 200-atom subsample of the real 4000-atom run, shown for clarity) -- every atom at its lattice site, before any dynamics. Rendered as argon-like spheres: reduced LJ units carry no real element, argon is the conventional reference fluid a reduced system is understood to stand in for, used here only to pick a rendering radius and colour, not asserted as the substance.",
+   "sha256": "72793f11a78f00204271c7eb853f593bd9592e33dcd28c57256c22f2a4b53f10",
+   "bytes": 71809
+  },
+  "ch01-f3.gif": {
+   "chapter": "LAMMPS_01_First_Simulation.ipynb",
+   "section": 0,
+   "heading": "Watching the melt happen",
+   "cell": 16,
+   "figure": 3,
+   "caption": "The same subsample of atoms, animated across the run: the lattice disordering as the melt proceeds -- the same trajectory the temperature and energy curves above were read from, seen directly rather than only through its derived thermo output.",
+   "sha256": "706ac9dec40d10f3ad7d47376b07d4cf369a63b680d731c665290659b5a350ad",
+   "bytes": 370821
+  },
   "ch03-f1.png": {
    "chapter": "LAMMPS_03_Thermostats.ipynb",
    "section": 0,

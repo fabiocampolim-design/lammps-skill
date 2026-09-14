@@ -108,9 +108,9 @@ def test_every_slide_is_well_formed(deck):
 
 def test_figures_are_named_by_chapter_key():
     records = list(extract_figures.catalogue(extract_figures.NOTEBOOKS))
-    assert len(records) == 6, [r["file"] for r in records]
+    assert len(records) == 8, [r["file"] for r in records]
     names = sorted(r["file"] for r in records)
-    assert names == ["ch01-f1.png", "ch03-f1.png", "ch04-f1.png",
+    assert names == ["ch01-f1.png", "ch01-f2.png", "ch01-f3.gif", "ch03-f1.png", "ch04-f1.png",
                       "ch06-f1.png", "ch06-f2.png", "ch06-f3.png"]
 
 
@@ -172,9 +172,9 @@ def test_every_figure_shown_has_notebook_provenance(deck, prov):
 
 
 def test_figures_match_the_executed_notebook():
-    """Every PNG output of the chapter notebooks is on disk, byte-identical, with no orphans."""
+    """Every PNG/GIF output of the chapter notebooks is on disk, byte-identical, with no orphans."""
     records = list(extract_figures.catalogue(extract_figures.NOTEBOOKS))
-    assert len(records) == 6
+    assert len(records) == 8
     problems = extract_figures.check(records, extract_figures.FIGDIR)
     assert not problems, "run course/tools/extract_figures.py: %s" % "; ".join(problems[:5])
 
