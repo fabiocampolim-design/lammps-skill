@@ -211,6 +211,26 @@ Slide `#minimisation-intro`.
 
 This is the slide to point back to every time a later chapter's run looks like it is about to fail -- the mechanism here is the same one behind almost every 'lost atoms' report. Q: "Is a displacement cap a real LAMMPS feature or just a mdlite fix?" A: Both -- LAMMPS's own min_style and fix nve/limit apply the identical idea; mdlite's minimiser demonstrates why it is needed, not a LAMMPS-specific workaround.
 
+### Reproducing N-7 on purpose  `[core]`
+Slide `#minimisation-lj-wall`.
+
+The number 2.6e14 is worth reading out loud slowly -- fmax growing after fifty iterations of a minimiser is the signature of exactly this bug, and it is a signature every LAMMPS beginner who has ever seen "lost atoms" has produced without knowing why. Q: "Why does the uncapped version not just error out immediately?" A: Nothing in the arithmetic is illegal -- floating point happily represents 2.6e14, the force is just meaningless at that point because the atoms have been launched somewhere the potential was never evaluated correctly for; the failure is silent until something downstream overflows or a bond length exceeds what LAMMPS considers physical, which is what "lost atoms" actually reports.
+
+### The fix is one line: cap the displacement, not the force  `[core]`
+Slide `#minimisation-cap-concept`.
+
+Make explicit that this is not a mdlite-specific workaround -- the same idea under a different name exists in LAMMPS itself, which is why this lecture's lesson transfers directly to a beginner's own "lost atoms" debugging. Q: "Is a smaller alpha (step size) an alternative to capping?" A: It helps but does not fix the underlying issue -- a small enough alpha for the LJ wall would be far too small for a well-behaved region of the same system, wasting iterations everywhere else; the cap only intervenes exactly where the force is large enough to need it.
+
+### Steepest descent vs FIRE, on a real system  `[core]`
+Slide `#minimisation-fire`.
+
+FIRE reaching at least as low an energy in fewer iterations is the chapter's own assertion, not a rounding-friendly framing -- both minimisers are run to the same force tolerance so the comparison is fair. Q: "If FIRE is better, why does mdlite keep steepest descent at all?" A: Steepest descent with the displacement cap is simple enough to be the reference implementation for teaching what can go wrong (N-7) -- FIRE's adaptive step would have avoided the bug without ever exposing the lesson.
+
+### The cap, precisely  `[math]`
+Slide `#minimisation-math`.
+
+This is literally mdlite.minimize.steepest_descent's two lines -- worth showing precisely because "cap the displacement" undersells how small the actual fix was against how large the bug's consequence (N-7) was. Q: "Why rescale the whole vector instead of clipping each atom's displacement independently?" A: Rescaling uniformly keeps the step's direction exactly the steepest-descent direction; clipping component-wise would change the direction of the move, which is no longer steepest descent at all.
+
 ## L8 · Reading What LAMMPS Writes (notebook ch08)
 _Data, dump, log and restart formats, and four pitfalls this project hit first: thermo normalisation, dump precision, the restart magic number, multi-format logs._
 
