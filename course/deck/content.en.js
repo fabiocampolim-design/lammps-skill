@@ -38,7 +38,7 @@ window.DECK_CONTENT = {
   "stacks": [
     {"sec": "orientation", "slides": ["orientation-intro", "orientation-releases", "orientation-toolkit", "orientation-pylj", "orientation-packages", "orientation-validation"]},
     {"sec": "first-sim", "slides": ["first-sim-intro", "first-sim-checker", "first-sim-checker-result", "first-sim-script", "first-sim-recordrun"]},
-    {"sec": "forces", "slides": ["forces-intro"]},
+    {"sec": "forces", "slides": ["forces-intro", "forces-numerical", "forces-conservation", "forces-crosscheck", "forces-verlet"]},
     {"sec": "thermostats", "slides": ["thermostats-intro"]},
     {"sec": "ensembles", "slides": ["ensembles-intro"]},
     {"sec": "eam", "slides": ["eam-intro"]},
@@ -181,6 +181,61 @@ window.DECK_CONTENT = {
         "Energy conservation versus timestep is the practical version of the same idea: too large a step and the trajectory drifts, long before it visibly explodes."
       ],
       "notes": "This slide's job is to establish trust in mdlite before it is used as a comparison tool for the rest of the course. Q: \"If mdlite already gets the right answer, why use LAMMPS at all?\" A: mdlite is a teaching engine, deliberately limited (one thermostat family, no parallelism, no accelerated neighbour lists at scale) -- LAMMPS is the production tool; the agreement is what licenses using mdlite to explain what LAMMPS is doing."
+    },
+    "forces-numerical": {
+      "level": "core", "layout": "eq",
+      "title": "A force worth integrating with is -dE/dx, to the last digit available",
+      "lead": "Before trusting an integrator, check the thing it integrates: displacing one atom by h and taking the central difference of the energy should reproduce the analytic force component.",
+      "eqs": [
+        {"label": "central difference", "math": "<span class='math'>F<sub>k</sub> ≈ -(E(x<sub>k</sub>+h) - E(x<sub>k</sub>-h)) / 2h</span>"}
+      ],
+      "bullets": [
+        "The error in this approximation is <span class='math'>O(h²)</span> -- shrinking h should shrink the mismatch, which is exactly the check mdlite.pair.LennardJones passes at h=10<sup>-6</sup>, worst mismatch under 10<sup>-5</sup>."
+      ],
+      "notes": "Central-difference checking is the single cheapest test to add to any force routine, in any language -- it needs nothing but the energy function itself. Q: \"Why central difference and not forward difference?\" A: Forward difference (E(x+h)-E(x))/h has O(h) error, an order of magnitude worse for the same h; central difference cancels the first-order term for free."
+    },
+    "forces-conservation": {
+      "level": "core", "layout": "table",
+      "title": "Energy conservation is a rate statement, not a pass/fail",
+      "lead": "A correct integrator's energy drift shrinks as the timestep shrinks -- roughly as dt^2 for velocity Verlet. Running the same starting state at two timesteps for the same physical time makes that concrete.",
+      "table": {
+        "head": ["Timestep", "Steps (same physical time)", "Relative energy drift"],
+        "rows": [
+          ["0.02", "100", "measured, larger"],
+          ["0.005", "400", "measured, smaller"]
+        ]
+      },
+      "bullets": [
+        "The ratio is close to <span class='math'>(0.02/0.005)² = 16</span> -- noisy enough that the chapter calls it an order of magnitude, not a law, but the direction is never in doubt: the finer step must conserve at least as well."
+      ],
+      "notes": "The point to land here is why one run at one timestep proves nothing -- a single \"small\" drift number has no scale until you know what a smaller timestep does to it. Q: \"What if the finer timestep drifted more?\" A: That would mean the integrator itself is wrong, not merely imprecise -- the chapter's tally cell asserts d_fine < d_coarse for exactly that reason, not as a formality."
+    },
+    "forces-crosscheck": {
+      "level": "core", "layout": "table",
+      "title": "Across the toolkit boundary: mdlite vs a real LAMMPS run",
+      "lead": "The comparisons above stay inside mdlite. data/records/lj_energy_vs_lammps.json asks the same question across the boundary: 256 atoms, the same Lennard-Jones potential, forces from mdlite compared to forces LAMMPS itself printed to a dump.",
+      "table": {
+        "head": ["Quantity", "mdlite vs LAMMPS", "Note"],
+        "rows": [
+          ["Force (max component diff)", "3×10<sup>-13</sup>", "round-off, not approximation"],
+          ["Energy", "within its recorded tolerance", "same run, same potential"]
+        ]
+      },
+      "notes": "It was not always this close -- flag that this number has a history worth citing rather than presenting it as if it always looked like this. Q: \"Why 3e-13 and not exactly zero?\" A: That is round-off for double precision on a sum over hundreds of pairwise terms in a different order in the two codes -- not a discrepancy, the floor of the arithmetic itself; L8 (Reading What LAMMPS Writes) tells the story of how this comparison got from 5e-5 to here."
+    },
+    "forces-verlet": {
+      "level": "math", "layout": "eq",
+      "title": "Velocity Verlet, the update every step of this course runs",
+      "lead": "A half-kick, a drift, a force evaluation, a second half-kick -- symplectic, time-reversible, and second-order accurate in the timestep.",
+      "eqs": [
+        {"label": "half-kick", "math": "<span class='math'>v(t+Δt/2) = v(t) + (Δt/2) a(t)</span>"},
+        {"label": "drift", "math": "<span class='math'>x(t+Δt) = x(t) + Δt·v(t+Δt/2)</span>"},
+        {"label": "second half-kick", "math": "<span class='math'>v(t+Δt) = v(t+Δt/2) + (Δt/2) a(t+Δt)</span>"}
+      ],
+      "bullets": [
+        "<span class='math'>a(t+Δt)</span> comes from a fresh force evaluation at the new positions -- the one expensive step, and the reason a bigger timestep is tempting and a wrong one is dangerous."
+      ],
+      "notes": "This is literally mdlite.integrate.velocity_verlet's inner loop -- three lines of code, the same three equations. Q: \"Why is this called symplectic?\" A: It exactly conserves a shadow Hamiltonian close to the true one, which is why its energy error oscillates rather than drifting away without bound -- a first-order (Euler) integrator does not have this property, which is why velocity Verlet, not Euler, is the default in every serious MD code including LAMMPS."
     },
     "thermostats-intro": {
       "level": "intro", "layout": "fig-right", "fig": "ch03-f1",

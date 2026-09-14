@@ -71,6 +71,26 @@ Slide `#forces-intro`.
 
 This slide's job is to establish trust in mdlite before it is used as a comparison tool for the rest of the course. Q: "If mdlite already gets the right answer, why use LAMMPS at all?" A: mdlite is a teaching engine, deliberately limited (one thermostat family, no parallelism, no accelerated neighbour lists at scale) -- LAMMPS is the production tool; the agreement is what licenses using mdlite to explain what LAMMPS is doing.
 
+### A force worth integrating with is -dE/dx, to the last digit available  `[core]`
+Slide `#forces-numerical`.
+
+Central-difference checking is the single cheapest test to add to any force routine, in any language -- it needs nothing but the energy function itself. Q: "Why central difference and not forward difference?" A: Forward difference (E(x+h)-E(x))/h has O(h) error, an order of magnitude worse for the same h; central difference cancels the first-order term for free.
+
+### Energy conservation is a rate statement, not a pass/fail  `[core]`
+Slide `#forces-conservation`.
+
+The point to land here is why one run at one timestep proves nothing -- a single "small" drift number has no scale until you know what a smaller timestep does to it. Q: "What if the finer timestep drifted more?" A: That would mean the integrator itself is wrong, not merely imprecise -- the chapter's tally cell asserts d_fine < d_coarse for exactly that reason, not as a formality.
+
+### Across the toolkit boundary: mdlite vs a real LAMMPS run  `[core]`
+Slide `#forces-crosscheck`.
+
+It was not always this close -- flag that this number has a history worth citing rather than presenting it as if it always looked like this. Q: "Why 3e-13 and not exactly zero?" A: That is round-off for double precision on a sum over hundreds of pairwise terms in a different order in the two codes -- not a discrepancy, the floor of the arithmetic itself; L8 (Reading What LAMMPS Writes) tells the story of how this comparison got from 5e-5 to here.
+
+### Velocity Verlet, the update every step of this course runs  `[math]`
+Slide `#forces-verlet`.
+
+This is literally mdlite.integrate.velocity_verlet's inner loop -- three lines of code, the same three equations. Q: "Why is this called symplectic?" A: It exactly conserves a shadow Hamiltonian close to the true one, which is why its energy error oscillates rather than drifting away without bound -- a first-order (Euler) integrator does not have this property, which is why velocity Verlet, not Euler, is the default in every serious MD code including LAMMPS.
+
 ## L3 · Thermostats (notebook ch03)
 _Berendsen, Langevin and a Nose-Hoover chain: what each one conserves, what each distorts, and NVT checked against the NIST reference within 3 sigma._
 

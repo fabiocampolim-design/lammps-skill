@@ -68,12 +68,28 @@
         <p class="kicker">L2 · notebook ch02</p>
         <h1>Forces and Integration</h1>
         <p class="hero-sub">Velocity Verlet in mdlite, forces checked against a numerical derivative, and energy conservation against the timestep, cross-checked with LAMMPS at 3e-13.</p>
-        <ol class="agenda"><li class="lv-intro">Integration is the part that must not be approximate</li></ol>
+        <ol class="agenda"><li class="lv-intro">Integration is the part that must not be approximate</li><li class="lv-core">A force worth integrating with is -dE/dx, to the last digit available</li><li class="lv-core">Energy conservation is a rate statement, not a pass/fail</li><li class="lv-core">Across the toolkit boundary: mdlite vs a real LAMMPS run</li><li class="lv-math">Velocity Verlet, the update every step of this course runs</li></ol>
         <aside class="notes">Divider — one breath: say in a sentence where the previous lecture ended and what this one adds. The list mirrors the slide order; colours mark intro / core / math.</aside>
       </section>
       <section id="forces-intro" data-sec="forces" data-level="intro">
         <h2 data-t="forces-intro.title"></h2><p data-t="forces-intro.lead"></p><ul class=""><li data-t="forces-intro.bullets.0"></li><li data-t="forces-intro.bullets.1"></li><li data-t="forces-intro.bullets.2"></li></ul>
         <aside class="notes" data-notes="forces-intro"></aside>
+      </section>
+      <section id="forces-numerical" data-sec="forces" data-level="core">
+        <h2 data-t="forces-numerical.title"></h2><p data-t="forces-numerical.lead"></p><div class="eq-box"><div class="kicker" data-t="forces-numerical.eqs.0.label"></div><div class="eq-hero" data-t="forces-numerical.eqs.0.math"></div></div><ul class="small"><li data-t="forces-numerical.bullets.0"></li></ul>
+        <aside class="notes" data-notes="forces-numerical"></aside>
+      </section>
+      <section id="forces-conservation" data-sec="forces" data-level="core">
+        <h2 data-t="forces-conservation.title"></h2><p data-t="forces-conservation.lead"></p><table><thead><tr><th data-t="forces-conservation.table.head.0"></th><th data-t="forces-conservation.table.head.1"></th><th data-t="forces-conservation.table.head.2"></th></tr></thead><tbody><tr><td data-t="forces-conservation.table.rows.0.0"></td><td data-t="forces-conservation.table.rows.0.1"></td><td data-t="forces-conservation.table.rows.0.2"></td></tr><tr><td data-t="forces-conservation.table.rows.1.0"></td><td data-t="forces-conservation.table.rows.1.1"></td><td data-t="forces-conservation.table.rows.1.2"></td></tr></tbody></table>
+        <aside class="notes" data-notes="forces-conservation"></aside>
+      </section>
+      <section id="forces-crosscheck" data-sec="forces" data-level="core">
+        <h2 data-t="forces-crosscheck.title"></h2><p data-t="forces-crosscheck.lead"></p><table><thead><tr><th data-t="forces-crosscheck.table.head.0"></th><th data-t="forces-crosscheck.table.head.1"></th><th data-t="forces-crosscheck.table.head.2"></th></tr></thead><tbody><tr><td data-t="forces-crosscheck.table.rows.0.0"></td><td data-t="forces-crosscheck.table.rows.0.1"></td><td data-t="forces-crosscheck.table.rows.0.2"></td></tr><tr><td data-t="forces-crosscheck.table.rows.1.0"></td><td data-t="forces-crosscheck.table.rows.1.1"></td><td data-t="forces-crosscheck.table.rows.1.2"></td></tr></tbody></table>
+        <aside class="notes" data-notes="forces-crosscheck"></aside>
+      </section>
+      <section id="forces-verlet" data-sec="forces" data-level="math">
+        <h2 data-t="forces-verlet.title"></h2><p data-t="forces-verlet.lead"></p><div class="eq-box"><div class="kicker" data-t="forces-verlet.eqs.0.label"></div><div class="eq-hero" data-t="forces-verlet.eqs.0.math"></div></div><div class="eq-box"><div class="kicker" data-t="forces-verlet.eqs.1.label"></div><div class="eq-hero" data-t="forces-verlet.eqs.1.math"></div></div><div class="eq-box"><div class="kicker" data-t="forces-verlet.eqs.2.label"></div><div class="eq-hero" data-t="forces-verlet.eqs.2.math"></div></div><ul class="small"><li data-t="forces-verlet.bullets.0"></li></ul>
+        <aside class="notes" data-notes="forces-verlet"></aside>
       </section>
       <section id="div-thermostats" data-sec="thermostats" class="divider-slide">
         <p class="kicker">L3 · notebook ch03</p>
