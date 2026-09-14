@@ -121,6 +121,31 @@ def test_every_figure_has_the_caption_from_the_notebook():
         assert len(r["caption"]) > 40, r["file"]
 
 
+def test_catalogue_recognises_gif_outputs(tmp_path):
+    """A cell whose output is display(Image(filename=...)) of a .gif file produces an
+    image/gif MIME output in the notebook; catalogue() must recognise it exactly like image/png,
+    with the same caption-pairing rule (the next HTML caption output attaches to it)."""
+    import base64
+    import json as _json
+
+    gif_bytes = b"GIF89a" + b"\x00" * 20   # not a real GIF -- catalogue() only cares about the MIME key
+    nb = {
+        "cells": [
+            {"cell_type": "code", "source": [], "outputs": [
+                {"data": {"image/gif": [base64.b64encode(gif_bytes).decode()]}},
+                {"data": {"text/html": ["<b>Figure 1.</b> a test animation</div>"]}},
+            ]},
+        ]
+    }
+    nb_path = tmp_path / "fake.ipynb"
+    nb_path.write_text(_json.dumps(nb), encoding="utf-8")
+    records = list(extract_figures.catalogue(str(nb_path)))
+    assert len(records) == 1
+    r = records[0]
+    assert r["file"].endswith(".gif")
+    assert r["figure"] == 1 and r["caption"] == "a test animation"
+
+
 def test_every_figure_shown_has_notebook_provenance(deck, prov):
     figdir = os.path.join(COURSE, "deck", "figs")
     for sid, s in deck["slides"].items():
