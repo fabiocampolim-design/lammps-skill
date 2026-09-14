@@ -1,0 +1,5 @@
+# Optional tooling for the course (NOT needed for the fast suite or to present):
+#   verify_deck.py, build_pptx.py, make_handout.py
+# After installing: python -m playwright install chromium
+playwright>=1.45
+python-pptx>=1.0
