@@ -79,9 +79,9 @@ def test_levels_run_intro_core_math_inside_each_stack(deck):
         ranks = [LEVEL_RANK[deck["slides"][s]["level"]] for s in st["slides"]]
         assert ranks == sorted(ranks), "%s: levels not non-decreasing %s" % (st["sec"], ranks)
         assert ranks[0] == 0, "%s: a stack must open with an intro slide" % st["sec"]
-        # Plan A ships one slide per lecture; a lecture must end in "math" only once Plan B has
-        # added enough slides for that to be meaningful (len > 1).
-        if deck["sections"][st["sec"]].get("lecture") and len(ranks) > 1:
+        # Plan B (docs/superpowers/plans/2026-09-13-lammps-skill-course-content-plan-b.md) gave
+        # every lecture its full depth -- the escape hatch for a single-slide stack is gone.
+        if deck["sections"][st["sec"]].get("lecture"):
             assert ranks[-1] == 2, "%s: a lecture must end with a math slide" % st["sec"]
 
 

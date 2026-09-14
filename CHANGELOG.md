@@ -2,6 +2,23 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.14 — 2026-09-14
+
+Course content (rule 22, Plan B of
+`docs/superpowers/plans/2026-09-13-lammps-skill-course-content-plan-b.md`): every lecture now runs
+its full intro → core → math depth. The deck grows from twelve slides (one per lecture, Plan A)
+to fifty-five, sized to what each chapter's own material supports — L0 (Orientation) gets six,
+L10 (Scaling and Limits) gets four, most lectures get five. No new figures: L2 (Forces and
+Integration), L5 (Potentials: EAM) and L7 (Minimisation) — the three lectures whose chapters plot
+nothing — use `eq`/`code`/`table` layouts for their depth instead (owner's decision, 2026-09-13),
+matching the content's actual shape rather than manufacturing a plot to satisfy the rule. Every
+equation (central-difference forces, velocity Verlet, the Berendsen thermostat and barostat, the
+Nosé–Hoover chain's conserved quantity, the EAM energy form, the steepest-descent displacement
+cap) was checked against the actual `mdlite` implementation before being written into a slide, not
+taken from a textbook in the abstract. `tests/test_course.py`'s level-ordering guard is tightened:
+every lecture stack must now end in a `math`-level slide unconditionally (Plan A's single-slide
+escape hatch is gone). 55 slides, 65 PDF pages (55 + 10 dividers).
+
 ## 0.1.13 — 2026-09-13
 
 Course infrastructure (rule 22, plan A of
