@@ -8,6 +8,7 @@ and the rule that a chapter marked "no LAMMPS" really does run without it.
 
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -82,15 +83,19 @@ def test_chapters_that_claim_no_lammps_do_not_call_the_runner():
             assert forbidden not in body, "%s claims no LAMMPS but uses %s" % (key, forbidden)
 
 
+FIGURE_CALL = re.compile(r"plt\.show\(\)|display\(Image\(filename=")
+
+
 def test_every_plot_is_captioned():
     """Rule 22: every figure the notebooks generate needs its caption for the course.
-    A caption() call must immediately follow every plt.show() in a chapter's code cells,
+    A caption() call must immediately follow every figure-producing call (plt.show() for a static
+    plot, display(Image(filename=...)) for an embedded GIF animation) in a chapter's code cells,
     so extract_figures.py (course/tools/) always finds one to attach."""
     for key, ch in asm.CHAPTERS.items():
         body = "\n".join(src for kind, src in ch["module"].CELLS if kind == "code")
-        assert body.count("plt.show()") == body.count("caption("), (
-            "%s: %d plt.show() but %d caption() calls"
-            % (key, body.count("plt.show()"), body.count("caption(")))
+        figs = len(FIGURE_CALL.findall(body))
+        caps = body.count("caption(")
+        assert figs == caps, "%s: %d figure-producing call(s) but %d caption() call(s)" % (key, figs, caps)
 
 
 def test_setup_cell_defines_caption():
