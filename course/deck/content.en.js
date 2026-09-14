@@ -169,10 +169,10 @@ window.DECK_CONTENT = {
       "title": "What the checker, the render and the run were always describing",
       "lead": "Every step so far -- the fourteen checks, the rendered script, the thermo curves -- was about this: real atoms, in a real box, moving under a real force law.",
       "bullets": [
-        "The static view (left) is the starting lattice before any dynamics; the animation (right) is the same subsample of atoms across the run, disordering as the melt proceeds.",
+        "The static view (left) is the bottom-most atomic layer before any dynamics; the animation (right) is that same layer across the run, disordering as the melt proceeds.",
         "Argon-like spheres by convention -- reduced LJ units carry no real element; this rendering choice is never asserted as the actual substance."
       ],
-      "notes": "This slide exists so a reader who has followed Spec -> check -> run -> plot without ever picturing an atom gets to see one -- deliberately placed after the rendered script, not before it, so the abstraction comes first and the concrete picture confirms it rather than replacing it. Q: \"Why only 200 atoms shown, when the run has 4000?\" A: The figure is a real subsample of the real run (same trajectory, same physics), kept small so the committed record and the notebook stay a few hundred KB instead of the multi-megabyte cost a full 4000-atom, many-frame trajectory would have -- chapter 6 hit exactly this cost once and fixed it the same way."
+      "notes": "This slide exists so a reader who has followed Spec -> check -> run -> plot without ever picturing an atom gets to see one -- deliberately placed after the rendered script, not before it, so the abstraction comes first and the concrete picture confirms it rather than replacing it. Q: \"Why only one atomic layer shown, when the run has 4000 atoms?\" A: A real slab of the real run (same trajectory, same physics) keeps the lattice order actually visible in the picture -- a random subsample of the same size would look like a disordered gas even before any dynamics, which this project tried first and had to fix -- while also keeping the committed record and the notebook a few hundred KB instead of the multi-megabyte cost a full 4000-atom, many-frame trajectory would have."
     },
     "first-sim-recordrun": {
       "level": "math", "layout": "code",

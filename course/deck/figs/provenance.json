@@ -29,9 +29,9 @@
    "heading": "Watching the melt happen",
    "cell": 15,
    "figure": 2,
-   "caption": "The starting FCC lattice lj_melt() builds (a 200-atom subsample of the real 4000-atom run, shown for clarity) -- every atom at its lattice site, before any dynamics. Rendered as argon-like spheres: reduced LJ units carry no real element, argon is the conventional reference fluid a reduced system is understood to stand in for, used here only to pick a rendering radius and colour, not asserted as the substance.",
-   "sha256": "72793f11a78f00204271c7eb853f593bd9592e33dcd28c57256c22f2a4b53f10",
-   "bytes": 71809
+   "caption": "The bottom-most atomic layer of the FCC lattice lj_melt() builds (a 200-atom slab of the real 4000-atom run, not a random subsample -- so the lattice order is actually visible) -- every atom at its lattice site, before any dynamics. Rendered as argon-like spheres: reduced LJ units carry no real element, argon is the conventional reference fluid a reduced system is understood to stand in for, used here only to pick a rendering radius and colour, not asserted as the substance.",
+   "sha256": "670be5c1b8f8ade5709c62b5d2cc1c8862972dedc26c1711c033834cec797b8c",
+   "bytes": 79158
   },
   "ch01-f3.gif": {
    "chapter": "LAMMPS_01_First_Simulation.ipynb",
@@ -39,9 +39,9 @@
    "heading": "Watching the melt happen",
    "cell": 16,
    "figure": 3,
-   "caption": "The same subsample of atoms, animated across the run: the lattice disordering as the melt proceeds -- the same trajectory the temperature and energy curves above were read from, seen directly rather than only through its derived thermo output.",
-   "sha256": "706ac9dec40d10f3ad7d47376b07d4cf369a63b680d731c665290659b5a350ad",
-   "bytes": 370821
+   "caption": "The same atomic layer, animated across the run: the lattice disordering as the melt proceeds -- the same trajectory the temperature and energy curves above were read from, seen directly rather than only through its derived thermo output.",
+   "sha256": "2fbbf9be18cb6e9991d7455de7a6bd9ebad473fe7fadbf2424a56d352aa02f80",
+   "bytes": 460332
   },
   "ch03-f1.png": {
    "chapter": "LAMMPS_03_Thermostats.ipynb",
