@@ -37,7 +37,7 @@ window.DECK_CONTENT = {
   },
   "stacks": [
     {"sec": "orientation", "slides": ["orientation-intro", "orientation-releases", "orientation-toolkit", "orientation-pylj", "orientation-packages", "orientation-validation"]},
-    {"sec": "first-sim", "slides": ["first-sim-intro", "first-sim-checker", "first-sim-checker-result", "first-sim-script", "first-sim-recordrun"]},
+    {"sec": "first-sim", "slides": ["first-sim-intro", "first-sim-checker", "first-sim-checker-result", "first-sim-script", "first-sim-atoms", "first-sim-recordrun"]},
     {"sec": "forces", "slides": ["forces-intro", "forces-numerical", "forces-conservation", "forces-crosscheck", "forces-verlet"]},
     {"sec": "thermostats", "slides": ["thermostats-intro", "thermostats-table", "thermostats-nh-check", "thermostats-nist", "thermostats-math"]},
     {"sec": "ensembles", "slides": ["ensembles-intro", "ensembles-fixnpt", "ensembles-restart-code", "ensembles-restart-numbers", "ensembles-math"]},
@@ -163,6 +163,16 @@ window.DECK_CONTENT = {
       "lead": "lammpskill.script.lj_melt() is a preset Spec: reduced units, an FCC lattice at the melt density rho=0.8442, 4000 atoms by default. render() turns it into the actual input text, in the order the manual's Commands_structure page prescribes.",
       "code": "from lammpskill.script import lj_melt, render\n\nspec = lj_melt()          # rho=0.8442, T=3.0, steps=250\ntext = render(spec)       # the real LAMMPS input, in manual order",
       "notes": "Contrast this with copying an example script -- nothing here is text a human typed and might have gotten subtly wrong; it is generated from the same Spec object the checker and the runner also see. Q: \"Could I edit the rendered text directly?\" A: You could, but then the checker and the runner are checking and running text that no longer corresponds to any Spec -- the pattern this course teaches is to change the Spec and re-render, the same discipline as never hand-editing a generated notebook."
+    },
+    "first-sim-atoms": {
+      "level": "core", "layout": "two-figs", "fig": "ch01-f2", "fig2": "ch01-f3",
+      "title": "What the checker, the render and the run were always describing",
+      "lead": "Every step so far -- the fourteen checks, the rendered script, the thermo curves -- was about this: real atoms, in a real box, moving under a real force law.",
+      "bullets": [
+        "The static view (left) is the starting lattice before any dynamics; the animation (right) is the same subsample of atoms across the run, disordering as the melt proceeds.",
+        "Argon-like spheres by convention -- reduced LJ units carry no real element; this rendering choice is never asserted as the actual substance."
+      ],
+      "notes": "This slide exists so a reader who has followed Spec -> check -> run -> plot without ever picturing an atom gets to see one -- deliberately placed after the rendered script, not before it, so the abstraction comes first and the concrete picture confirms it rather than replacing it. Q: \"Why only 200 atoms shown, when the run has 4000?\" A: The figure is a real subsample of the real run (same trajectory, same physics), kept small so the committed record and the notebook stay a few hundred KB instead of the multi-megabyte cost a full 4000-atom, many-frame trajectory would have -- chapter 6 hit exactly this cost once and fixed it the same way."
     },
     "first-sim-recordrun": {
       "level": "math", "layout": "code",

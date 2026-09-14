@@ -58,6 +58,11 @@ Slide `#first-sim-script`.
 
 Contrast this with copying an example script -- nothing here is text a human typed and might have gotten subtly wrong; it is generated from the same Spec object the checker and the runner also see. Q: "Could I edit the rendered text directly?" A: You could, but then the checker and the runner are checking and running text that no longer corresponds to any Spec -- the pattern this course teaches is to change the Spec and re-render, the same discipline as never hand-editing a generated notebook.
 
+### What the checker, the render and the run were always describing  `[core]`
+Slide `#first-sim-atoms`; figures `ch01-f2` (§0 cell 15), `ch01-f3` (§0 cell 16).
+
+This slide exists so a reader who has followed Spec -> check -> run -> plot without ever picturing an atom gets to see one -- deliberately placed after the rendered script, not before it, so the abstraction comes first and the concrete picture confirms it rather than replacing it. Q: "Why only 200 atoms shown, when the run has 4000?" A: The figure is a real subsample of the real run (same trajectory, same physics), kept small so the committed record and the notebook stay a few hundred KB instead of the multi-megabyte cost a full 4000-atom, many-frame trajectory would have -- chapter 6 hit exactly this cost once and fixed it the same way.
+
 ### run_or_load: the pattern every later lecture uses  `[math]`
 Slide `#first-sim-recordrun`.
 

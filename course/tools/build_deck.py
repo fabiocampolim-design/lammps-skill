@@ -88,13 +88,18 @@ def _chapter_label(meta):
     return f"chapter {int(m.group(1))}, " if m else ""
 
 
-def figure_block(key, prov, extra_class=""):
-    """<figure> for a provenance key; the full notebook caption travels with it. Resolves
-    whichever extension the figure actually has (.png for a static plot, .gif for an animation)."""
+def _resolve_figure(key, prov):
+    """(ext, meta) for a provenance key, whichever extension it actually has (.png for a static
+    plot, .gif for an animation) -- the one place that knows figures aren't always .png."""
     ext = next((e for e in ("png", "gif") if key + "." + e in prov), None)
     if ext is None:
         raise KeyError(key)
-    meta = prov[key + "." + ext]
+    return ext, prov[key + "." + ext]
+
+
+def figure_block(key, prov, extra_class=""):
+    """<figure> for a provenance key; the full notebook caption travels with it."""
+    ext, meta = _resolve_figure(key, prov)
     cap = html.escape(meta["caption"])
     fig = f'Figure {meta["figure"]} · ' if meta.get("figure") else ""
     return (f'<figure class="fig {extra_class}">'
@@ -253,7 +258,7 @@ def render_handout(deck, prov):
         eqs = "".join(f"<li><span class='eq'>{e['math']}</span> <span class='lab'>— {html.escape(e['label'])}</span></li>"
                       for s in slides for e in s.get("eqs", []))
         figs = sorted({s[k] for s in slides for k in ("fig", "fig2") if k in s})
-        figlist = ", ".join(f"§{prov[f + '.png']['section']} cell {prov[f + '.png']['cell']}" for f in figs)
+        figlist = ", ".join(f"§{_resolve_figure(f, prov)[1]['section']} cell {_resolve_figure(f, prov)[1]['cell']}" for f in figs)
         secs.append(f"""
 <section class="lecture">
   <h2>{html.escape(sec['lecture'])} · {html.escape(sec['name'])}
@@ -342,7 +347,7 @@ def render_notes(deck, prov):
         for sid in stack["slides"]:
             s = deck["slides"][sid]
             figs = [s[k] for k in ("fig", "fig2") if k in s]
-            figtxt = ("; figures " + ", ".join(f"`{f}` (§{prov[f + '.png']['section']} cell {prov[f + '.png']['cell']})"
+            figtxt = ("; figures " + ", ".join(f"`{f}` (§{_resolve_figure(f, prov)[1]['section']} cell {_resolve_figure(f, prov)[1]['cell']})"
                                               for f in figs)) if figs else ""
             out.append(f"\n### {strip_tags(s['title'])}  `[{s['level']}]`\n")
             out.append(f"Slide `#{sid}`{figtxt}.\n\n{strip_tags(s['notes'])}\n")

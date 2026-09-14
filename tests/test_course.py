@@ -70,8 +70,8 @@ def test_every_slide_listed_exactly_once_and_every_stack_has_one(deck):
     listed = [s for st in deck["stacks"] for s in st["slides"]]
     assert len(listed) == len(set(listed)), "a slide id appears in two stacks"
     assert set(listed) == set(deck["slides"]), set(listed) ^ set(deck["slides"])
-    # Plan B, task 11 of 11 (L10 Scaling and Limits): 52 -> 55 -- the plan's final total
-    assert len(listed) == 55
+    # atom visuals plan, task 7: L1 gains first-sim-atoms (the new snapshot+animation slide)
+    assert len(listed) == 56
 
 
 def test_levels_run_intro_core_math_inside_each_stack(deck):
@@ -160,7 +160,7 @@ def test_every_figure_shown_has_notebook_provenance(deck, prov):
         for key in ("fig", "fig2"):
             if key not in s:
                 continue
-            name = s[key] + ".png"
+            name = next((s[key] + "." + e for e in ("png", "gif") if s[key] + "." + e in prov), s[key] + ".png")
             assert name in prov, "%s: %s has no provenance entry" % (sid, name)
             meta = prov[name]
             assert isinstance(meta["cell"], int)
@@ -180,7 +180,9 @@ def test_figures_match_the_executed_notebook():
 
 
 def test_every_notebook_figure_is_used(deck, prov):
-    used = {s[k] + ".png" for s in deck["slides"].values() for k in ("fig", "fig2") if k in s}
+    def _resolved(key):
+        return next((key + "." + e for e in ("png", "gif") if key + "." + e in prov), key + ".png")
+    used = {_resolved(s[k]) for s in deck["slides"].values() for k in ("fig", "fig2") if k in s}
     assert used == set(prov), "unused notebook figures: %s" % sorted(set(prov) - used)
 
 
