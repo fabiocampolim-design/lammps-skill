@@ -226,6 +226,22 @@ def test_index_html_keys_resolve_and_images_exist(deck):
     assert dividers == expected
 
 
+def test_declared_eqs_are_actually_rendered(deck):
+    """test_index_html_keys_resolve_and_images_exist only checks that every data-t reference IN
+    the HTML resolves to real content -- it says nothing about whether a slide's own declared
+    content made it into the HTML at all. A layout branch in render_slide() that forgets to call
+    eq_block() (or bullets_block()/table_block()) would pass that test while silently dropping
+    the slide's equations from the deck -- this test catches that failure mode directly."""
+    html = _read("course", "deck", "index.html")
+    for sid, s in deck["slides"].items():
+        for i in range(len(s.get("eqs", []))):
+            assert f'data-t="{sid}.eqs.{i}.math"' in html, "%s: eqs[%d] never rendered (layout %s)" % (sid, i, s["layout"])
+        for i in range(len(s.get("bullets", []))):
+            assert f'data-t="{sid}.bullets.{i}"' in html, "%s: bullets[%d] never rendered (layout %s)" % (sid, i, s["layout"])
+        if "table" in s:
+            assert f'data-t="{sid}.table.head.0"' in html, "%s: table never rendered (layout %s)" % (sid, s["layout"])
+
+
 def test_handout_and_notes_cover_every_lecture_and_slide(deck):
     handout = _read("course", "handout", "handout.html")
     notes = _read("course", "notes", "LECTURER_NOTES.md")

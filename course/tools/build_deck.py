@@ -174,10 +174,10 @@ def render_slide(deck, sec, sid, slide, prov):
         body = (T + '<div class="grid-2">' + figure_block(slide["fig"], prov)
                 + f'<div>{lead}{bullets_block(sid, slide)}</div></div>')
     elif lay == "two-figs":
-        body = (T + lead + '<div class="grid-2 two-figs">' + figure_block(slide["fig"], prov)
+        body = (T + lead + eq_block(sid, slide) + '<div class="grid-2 two-figs">' + figure_block(slide["fig"], prov)
                 + figure_block(slide["fig2"], prov) + "</div>" + bullets_block(sid, slide, "small"))
     elif lay == "table":
-        body = T + lead + table_block(sid, slide)
+        body = T + lead + table_block(sid, slide) + bullets_block(sid, slide, "small")
     return (f'      <section id="{sid}" data-sec="{sec}" data-level="{level}">\n'
             f'        {body}\n'
             f'        <aside class="notes" data-notes="{sid}"></aside>\n      </section>\n')
