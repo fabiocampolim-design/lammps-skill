@@ -89,12 +89,16 @@ def _chapter_label(meta):
 
 
 def figure_block(key, prov, extra_class=""):
-    """<figure> for a provenance key; the full notebook caption travels with it."""
-    meta = prov[key + ".png"]
+    """<figure> for a provenance key; the full notebook caption travels with it. Resolves
+    whichever extension the figure actually has (.png for a static plot, .gif for an animation)."""
+    ext = next((e for e in ("png", "gif") if key + "." + e in prov), None)
+    if ext is None:
+        raise KeyError(key)
+    meta = prov[key + "." + ext]
     cap = html.escape(meta["caption"])
     fig = f'Figure {meta["figure"]} · ' if meta.get("figure") else ""
     return (f'<figure class="fig {extra_class}">'
-            f'<img src="figs/{key}.png" alt="{cap}">'
+            f'<img src="figs/{key}.{ext}" alt="{cap}">'
             f'<figcaption class="caption">{cap}'
             f' <span class="src">— {fig}notebook §{meta["section"]} · '
             f'{_chapter_label(meta)}cell {meta["cell"]}</span>'

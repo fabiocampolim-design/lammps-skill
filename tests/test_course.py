@@ -121,6 +121,14 @@ def test_every_figure_has_the_caption_from_the_notebook():
         assert len(r["caption"]) > 40, r["file"]
 
 
+def test_figure_block_resolves_gif_extension():
+    prov = {"fake-f1.gif": {"chapter": "x", "section": 0, "heading": "", "cell": 1,
+                            "figure": 1, "caption": "a gif", "sha256": "x", "bytes": 1}}
+    html = build_deck.figure_block("fake-f1", prov)
+    assert 'src="figs/fake-f1.gif"' in html
+    assert "a gif" in html
+
+
 def test_catalogue_recognises_gif_outputs(tmp_path):
     """A cell whose output is display(Image(filename=...)) of a .gif file produces an
     image/gif MIME output in the notebook; catalogue() must recognise it exactly like image/png,
