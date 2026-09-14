@@ -2,6 +2,24 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.13 — 2026-09-13
+
+Course infrastructure (rule 22, plan A of
+`docs/superpowers/plans/2026-09-13-lammps-skill-course-infra.md`): `course/` now has a working
+reveal.js deck, A4 handout, lecturer notes and a committed PDF fallback, built the same way as
+pythtb-skill's course (`content.en.js` → `build_deck.py` → `index.html`/handout/notes;
+`extract_figures.py` → `deck/figs/*.png` + `provenance.json`). New: a `caption()` retrofit on
+the four chapters that already plot a figure (01, 03, 04, 06 — 00/02/05/07/08/09/10 still have
+none), figures named by chapter key (`ch01-f1`) rather than a numbered section since chapters
+are self-contained; `course/shared/` (vendored reveal.js 5.2.0, MIT) and
+`course/tools/{extract_figures,build_deck,make_slides_pdf,make_handout,verify_deck,build_pptx}.py`.
+Eleven lectures locked 1:1 with the eleven chapters; Plan A ships one real slide per lecture
+(twelve total — L6 gets a second, since it has three figures, not one — four of them showing
+the four captured figures) — the intro → core → math depth per lecture is Plan B, not yet
+started. `tests/test_course.py` guards the whole contract (content is strict JSON, every figure
+has provenance and a real caption, generated outputs are fresh, the PDF page count matches the
+deck, the vendored MIT licence is intact and named in NOTICE).
+
 ## 0.1.12 — 2026-09-08
 
 Chapters 07 and 10 -- minimisation and scaling. **Plan 1b's chapter set is now complete: all
