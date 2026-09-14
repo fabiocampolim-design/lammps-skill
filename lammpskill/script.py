@@ -32,7 +32,11 @@ class Spec:
     atom_style: str = "atomic"
     boundary: str = "p p p"
     lattice: str | None = None
-    region: str | None = None
+    region: str | None = None   # the box region, consumed by create_box/create_atoms
+    regions: list = field(default_factory=list)   # auxiliary regions (e.g. a small selection
+                                                    # region for group+delete_atoms) -- rendered
+                                                    # right after `region`, never consumed by
+                                                    # create_box (that always uses `region` above)
     create_box: int | None = None
     create_atoms: str | None = None
     read_data: str | None = None
@@ -51,6 +55,7 @@ class Spec:
     neigh_modify: str | None = None
     timestep: float | None = None
     groups: list = field(default_factory=list)
+    delete_atoms: list = field(default_factory=list)
     velocity: list = field(default_factory=list)
     computes: list = field(default_factory=list)
     fixes: list = field(default_factory=list)
@@ -80,6 +85,7 @@ def render(spec: Spec) -> str:
         L.append("lattice %s" % spec.lattice)
     if spec.region:
         L.append("region %s" % spec.region)
+    L += ["region %s" % r for r in spec.regions]
     if spec.create_box is not None:
         L.append("create_box %d %s" % (spec.create_box, (spec.region or "box").split()[0]))
     if spec.create_atoms:
@@ -108,6 +114,7 @@ def render(spec: Spec) -> str:
     if spec.timestep is not None:
         L.append("timestep %.10g" % spec.timestep)
     L += ["group %s" % g for g in spec.groups]
+    L += ["delete_atoms %s" % d for d in spec.delete_atoms]
     L += ["velocity %s" % v for v in spec.velocity]
     L += ["compute %s" % c for c in spec.computes]
     L += ["fix %s" % f for f in spec.fixes]

@@ -20,14 +20,24 @@ def test_spec_round_trip_of_every_field():
              bond_style="harmonic", bond_coeffs=["1 1000 1.0"], angle_style="harmonic", angle_coeffs=["1 100 109.47"], kspace_style="pppm 1e-4",
              special_bonds="lj/coul 0 0 0.5", timestep=0.001, fixes=["1 all shake 1e-4 20 0 b 1 a 1", "2 all nvt temp 300 300 0.1"],
              computes=["msd all msd"], dumps=["d all custom 100 w.dump id type x y z"], thermo=50, stages=[Stage("minimize", "1e-6 1e-8 100 1000"), Stage("run", "500")],
-             write_data="final.data", groups=["ox type 1"], velocity=["all create 300 12345"], pre=["# pre"], post=["# post"])
+             write_data="final.data", regions=["vacsite sphere 5 5 5 0.5 units box"], groups=["ox type 1"],
+             delete_atoms=["group ox compress yes"], velocity=["all create 300 12345"], pre=["# pre"], post=["# post"])
     t = render(s)
     for frag in ("units metal", "read_data w.data", "kspace_style pppm 1e-4", "special_bonds lj/coul 0 0 0.5", "timestep 0.001",
                  "fix 1 all shake", "compute msd all msd", "dump d all custom", "minimize 1e-6 1e-8 100 1000", "run 500",
-                 "write_data final.data", "group ox type 1", "# pre", "# post"):
+                 "write_data final.data", "region vacsite sphere 5 5 5 0.5 units box",
+                 "group ox type 1", "delete_atoms group ox compress yes", "# pre", "# post"):
         assert frag in t, frag
-    assert t.index("group ox") < t.index("velocity") < t.index("fix 1")
+    assert t.index("region vacsite") < t.index("group ox") < t.index("delete_atoms") < t.index("velocity") < t.index("fix 1")
     assert t.index("minimize") < t.index("run 500") < t.index("write_data")
+
+
+def test_regions_field_is_the_auxiliary_ones_not_the_box_region():
+    s = Spec(lattice="fcc 0.8442", region="box block 0 4 0 4 0 4", create_box=1,
+             regions=["vacsite sphere 1 1 1 0.5 units box"])
+    t = render(s)
+    assert "create_box 1 box" in t   # the box region is still spec.region, unaffected by regions=
+    assert t.index("region box block") < t.index("region vacsite sphere") < t.index("create_box")
 
 
 def test_checker_finds_the_documented_mistakes():
