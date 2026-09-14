@@ -99,6 +99,26 @@ Slide `#thermostats-intro`; figures `ch03-f1` (§0 cell 4).
 
 Beginners on the LAMMPS forum ask 'which thermostat, for how long' more than almost anything else (docs/08) -- this slide is where that question gets a real answer instead of a rule of thumb. Q: "Which one should I actually use?" A: Berendsen or Langevin to equilibrate quickly, then Nose-Hoover (LAMMPS's fix nvt) once you are measuring an ensemble average that has to be exactly canonical.
 
+### Three thermostats, three different promises  `[core]`
+Slide `#thermostats-table`.
+
+Say plainly that "samples the canonical ensemble" is not a synonym for "correct temperature" -- Berendsen gets the mean right and the fluctuations wrong, which matters the moment you compute anything beyond a mean. Q: "If Berendsen doesn't sample correctly, why does anyone use it?" A: It reaches the target fast with no tuning, which makes it good at equilibration -- the discipline is switching to Langevin or Nose-Hoover before recording any production statistic.
+
+### Nosé–Hoover's own check: a conserved quantity  `[core]`
+Slide `#thermostats-nh-check`.
+
+This is the same discipline as L2's forces-vs-numerical-derivative check, aimed at a thermostat instead of an integrator: a self-consistency check that does not need an external reference to be worth running. Q: "What would it mean if H drifted a lot?" A: The chain's half-step propagation (updating the extended variables before and after the velocity-Verlet step) would be wrong -- exactly the kind of bug that a temperature-only check would never catch, since the mean temperature can look fine while H drifts.
+
+### Against a published reference, with no LAMMPS on either side  `[core]`
+Slide `#thermostats-nist`.
+
+Point out explicitly that this is the one comparison in the whole course with no LAMMPS run on either side -- record-or-run loads it with route: "none", which L0's records cell already flagged as a distinct case. Q: "Why compare to NIST instead of only to LAMMPS?" A: An independent published reference rules out the possibility that mdlite and LAMMPS share a bug -- agreeing with each other is necessary but not sufficient; agreeing with a third, independently produced table is stronger evidence.
+
+### Berendsen's rescaling, in one line  `[math]`
+Slide `#thermostats-math`.
+
+Worth writing the whole equation out precisely here, since "rescale the velocities" undersells how little computation this actually is compared to Langevin's noise generation or the Nose-Hoover chain's own extra state. Q: "What happens as tau gets very small?" A: lambda snaps toward sqrt(T0/T) every step -- an instantaneous rescale to the exact target temperature, which is the aggressive limit of the same weak-coupling idea and even further from sampling the canonical ensemble correctly.
+
 ## L4 · Ensembles and Restarts (notebook ch04)
 _An NPT sketch with its limits stated, LAMMPS's own fix npt, and restarting a run through write_restart / read_restart._
 

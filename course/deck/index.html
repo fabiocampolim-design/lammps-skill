@@ -95,12 +95,28 @@
         <p class="kicker">L3 · notebook ch03</p>
         <h1>Thermostats</h1>
         <p class="hero-sub">Berendsen, Langevin and a Nose-Hoover chain: what each one conserves, what each distorts, and NVT checked against the NIST reference within 3 sigma.</p>
-        <ol class="agenda"><li class="lv-intro">Three ways to hold a temperature</li></ol>
+        <ol class="agenda"><li class="lv-intro">Three ways to hold a temperature</li><li class="lv-core">Three thermostats, three different promises</li><li class="lv-core">Nosé–Hoover&#x27;s own check: a conserved quantity</li><li class="lv-core">Against a published reference, with no LAMMPS on either side</li><li class="lv-math">Berendsen&#x27;s rescaling, in one line</li></ol>
         <aside class="notes">Divider — one breath: say in a sentence where the previous lecture ended and what this one adds. The list mirrors the slide order; colours mark intro / core / math.</aside>
       </section>
       <section id="thermostats-intro" data-sec="thermostats" data-level="intro">
         <h2 data-t="thermostats-intro.title"></h2><div class="grid-2"><div><p data-t="thermostats-intro.lead"></p><ul class=""><li data-t="thermostats-intro.bullets.0"></li><li data-t="thermostats-intro.bullets.1"></li><li data-t="thermostats-intro.bullets.2"></li></ul></div><figure class="fig "><img src="figs/ch03-f1.png" alt="Temperature against step for the same fcc lattice, started hot (T~2) and cooled by three thermostats -- Berendsen, Langevin, Nose-Hoover chain -- each converging toward the target (dashed line) by its own route."><figcaption class="caption">Temperature against step for the same fcc lattice, started hot (T~2) and cooled by three thermostats -- Berendsen, Langevin, Nose-Hoover chain -- each converging toward the target (dashed line) by its own route. <span class="src">— Figure 1 · notebook §0 · chapter 3, cell 4</span></figcaption></figure></div>
         <aside class="notes" data-notes="thermostats-intro"></aside>
+      </section>
+      <section id="thermostats-table" data-sec="thermostats" data-level="core">
+        <h2 data-t="thermostats-table.title"></h2><p data-t="thermostats-table.lead"></p><table><thead><tr><th data-t="thermostats-table.table.head.0"></th><th data-t="thermostats-table.table.head.1"></th><th data-t="thermostats-table.table.head.2"></th></tr></thead><tbody><tr><td data-t="thermostats-table.table.rows.0.0"></td><td data-t="thermostats-table.table.rows.0.1"></td><td data-t="thermostats-table.table.rows.0.2"></td></tr><tr><td data-t="thermostats-table.table.rows.1.0"></td><td data-t="thermostats-table.table.rows.1.1"></td><td data-t="thermostats-table.table.rows.1.2"></td></tr><tr><td data-t="thermostats-table.table.rows.2.0"></td><td data-t="thermostats-table.table.rows.2.1"></td><td data-t="thermostats-table.table.rows.2.2"></td></tr></tbody></table>
+        <aside class="notes" data-notes="thermostats-table"></aside>
+      </section>
+      <section id="thermostats-nh-check" data-sec="thermostats" data-level="core">
+        <h2 data-t="thermostats-nh-check.title"></h2><p data-t="thermostats-nh-check.lead"></p><div class="eq-box"><div class="kicker" data-t="thermostats-nh-check.eqs.0.label"></div><div class="eq-hero" data-t="thermostats-nh-check.eqs.0.math"></div></div><ul class="small"><li data-t="thermostats-nh-check.bullets.0"></li></ul>
+        <aside class="notes" data-notes="thermostats-nh-check"></aside>
+      </section>
+      <section id="thermostats-nist" data-sec="thermostats" data-level="core">
+        <h2 data-t="thermostats-nist.title"></h2><p data-t="thermostats-nist.lead"></p><table><thead><tr><th data-t="thermostats-nist.table.head.0"></th><th data-t="thermostats-nist.table.head.1"></th><th data-t="thermostats-nist.table.head.2"></th></tr></thead><tbody><tr><td data-t="thermostats-nist.table.rows.0.0"></td><td data-t="thermostats-nist.table.rows.0.1"></td><td data-t="thermostats-nist.table.rows.0.2"></td></tr><tr><td data-t="thermostats-nist.table.rows.1.0"></td><td data-t="thermostats-nist.table.rows.1.1"></td><td data-t="thermostats-nist.table.rows.1.2"></td></tr></tbody></table>
+        <aside class="notes" data-notes="thermostats-nist"></aside>
+      </section>
+      <section id="thermostats-math" data-sec="thermostats" data-level="math">
+        <h2 data-t="thermostats-math.title"></h2><p data-t="thermostats-math.lead"></p><div class="eq-box"><div class="kicker" data-t="thermostats-math.eqs.0.label"></div><div class="eq-hero" data-t="thermostats-math.eqs.0.math"></div></div><ul class="small"><li data-t="thermostats-math.bullets.0"></li></ul>
+        <aside class="notes" data-notes="thermostats-math"></aside>
       </section>
       <section id="div-ensembles" data-sec="ensembles" class="divider-slide">
         <p class="kicker">L4 · notebook ch04</p>

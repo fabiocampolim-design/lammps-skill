@@ -39,7 +39,7 @@ window.DECK_CONTENT = {
     {"sec": "orientation", "slides": ["orientation-intro", "orientation-releases", "orientation-toolkit", "orientation-pylj", "orientation-packages", "orientation-validation"]},
     {"sec": "first-sim", "slides": ["first-sim-intro", "first-sim-checker", "first-sim-checker-result", "first-sim-script", "first-sim-recordrun"]},
     {"sec": "forces", "slides": ["forces-intro", "forces-numerical", "forces-conservation", "forces-crosscheck", "forces-verlet"]},
-    {"sec": "thermostats", "slides": ["thermostats-intro"]},
+    {"sec": "thermostats", "slides": ["thermostats-intro", "thermostats-table", "thermostats-nh-check", "thermostats-nist", "thermostats-math"]},
     {"sec": "ensembles", "slides": ["ensembles-intro"]},
     {"sec": "eam", "slides": ["eam-intro"]},
     {"sec": "structure", "slides": ["structure-intro", "structure-msd-vacf"]},
@@ -247,6 +247,60 @@ window.DECK_CONTENT = {
         "Nose-Hoover chain: an extra dynamical variable keeps the total (system + thermostat) energy conserved -- checked here directly."
       ],
       "notes": "Beginners on the LAMMPS forum ask 'which thermostat, for how long' more than almost anything else (docs/08) -- this slide is where that question gets a real answer instead of a rule of thumb. Q: \"Which one should I actually use?\" A: Berendsen or Langevin to equilibrate quickly, then Nose-Hoover (LAMMPS's fix nvt) once you are measuring an ensemble average that has to be exactly canonical."
+    },
+    "thermostats-table": {
+      "level": "core", "layout": "table",
+      "title": "Three thermostats, three different promises",
+      "lead": "Each way of holding a temperature trades something different -- visible on the same axes in the figure just shown, not taken on faith.",
+      "table": {
+        "head": ["Thermostat", "Mechanism", "Samples the canonical ensemble?"],
+        "rows": [
+          ["Berendsen", "rescales every velocity toward the target each step", "no -- correct mean temperature only"],
+          ["Langevin", "the O-step of BAOAB: friction plus noise", "yes"],
+          ["Nosé–Hoover chain", "an extended dynamical variable couples to the bath", "yes, plus its own conserved check"]
+        ]
+      },
+      "notes": "Say plainly that \"samples the canonical ensemble\" is not a synonym for \"correct temperature\" -- Berendsen gets the mean right and the fluctuations wrong, which matters the moment you compute anything beyond a mean. Q: \"If Berendsen doesn't sample correctly, why does anyone use it?\" A: It reaches the target fast with no tuning, which makes it good at equilibration -- the discipline is switching to Langevin or Nose-Hoover before recording any production statistic."
+    },
+    "thermostats-nh-check": {
+      "level": "core", "layout": "eq",
+      "title": "Nosé–Hoover's own check: a conserved quantity",
+      "lead": "The chain adds an extended-system energy H_extra; the total H = E_tot + H_extra should stay flat if the half-step bookkeeping is right, independent of whether the temperature looks reasonable.",
+      "eqs": [
+        {"label": "conserved quantity", "math": "<span class='math'>H = E<sub>tot</sub> + H<sub>extra</sub></span>"}
+      ],
+      "bullets": [
+        "Measured over 1000 steps on the fcc lattice: relative drift in H under <span class='math'>5×10<sup>-3</sup></span> -- the chapter's own tolerance, not a round number chosen after the fact."
+      ],
+      "notes": "This is the same discipline as L2's forces-vs-numerical-derivative check, aimed at a thermostat instead of an integrator: a self-consistency check that does not need an external reference to be worth running. Q: \"What would it mean if H drifted a lot?\" A: The chain's half-step propagation (updating the extended variables before and after the velocity-Verlet step) would be wrong -- exactly the kind of bug that a temperature-only check would never catch, since the mean temperature can look fine while H drifts."
+    },
+    "thermostats-nist": {
+      "level": "core", "layout": "table",
+      "title": "Against a published reference, with no LAMMPS on either side",
+      "lead": "data/records/lj_nvt_nist.json compares mdlite's equilibrium pressure and energy at one NIST reference state point to the NIST Standard Reference Simulation Website's own table.",
+      "table": {
+        "head": ["Property", "mdlite", "NIST reference"],
+        "rows": [
+          ["Pressure P", "measured", "published, with its own uncertainty"],
+          ["Energy U", "measured", "published, with its own uncertainty"]
+        ]
+      },
+      "bullets": [
+        "State point: <span class='math'>T*=0.85, ρ*=0.776</span>, 500 atoms; both differences land within three NIST-reported standard errors."
+      ],
+      "notes": "Point out explicitly that this is the one comparison in the whole course with no LAMMPS run on either side -- record-or-run loads it with route: \"none\", which L0's records cell already flagged as a distinct case. Q: \"Why compare to NIST instead of only to LAMMPS?\" A: An independent published reference rules out the possibility that mdlite and LAMMPS share a bug -- agreeing with each other is necessary but not sufficient; agreeing with a third, independently produced table is stronger evidence."
+    },
+    "thermostats-math": {
+      "level": "math", "layout": "eq",
+      "title": "Berendsen's rescaling, in one line",
+      "lead": "The mechanism behind the fastest-converging curve in the figure: rescale every velocity by a single factor, computed fresh each step from how far the current temperature is from the target.",
+      "eqs": [
+        {"label": "velocity scaling", "math": "<span class='math'>λ = √(1 + (Δt/τ)(T₀/T − 1))</span>, &nbsp; v → λv"}
+      ],
+      "bullets": [
+        "This is literally mdlite.thermostats.Berendsen.apply -- one square root and one multiply, applied once per step, which is exactly why it is the cheapest of the three and the least rigorous."
+      ],
+      "notes": "Worth writing the whole equation out precisely here, since \"rescale the velocities\" undersells how little computation this actually is compared to Langevin's noise generation or the Nose-Hoover chain's own extra state. Q: \"What happens as tau gets very small?\" A: lambda snaps toward sqrt(T0/T) every step -- an instantaneous rescale to the exact target temperature, which is the aggressive limit of the same weak-coupling idea and even further from sampling the canonical ensemble correctly."
     },
     "ensembles-intro": {
       "level": "intro", "layout": "fig-right", "fig": "ch04-f1",
