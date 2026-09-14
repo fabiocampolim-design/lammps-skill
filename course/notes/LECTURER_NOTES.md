@@ -127,6 +127,26 @@ Slide `#ensembles-intro`; figures `ch04-f1` (§0 cell 5).
 
 Flag directly that mdlite's NPT is intentionally the least complete piece of the teaching engine -- that honesty is itself part of what this course teaches about the difference between a teaching model and a production one. Q: "What happens if I put `units lj` back into a restart-continuation script?" A: LAMMPS refuses -- units, dimension and boundary are fixed the moment the box is read from the restart file; lammpskill's Spec(units=None) is how you build a script that respects that.
 
+### fix npt: the real thing the sketch stands in for  `[core]`
+Slide `#ensembles-fixnpt`.
+
+State again, out loud, that the sketch and fix npt are answering the same question with methods of very different rigor -- comparing their directions is legitimate, comparing their numbers quantitatively is not. Q: "So is the mdlite comparison in the figure meaningless?" A: No -- both start denser than their target pressure and both expand toward it, which is exactly the qualitative claim being tested; a quantitative match was never the claim.
+
+### A restart script declares only what the restart does not carry  `[core]`
+Slide `#ensembles-restart-code`.
+
+Emphasise that units=None is not a workaround bolted on afterward -- it is Spec saying explicitly "this script continues state, it does not declare a new one", which is a real distinction the checker (L1) would otherwise flag as read_data-shaped. Q: "What else besides units must not be re-declared?" A: dimension, boundary and atom_style -- anything that defines the box or its atom layout; pair style and coefficients are repeated here because a restart file does not always carry them.
+
+### The continuation, in numbers  `[core]`
+Slide `#ensembles-restart-numbers`.
+
+The chapter's own tally cell asserts step_b_final == step_a_final + 300 exactly -- not approximately continues, but the same trajectory picked back up. Q: "Could stage B have used a different timestep or thermostat than stage A?" A: Yes -- a restart carries positions, velocities and the box, not the fix list; changing the ensemble or the timestep between stages is a legitimate and common use of restart continuation, not something this pattern forbids.
+
+### Berendsen barostat: the same weak-coupling idea, on the box  `[math]`
+Slide `#ensembles-math`.
+
+Draw the parallel to the previous lecture's Berendsen thermostat equation explicitly -- same weak-coupling structure, same author (Berendsen et al. 1984), one number instead of one velocity vector. Q: "Why the cube root?" A: Isotropic scaling multiplies volume by mu^3; scaling every linear dimension by mu is what keeps the box shape (just not its size) unchanged, which is the isotropic-only limitation the chapter states directly.
+
 ## L5 · Potentials: EAM (notebook ch05)
 _An embedded-atom potential read from a real setfl file: copper's lattice constant and cohesive energy against the recorded 3e-5 -- and why the potential file is never shipped._
 

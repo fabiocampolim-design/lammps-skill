@@ -122,12 +122,28 @@
         <p class="kicker">L4 · notebook ch04</p>
         <h1>Ensembles and Restarts</h1>
         <p class="hero-sub">An NPT sketch with its limits stated, LAMMPS&#x27;s own fix npt, and restarting a run through write_restart / read_restart.</p>
-        <ol class="agenda"><li class="lv-intro">Beyond NVT: pressure, and picking a run back up</li></ol>
+        <ol class="agenda"><li class="lv-intro">Beyond NVT: pressure, and picking a run back up</li><li class="lv-core">fix npt: the real thing the sketch stands in for</li><li class="lv-core">A restart script declares only what the restart does not carry</li><li class="lv-core">The continuation, in numbers</li><li class="lv-math">Berendsen barostat: the same weak-coupling idea, on the box</li></ol>
         <aside class="notes">Divider — one breath: say in a sentence where the previous lecture ended and what this one adds. The list mirrors the slide order; colours mark intro / core / math.</aside>
       </section>
       <section id="ensembles-intro" data-sec="ensembles" data-level="intro">
         <h2 data-t="ensembles-intro.title"></h2><div class="grid-2"><div><p data-t="ensembles-intro.lead"></p><ul class=""><li data-t="ensembles-intro.bullets.0"></li><li data-t="ensembles-intro.bullets.1"></li><li data-t="ensembles-intro.bullets.2"></li></ul></div><figure class="fig "><img src="figs/ch04-f1.png" alt="The NPT run started denser than its target pressure: box volume expands (left) while the instantaneous pressure relaxes down toward the target of 1.0 (right, dashed) under the Berendsen barostat."><figcaption class="caption">The NPT run started denser than its target pressure: box volume expands (left) while the instantaneous pressure relaxes down toward the target of 1.0 (right, dashed) under the Berendsen barostat. <span class="src">— Figure 1 · notebook §0 · chapter 4, cell 5</span></figcaption></figure></div>
         <aside class="notes" data-notes="ensembles-intro"></aside>
+      </section>
+      <section id="ensembles-fixnpt" data-sec="ensembles" data-level="core">
+        <h2 data-t="ensembles-fixnpt.title"></h2><p data-t="ensembles-fixnpt.lead"></p><table><thead><tr><th data-t="ensembles-fixnpt.table.head.0"></th><th data-t="ensembles-fixnpt.table.head.1"></th><th data-t="ensembles-fixnpt.table.head.2"></th></tr></thead><tbody><tr><td data-t="ensembles-fixnpt.table.rows.0.0"></td><td data-t="ensembles-fixnpt.table.rows.0.1"></td><td data-t="ensembles-fixnpt.table.rows.0.2"></td></tr><tr><td data-t="ensembles-fixnpt.table.rows.1.0"></td><td data-t="ensembles-fixnpt.table.rows.1.1"></td><td data-t="ensembles-fixnpt.table.rows.1.2"></td></tr><tr><td data-t="ensembles-fixnpt.table.rows.2.0"></td><td data-t="ensembles-fixnpt.table.rows.2.1"></td><td data-t="ensembles-fixnpt.table.rows.2.2"></td></tr></tbody></table>
+        <aside class="notes" data-notes="ensembles-fixnpt"></aside>
+      </section>
+      <section id="ensembles-restart-code" data-sec="ensembles" data-level="core">
+        <h2 data-t="ensembles-restart-code.title"></h2><p data-t="ensembles-restart-code.lead"></p><div class="panel code" data-t="ensembles-restart-code.code"></div>
+        <aside class="notes" data-notes="ensembles-restart-code"></aside>
+      </section>
+      <section id="ensembles-restart-numbers" data-sec="ensembles" data-level="core">
+        <h2 data-t="ensembles-restart-numbers.title"></h2><p data-t="ensembles-restart-numbers.lead"></p><table><thead><tr><th data-t="ensembles-restart-numbers.table.head.0"></th><th data-t="ensembles-restart-numbers.table.head.1"></th><th data-t="ensembles-restart-numbers.table.head.2"></th></tr></thead><tbody><tr><td data-t="ensembles-restart-numbers.table.rows.0.0"></td><td data-t="ensembles-restart-numbers.table.rows.0.1"></td><td data-t="ensembles-restart-numbers.table.rows.0.2"></td></tr><tr><td data-t="ensembles-restart-numbers.table.rows.1.0"></td><td data-t="ensembles-restart-numbers.table.rows.1.1"></td><td data-t="ensembles-restart-numbers.table.rows.1.2"></td></tr></tbody></table>
+        <aside class="notes" data-notes="ensembles-restart-numbers"></aside>
+      </section>
+      <section id="ensembles-math" data-sec="ensembles" data-level="math">
+        <h2 data-t="ensembles-math.title"></h2><p data-t="ensembles-math.lead"></p><div class="eq-box"><div class="kicker" data-t="ensembles-math.eqs.0.label"></div><div class="eq-hero" data-t="ensembles-math.eqs.0.math"></div></div><ul class="small"><li data-t="ensembles-math.bullets.0"></li></ul>
+        <aside class="notes" data-notes="ensembles-math"></aside>
       </section>
       <section id="div-eam" data-sec="eam" class="divider-slide">
         <p class="kicker">L5 · notebook ch05</p>

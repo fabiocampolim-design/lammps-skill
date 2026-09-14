@@ -40,7 +40,7 @@ window.DECK_CONTENT = {
     {"sec": "first-sim", "slides": ["first-sim-intro", "first-sim-checker", "first-sim-checker-result", "first-sim-script", "first-sim-recordrun"]},
     {"sec": "forces", "slides": ["forces-intro", "forces-numerical", "forces-conservation", "forces-crosscheck", "forces-verlet"]},
     {"sec": "thermostats", "slides": ["thermostats-intro", "thermostats-table", "thermostats-nh-check", "thermostats-nist", "thermostats-math"]},
-    {"sec": "ensembles", "slides": ["ensembles-intro"]},
+    {"sec": "ensembles", "slides": ["ensembles-intro", "ensembles-fixnpt", "ensembles-restart-code", "ensembles-restart-numbers", "ensembles-math"]},
     {"sec": "eam", "slides": ["eam-intro"]},
     {"sec": "structure", "slides": ["structure-intro", "structure-msd-vacf"]},
     {"sec": "minimisation", "slides": ["minimisation-intro"]},
@@ -312,6 +312,52 @@ window.DECK_CONTENT = {
         "This is the pattern for a run too long to finish in one session: checkpoint, then continue."
       ],
       "notes": "Flag directly that mdlite's NPT is intentionally the least complete piece of the teaching engine -- that honesty is itself part of what this course teaches about the difference between a teaching model and a production one. Q: \"What happens if I put `units lj` back into a restart-continuation script?\" A: LAMMPS refuses -- units, dimension and boundary are fixed the moment the box is read from the restart file; lammpskill's Spec(units=None) is how you build a script that respects that."
+    },
+    "ensembles-fixnpt": {
+      "level": "core", "layout": "table",
+      "title": "fix npt: the real thing the sketch stands in for",
+      "lead": "LAMMPS's fix npt couples a Nosé–Hoover chain on both temperature and pressure -- a real fluctuating-cell method, not a weak-coupling sketch.",
+      "table": {
+        "head": ["", "mdlite's BerendsenBarostat", "LAMMPS's fix npt"],
+        "rows": [
+          ["Method", "Berendsen weak coupling", "Nosé–Hoover chain, both T and P"],
+          ["Samples NPT correctly?", "no -- relaxes toward the target and holds it", "yes"],
+          ["What it shows", "the mechanism: a system finds its own volume at a given pressure", "production-grade equilibration"]
+        ]
+      },
+      "notes": "State again, out loud, that the sketch and fix npt are answering the same question with methods of very different rigor -- comparing their directions is legitimate, comparing their numbers quantitatively is not. Q: \"So is the mdlite comparison in the figure meaningless?\" A: No -- both start denser than their target pressure and both expand toward it, which is exactly the qualitative claim being tested; a quantitative match was never the claim."
+    },
+    "ensembles-restart-code": {
+      "level": "core", "layout": "code",
+      "title": "A restart script declares only what the restart does not carry",
+      "lead": "read_restart defines the box -- and LAMMPS refuses a units command once the box exists (hit live while writing this chapter: ERROR: Units command after simulation box is defined).",
+      "code": "stage_b = Spec(\n    units=None, pre=[\"read_restart stage_a.restart\"],\n    pair_style=\"lj/cut 2.5\", pair_coeffs=[\"1 1 1.0 1.0 2.5\"],\n    ...\n    stages=[Stage(\"run\", \"300\")],\n)",
+      "notes": "Emphasise that units=None is not a workaround bolted on afterward -- it is Spec saying explicitly \"this script continues state, it does not declare a new one\", which is a real distinction the checker (L1) would otherwise flag as read_data-shaped. Q: \"What else besides units must not be re-declared?\" A: dimension, boundary and atom_style -- anything that defines the box or its atom layout; pair style and coefficients are repeated here because a restart file does not always carry them."
+    },
+    "ensembles-restart-numbers": {
+      "level": "core", "layout": "table",
+      "title": "The continuation, in numbers",
+      "lead": "Stage A runs 300 steps and checkpoints; stage B reads that checkpoint and runs 300 more -- as if it never stopped.",
+      "table": {
+        "head": ["Stage", "Ends at step", "Final temperature"],
+        "rows": [
+          ["A (fresh run)", "300", "recorded"],
+          ["B (from the restart)", "600 (300 + 300)", "recorded, continues stage A's trajectory"]
+        ]
+      },
+      "notes": "The chapter's own tally cell asserts step_b_final == step_a_final + 300 exactly -- not approximately continues, but the same trajectory picked back up. Q: \"Could stage B have used a different timestep or thermostat than stage A?\" A: Yes -- a restart carries positions, velocities and the box, not the fix list; changing the ensemble or the timestep between stages is a legitimate and common use of restart continuation, not something this pattern forbids."
+    },
+    "ensembles-math": {
+      "level": "math", "layout": "eq",
+      "title": "Berendsen barostat: the same weak-coupling idea, on the box",
+      "lead": "Scale every box length by one factor per step, computed from how far the instantaneous pressure is from the target -- the pressure analogue of the thermostat's velocity rescale.",
+      "eqs": [
+        {"label": "box scaling", "math": "<span class='math'>μ = (1 − (Δt/τ)·χ·(P₀ − P))<sup>1/3</sup></span>, &nbsp; L → μL"}
+      ],
+      "bullets": [
+        "<span class='math'>χ</span> is a compressibility parameter -- mdlite.npt.BerendsenBarostat defaults it to 1.0 rather than measuring the system's real compressibility, one more way the sketch stays a sketch."
+      ],
+      "notes": "Draw the parallel to the previous lecture's Berendsen thermostat equation explicitly -- same weak-coupling structure, same author (Berendsen et al. 1984), one number instead of one velocity vector. Q: \"Why the cube root?\" A: Isotropic scaling multiplies volume by mu^3; scaling every linear dimension by mu is what keeps the box shape (just not its size) unchanged, which is the isotropic-only limitation the chapter states directly."
     },
     "eam-intro": {
       "level": "intro", "layout": "text",
