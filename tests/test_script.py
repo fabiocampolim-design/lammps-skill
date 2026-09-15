@@ -115,9 +115,9 @@ def test_eam_preset_uses_funcfl_or_setfl_by_extension():
 def test_presets_run_in_lammps(lammps_exe, tmp_path):
     from lammpskill.install.base import run_command
     from lammpskill.io.log import read_log
-    spec, _ = spce_water(n_side=2, steps=20, workdir=str(tmp_path))
     if not {"KSPACE", "MOLECULE", "RIGID"} <= set(lammps_exe.packages):
         pytest.skip("KSPACE/MOLECULE/RIGID not in this build")
+    spec, _ = spce_water(n_side=2, steps=20, workdir=str(tmp_path))
     (tmp_path / "in.w").write_text(render(spec), encoding="utf-8")
     p = run_command(lammps_exe, ["-in", "in.w", "-log", "log.w", "-screen", "none"], cwd=str(tmp_path), timeout=300)
     assert p.returncode == 0, p.stderr + (tmp_path / "log.w").read_text(errors="replace")[-1500:]
@@ -128,9 +128,9 @@ def test_presets_run_in_lammps(lammps_exe, tmp_path):
 def test_bead_spring_chain_preset_runs_in_lammps(lammps_exe, tmp_path):
     from lammpskill.install.base import run_command
     from lammpskill.io.log import read_log
-    spec, _ = bead_spring_chain(n_beads=10, steps=20, workdir=str(tmp_path))
     if "MOLECULE" not in set(lammps_exe.packages):
         pytest.skip("MOLECULE not in this build")
+    spec, _ = bead_spring_chain(n_beads=10, steps=20, workdir=str(tmp_path))
     (tmp_path / "in.c").write_text(render(spec), encoding="utf-8")
     p = run_command(lammps_exe, ["-in", "in.c", "-log", "log.c", "-screen", "none"], cwd=str(tmp_path), timeout=300)
     assert p.returncode == 0, p.stderr + (tmp_path / "log.c").read_text(errors="replace")[-1500:]

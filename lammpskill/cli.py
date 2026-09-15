@@ -19,9 +19,12 @@ from .post import rdf_trajectory
 from .script import bead_spring_chain, check, eam_fcc, lj_melt, render, spce_water
 
 PRESETS = {"lj_melt": lj_melt, "eam_fcc": eam_fcc, "spce_water": spce_water, "bead_spring_chain": bead_spring_chain}
-# presets that return (Spec, DataFile) and need a workdir to write their data file into, vs. the
-# self-contained lattice/create_atoms presets that return a Spec alone
-_WRITES_DATA_FILE = {"spce_water": "n_side", "bead_spring_chain": "n_beads"}
+# presets that return (Spec, DataFile) and need --out as a workdir to write their data file into,
+# vs. the self-contained lattice/create_atoms presets that return a Spec alone
+_WRITES_DATA_FILE = {"spce_water", "bead_spring_chain"}
+# each such preset's own name for its "--n" repetition-count kwarg (only meaningful for entries in
+# _WRITES_DATA_FILE above; a preset absent here uses the plain "n" kwarg name)
+_N_KWARG = {"spce_water": "n_side", "bead_spring_chain": "n_beads"}
 
 
 def _detect(routes=None):
@@ -107,7 +110,7 @@ def _cmd_new(a):
     if a.steps is not None:
         kw["steps"] = a.steps
     if a.n is not None:
-        kw[_WRITES_DATA_FILE.get(a.preset, "n")] = a.n
+        kw[_N_KWARG.get(a.preset, "n")] = a.n
     if a.preset in _WRITES_DATA_FILE:
         spec, _ = fn(workdir=a.out, **kw)
     else:

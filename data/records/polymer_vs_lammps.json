@@ -10,7 +10,7 @@
  "nbonds": 29,
  "provenance": {
   "date": "2026-09-15",
-  "lammps_skill": "0.1.18",
+  "lammps_skill": "0.1.20",
   "lammps_version": "10 Dec 2025",
   "route": "wsl-apt",
   "why": "one bead-spring-chain configuration (30 beads); mdlite: LennardJones + HarmonicBond summed independently over all pairs/bonds; LAMMPS: pair lj/cut + bond harmonic with special_bonds lj 1 1 1 so neither engine excludes bonded pairs from the nonbonded sum (pitfall in references/pitfalls.md); forces (dump_modify format %20.15g) agree to round-off"

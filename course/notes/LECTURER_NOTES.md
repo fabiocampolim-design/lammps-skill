@@ -331,17 +331,22 @@ State the simplification before anything else runs, the same discipline L0 appli
 ### One bond term, one pairwise term  `[core]`
 Slide `#polymers-form`.
 
-Two closed-form potentials, no tables to fit or parse -- a much simpler physical picture than L5's EAM, worth naming explicitly since a reader has just seen EAM's F(rho)/rho(r)/phi(r) tables two lectures ago. Q: "Why is E_LJ applied even between directly-bonded beads?" A: Because mdlite's LennardJones has no concept of excluding a pair -- it always sums over everything the neighbour list finds -- so the bond and the pairwise term are simply added, and the LAMMPS side has to be told not to exclude bonded pairs either (next slide).
+Two closed-form potentials, no tables to fit or parse -- a much simpler physical picture than L5's EAM, worth naming explicitly since a reader has just seen EAM's F(rho)/rho(r)/phi(r) tables two lectures ago. Q: "Why is E_LJ applied even between directly-bonded beads?" A: Because mdlite's LennardJones has no concept of excluding a pair -- it always sums over everything the neighbour list finds -- so the bond and the pairwise term are simply added, and the LAMMPS side has to be told not to exclude bonded neighbours either (next slide).
 
 ### special_bonds: the pitfall this chapter exists to surface  `[core]`
 Slide `#polymers-preset`.
 
 This is the same species of pitfall as thermo_modify norm (L0/L8) and dump precision (L2/L8) -- a silent default that produces a plausible-looking wrong number rather than an error. Q: "Is there a general lesson here, beyond this one flag?" A: Any time two engines are cross-checked, every implicit default each one applies has to be found and matched explicitly -- this project's own references/pitfalls.md exists because that list is never obvious in advance, only after being hit once.
 
-### Collapsing into a globule  `[core]`
+### Watching the chain contract  `[core]`
 Slide `#polymers-relax`; figures `ch11-f1` (§0 cell 9), `ch11-f2` (§0 cell 10).
 
-Lead with the physics before the caveat -- the collapse is real and worth understanding on its own terms, and the WCA comparison is what makes it a teaching moment rather than a surprising picture. Q: "Could this model be made to show an extended coil instead?" A: Yes -- truncating the Lennard-Jones at its minimum (WCA) removes the attractive well that drives the collapse; mdlite does not implement that truncation today, which is exactly why this chapter shows the full-LJ result rather than the field-standard one.
+Deliberately underclaim here and let the next slide's numbers carry the physical argument -- an earlier version of this lecture asserted a coil-globule transition from the picture alone, which a reviewer correctly flagged as evidence the picture does not actually provide. Q: "Isn't the visual enough on its own?" A: No -- a picture of a chain contracting from a straight line is also what pure relaxation of an unnatural starting conformation looks like; only a controlled comparison (next slide) isolates what full LJ specifically contributes.
+
+### Isolating the variable: full LJ against WCA, in mdlite alone  `[core]`
+Slide `#polymers-quantified`.
+
+This slide exists because the picture on its own does not distinguish 'the chain relaxes' from 'full LJ specifically collapses it further than WCA would' -- only a controlled A/B run does. Q: "Why run this in mdlite rather than LAMMPS?" A: Isolating one variable (the pair potential's cutoff and shift) requires holding everything else -- the integrator, the thermostat, the random seed -- fixed; running both cases on the same engine removes any risk that an engine difference, not the physics, explains the gap.
 
 ### One configuration, mdlite against LAMMPS  `[math]`
 Slide `#polymers-crosscheck`.

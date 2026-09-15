@@ -2,20 +2,59 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.20 — 2026-09-15
+
+Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of 0.1.19's polymer
+chapter. Verdict was SHIP WITH FIXES; the two important findings addressed, plus several minors:
+
+- The chapter and course slide claimed a "textbook coil-globule transition" and asserted "a
+  purely-repulsive WCA chain would show an extended, self-avoiding coil instead" -- a claim no run
+  anywhere in the repo demonstrated; the picture alone cannot distinguish ordinary relaxation of an
+  artificially stretched starting chain from an effect specific to full Lennard-Jones. Fixed by
+  actually computing the comparison: a new chapter section runs the identical starting chain
+  through `mdlite`'s own `velocity_verlet` twice -- once with full (`rcut=2.5`) Lennard-Jones, once
+  with WCA (`rcut=2**(1/6)*sigma, shift=True`, which needs no new `mdlite` code at all, only a
+  different cutoff and shift on the `LennardJones` class this chapter already uses) -- isolating
+  the one variable with no LAMMPS-vs-mdlite confound. Measured: full LJ ends 30% more contracted
+  (R_g 2.34 vs 3.34) than WCA on the identical chain, same steps, same thermostat. The chapter's
+  earlier prose and the course's new `polymers-quantified` slide now report this measured number
+  instead of an assumed one; two new TALLY assertions check it lands the right way every time the
+  notebook re-executes. A second, smaller finding surfaced by the same investigation: the settled
+  bond length under real dynamics is ~1.06, not exactly `r0=1.0`, because every bonded pair also
+  carries full LJ and `r0` sits inside the LJ minimum (2**(1/6)~=1.122) -- now measured and
+  explained rather than left implicit.
+- The `special_bonds lj 0 0 0` default excludes 1-2, 1-3 *and* 1-4 neighbours along the bond
+  topology, not just directly-bonded pairs as the chapter and slide said -- material here, since
+  this chain's 1-3 neighbours sit around 2 sigma, well inside the 2.5 sigma cutoff. Corrected in
+  `build/chapter11_polymers.py`, the `polymers-preset` slide, and the inline `Spec` comment.
+- Minor: `CITATION.cff`'s `date-released` bumped to match `CHANGELOG.md`'s date; the CLI's
+  `_WRITES_DATA_FILE` dict (conflating "needs a workdir" with "the --n kwarg's name") split into
+  that plus a separate `_N_KWARG` map; `tests/test_run_benchmarks.py`'s new offline force test
+  documents what it does and does not cover (a self-consistency check against mdlite's own energy,
+  not a check that a whole term wasn't silently dropped from both sides); `tests/test_script.py`'s
+  two LAMMPS-backed preset tests now check the package-skip condition before building the preset,
+  not after.
+
+Whole suite (measured with every changed file already tracked, since two tests parametrize over
+tracked files and the number a partially-staged run reports is not the number the shipped commit
+collects -- this batch adds no new tracked file, so the count is unaffected by staging): 414
+passed / 3 skipped, pyflakes clean, conformance PASS=23 FAIL=0. Deck verified clean across all
+states (`course/tools/verify_deck.py`).
+
 ## 0.1.19 — 2026-09-15
 
-Chapter 12 of the atom-visuals roadmap (item 3, built before item 2/water since it needs no
+Chapter 11 of the atom-visuals roadmap (item 3 of 6, built before item 2/water since it needs no
 external file or literature reference): a bead-spring polymer chain.
 
 - `lammpskill.script.bead_spring_chain()`: a simplified bead-spring model built from exactly what
   `mdlite` already has -- `HarmonicBond` along the backbone, full (attractive + repulsive)
   `LennardJones` between every pair -- explicitly not the field-standard Kremer-Grest FENE+WCA
-  model (`mdlite` has neither). Reduced (`lj`) units, 30 beads by default, near-straight starting
-  conformation with a small jitter. One deliberate correctness detail: `special_bonds lj 1.0 1.0
-  1.0`, because LAMMPS's own default (`lj 0 0 0`) excludes directly-bonded pairs from the
+  model (`mdlite` has no FENE bond). Reduced (`lj`) units, 30 beads by default, near-straight
+  starting conformation with a small jitter. One deliberate correctness detail: `special_bonds lj
+  1.0 1.0 1.0`, because LAMMPS's own default (`lj 0 0 0`) excludes bonded neighbours from the
   nonbonded sum, which `mdlite`'s potentials have no concept of at all -- a new pitfall recorded in
-  `references/pitfalls.md`. `lammpskill new --preset bead_spring_chain` and
-  `lammpskill.script.PRESETS` (CLI) support it the same way `spce_water` already does.
+  `references/pitfalls.md`. `lammpskill new --preset bead_spring_chain` and the CLI's `PRESETS`
+  (`lammpskill/cli.py`) support it the same way `spce_water` already does.
 - `scripts/run_benchmarks.py` gains `polymer`: one bead-spring-chain configuration, `mdlite`
   (`LennardJones` + `HarmonicBond`, summed independently) vs LAMMPS (`run 0`, forces dumped at
   full precision) -- the same single-configuration cross-check chapters 02/05 already established,
@@ -27,19 +66,16 @@ external file or literature reference): a bead-spring polymer chain.
 - Chapter 11 (Polymers, new): the preset and checker demo; the mdlite-vs-LAMMPS cross-check
   reading the committed record; a real LAMMPS run with a trajectory dump (chapter 01's
   record-or-run pattern) producing a `viz.snapshot()` of the starting conformation and a
-  `viz.animate_gif()` of the chain relaxing. The chain visibly collapses from a near-straight line
-  into a compact globule -- the real, textbook coil-globule transition full Lennard-Jones predicts
-  for a homopolymer (a purely-repulsive WCA chain would show an extended, self-avoiding coil
-  instead) -- called out explicitly in the chapter text as a direct consequence of this chapter's
-  own stated simplification, not left as an unexplained picture.
-- Course: new lecture L11 (Polymers), full intro -> core -> math depth, five slides ending on the
-  cross-check numbers table (mirroring L5's `eam-cu`). `test_eleven_lectures_locked_to_the_chapters`
-  renamed to `test_twelve_lectures_locked_to_the_chapters` (L0..L11 now, the atom-visuals design
-  spec's own item 5 anticipated this). Deck 57 -> 62 slides, PDF fallback 67 -> 73 pages, figures
-  10 -> 12; README/SKILL.md/AGENTS.md/USER_MANUAL.md's chapter/lecture counts updated throughout.
+  `viz.animate_gif()` of the chain contracting under thermal motion (quantified against WCA in
+  0.1.20, immediately below, after review).
+- Course: new lecture L11 (Polymers), full intro -> core -> math depth (five slides in this
+  release, a sixth added in 0.1.20). `test_eleven_lectures_locked_to_the_chapters` renamed to
+  `test_twelve_lectures_locked_to_the_chapters` (L0..L11 now, the atom-visuals design spec's own
+  item 5 anticipated this). Deck 57 -> 62 slides, PDF fallback 67 -> 73 pages, figures 10 -> 12;
+  README/SKILL.md/AGENTS.md/USER_MANUAL.md's chapter/lecture counts updated throughout.
 
-Whole suite: 410 passed / 3 skipped, pyflakes clean, conformance PASS=23 FAIL=0. Deck verified
-clean across all 73 states (`course/tools/verify_deck.py`).
+Whole suite (as first landed, before the 0.1.20 review pass): 410 passed / 3 skipped, pyflakes
+clean, conformance PASS=23 FAIL=0. Deck verified clean across all 73 states.
 
 ## 0.1.18 — 2026-09-14
 

@@ -9,7 +9,7 @@ and is byte-identical to the notebook's output (extract_figures --check); the ge
 handout and notes are up to date with the content (build_deck --check); every data-t key in
 index.html resolves; the vendored reveal.js keeps its licence and NOTICE names it.
 
-Numeric thresholds are calibrated to this project's actual scale (currently 12 figures, 62 slides
+Numeric thresholds are calibrated to this project's actual scale (currently 12 figures, 63 slides
 across 12 lectures) rather than copied from pythtb-skill's reference implementation (69 figures,
 50+ slides); they are meant to keep growing as the atom-visuals roadmap adds more figures and
 lectures (docs/superpowers/specs/2026-09-14-lammps-skill-atom-visuals-design.md) -- update them
@@ -76,8 +76,8 @@ def test_every_slide_listed_exactly_once_and_every_stack_has_one(deck):
     assert set(listed) == set(deck["slides"]), set(listed) ^ set(deck["slides"])
     # atom visuals plan, task 7: L1 gains first-sim-atoms (the new snapshot+animation slide)
     # Cu vacancy feature: L5 gains eam-vacancy (the new snapshot pair, before/after FIRE relaxation)
-    # Polymer chapter: L11 (5 slides) is new
-    assert len(listed) == 62
+    # Polymer chapter: L11 (6 slides) is new
+    assert len(listed) == 63
 
 
 def test_levels_run_intro_core_math_inside_each_stack(deck):

@@ -130,7 +130,7 @@
    "heading": "Watching the chain relax",
    "cell": 10,
    "figure": 2,
-   "caption": "The same chain animated across the run: the near-straight starting conformation collapsing into a compact globule as thermal motion (T*=1.0) samples the space the harmonic bonds and full (attractive+repulsive) Lennard-Jones allow -- the coil-globule collapse a purely-repulsive WCA chain would not show, and the same physical case the energy/force cross-check above verified, seen directly rather than only through a single static configuration.",
+   "caption": "The same chain animated across the run: the near-straight starting conformation contracting as thermal motion (T*=1.0) samples the space the harmonic bonds and full (attractive+repulsive) Lennard-Jones allow -- the same physical case the energy/force cross-check above verified, seen directly rather than only through a single static configuration. How much of this contraction is specifically because this model uses full LJ rather than WCA is measured, not asserted, next.",
    "sha256": "a337ad052284b012f080e47c3881ededc0a491c32a52b87329f9745d1743164e",
    "bytes": 28010
   }
