@@ -93,3 +93,12 @@ with its manual page) and the operational pitfalls met while building this produ
   execute process: No such file or directory`. Use `timeout N env VAR=value prog`. This is how an
   examples sweep scored 191 consecutive cases as "no thermo output" (finding N-22) — and note that
   the failure is silent in the usual way, because the exit status was still 0 (N-15).
+- **2026-09-15 — `special_bonds` defaults to excluding directly-bonded pairs from LAMMPS's
+  nonbonded sum, silently.** `special_bonds lj 0 0 0` (LAMMPS's own default) means the 1-2, 1-3 and
+  1-4 neighbours along a bond topology get zero weight in the pairwise LJ energy — invisible unless
+  you know to look for it, and exactly wrong for cross-checking against `mdlite`'s
+  `LennardJones`/`HarmonicBond`, which sum independently over all pairs and all bonds with no
+  exclusion concept at all. `lammpskill.script.bead_spring_chain()` sets `special_bonds lj 1.0 1.0
+  1.0` explicitly so both engines describe the same system; any bonded `Spec` compared against
+  mdlite needs the same check, the same way `thermo_modify norm no` is checked for every `units lj`
+  case (N-4 above).

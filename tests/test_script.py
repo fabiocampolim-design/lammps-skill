@@ -2,7 +2,7 @@
 # Copyright 2026 Fabio Campolim
 import pytest
 
-from lammpskill.script import Spec, Stage, check, eam_fcc, lj_melt, render, spce_water
+from lammpskill.script import Spec, Stage, bead_spring_chain, check, eam_fcc, lj_melt, render, spce_water
 
 
 def test_lj_melt_renders_in_manual_order_and_has_no_absolute_path():
@@ -72,6 +72,18 @@ def test_checker_is_quiet_on_the_presets(tmp_path):
     spec, df = spce_water(n_side=2, workdir=str(tmp_path))
     assert (tmp_path / "water.data").exists() and df.natoms == 3 * 8 and df.bonds.shape[0] == 16 and df.angles.shape[0] == 8
     assert [x for x in check(render(spec), workdir=str(tmp_path)) if x.level == "error"] == []
+    chain_spec, chain_df = bead_spring_chain(n_beads=10, workdir=str(tmp_path))
+    assert (tmp_path / "chain.data").exists() and chain_df.natoms == 10 and chain_df.bonds.shape[0] == 9
+    assert [x for x in check(render(chain_spec), workdir=str(tmp_path)) if x.level == "error"] == []
+
+
+def test_bead_spring_chain_includes_bonded_pairs_in_the_lj_sum():
+    """mdlite's LennardJones/HarmonicBond sum independently over all pairs and all bonds -- no
+    exclusion concept -- so the LAMMPS side must not exclude directly-bonded pairs from its own
+    nonbonded sum either (LAMMPS's default, special_bonds lj 0 0 0, would), or the two engines
+    describe different systems."""
+    spec, _ = bead_spring_chain(n_beads=5)
+    assert "special_bonds lj 1.0 1.0 1.0" in render(spec)
 
 
 def test_checker_flags_missing_data_file(tmp_path):
@@ -110,4 +122,17 @@ def test_presets_run_in_lammps(lammps_exe, tmp_path):
     p = run_command(lammps_exe, ["-in", "in.w", "-log", "log.w", "-screen", "none"], cwd=str(tmp_path), timeout=300)
     assert p.returncode == 0, p.stderr + (tmp_path / "log.w").read_text(errors="replace")[-1500:]
     lf = read_log(str(tmp_path / "log.w"))
+    assert lf.errors == [] and lf.thermo.last["Step"] == 20
+
+
+def test_bead_spring_chain_preset_runs_in_lammps(lammps_exe, tmp_path):
+    from lammpskill.install.base import run_command
+    from lammpskill.io.log import read_log
+    spec, _ = bead_spring_chain(n_beads=10, steps=20, workdir=str(tmp_path))
+    if "MOLECULE" not in set(lammps_exe.packages):
+        pytest.skip("MOLECULE not in this build")
+    (tmp_path / "in.c").write_text(render(spec), encoding="utf-8")
+    p = run_command(lammps_exe, ["-in", "in.c", "-log", "log.c", "-screen", "none"], cwd=str(tmp_path), timeout=300)
+    assert p.returncode == 0, p.stderr + (tmp_path / "log.c").read_text(errors="replace")[-1500:]
+    lf = read_log(str(tmp_path / "log.c"))
     assert lf.errors == [] and lf.thermo.last["Step"] == 20

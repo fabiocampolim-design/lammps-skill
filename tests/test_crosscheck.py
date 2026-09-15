@@ -47,7 +47,14 @@ def test_eam_cu_vacancy_record():
     assert r["natoms_vacancy_lammps"] == r["natoms_perfect"] - 1
 
 
+def test_polymer_vs_lammps_record_is_within_its_own_tolerance():
+    r = _rec("polymer_vs_lammps")
+    assert abs(r["energy_mdlite"] - r["energy_lammps"]) <= r["tolerance_energy"]
+    assert r["force_maxdiff"] <= r["tolerance_force"]
+    assert r["nbonds"] == r["natoms"] - 1   # one linear chain: n beads, n-1 bonds
+
+
 def test_records_carry_measured_residue_and_a_reason():
-    for name in ("lj_energy_vs_lammps", "lj_nvt_nist", "eam_cu_lattice", "eam_cu_vacancy"):
+    for name in ("lj_energy_vs_lammps", "lj_nvt_nist", "eam_cu_lattice", "eam_cu_vacancy", "polymer_vs_lammps"):
         r = _rec(name)
         assert "measured" in r and "why" in r["provenance"] and r["provenance"]["date"]

@@ -5,11 +5,13 @@
   lj-nvt          : mdlite NVT (Nose-Hoover) at a NIST state point vs the NIST P*, U* (block errors)
   eam-cu          : lattice constant + cohesive energy of fcc Cu on the SAME potential file (user-provided path), mdlite vs LAMMPS
   eam-cu-vacancy  : vacancy formation energy of fcc Cu (same potential, same fitted a0) -- mdlite (FIRE-relaxed) vs LAMMPS (minimize)
+  polymer         : one bead-spring-chain configuration, energy and forces, mdlite (LennardJones + HarmonicBond) vs LAMMPS (`run 0`, dump forces)
 Usage: run_benchmarks.py [--which a,b] [--outdir data/records] [--potential PATH] [--steps N] [--log-dir DIR] [--version]"""
 
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import datetime as _dt
 import json
 import os
@@ -31,18 +33,18 @@ from lammpskill.io.dump import read_dump  # noqa: E402
 from lammpskill.io.potential import read_eam_funcfl, read_eam_setfl  # noqa: E402
 from lammpskill.post import block_average, load_benchmark  # noqa: E402
 from lammpskill.run import run as lrun  # noqa: E402
-from lammpskill.script import Spec, Stage, eam_fcc, render  # noqa: E402
+from lammpskill.script import Spec, Stage, bead_spring_chain, eam_fcc, render  # noqa: E402
 from mdlite.box import Box  # noqa: E402
 from mdlite.eam import EAM  # noqa: E402
 from mdlite.integrate import State, velocity_verlet  # noqa: E402
 from mdlite.neighbors import VerletList  # noqa: E402
-from mdlite.pair import LennardJones  # noqa: E402
+from mdlite.pair import HarmonicBond, LennardJones  # noqa: E402
 from mdlite.thermostats import NoseHooverChain  # noqa: E402
 
 
 def build_parser():
     p = argparse.ArgumentParser(prog="run_benchmarks.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--which", default="lj-vs-lammps,lj-nvt,eam-cu,eam-cu-vacancy", help="comma-separated benchmarks to run")
+    p.add_argument("--which", default="lj-vs-lammps,lj-nvt,eam-cu,eam-cu-vacancy,polymer", help="comma-separated benchmarks to run")
     p.add_argument("--outdir", default=os.path.join(ROOT, "data", "records"), help="where the record JSON files are written")
     p.add_argument("--workdir", default=os.path.join(ROOT, "out", "benchmarks"), help="scratch directory for the LAMMPS runs")
     p.add_argument("--potential", default=None, help="path to a Cu EAM file (funcfl .eam or setfl .eam.alloy) you obtained yourself")
@@ -102,6 +104,54 @@ def lj_vs_lammps(inst, workdir):
             "tolerance_energy": _tol(dE), "tolerance_force": _tol(dF), "natoms": len(pos),
             "provenance": _prov(inst, "double precision both sides; forces (dump_modify format %20.15g) agree to round-off; the energy residue is "
                                       "the thermo print precision (pe printed with ~8 significant digits); tolerance one decade above measured")}
+
+
+def _polymer_energy_forces_mdlite(pos, box, bonds0):
+    """mdlite's side of the bead-spring cross-check: LennardJones + HarmonicBond, summed
+    independently over all pairs/bonds (no bonded-pair exclusion -- see the special_bonds pitfall
+    in references/pitfalls.md). Factored out so it can be exercised offline, without LAMMPS, in
+    tests/test_run_benchmarks.py."""
+    lj = LennardJones(epsilon=1.0, sigma=1.0, rcut=2.5, shift=False)   # bead_spring_chain's Spec never
+                                                                        # sets pair_modify shift -- LAMMPS's
+                                                                        # own lj/cut default is unshifted too
+    bond = HarmonicBond(k=100.0, r0=1.0, bonds=bonds0)
+    vl = VerletList(box, 2.5)
+    vl.update(pos)
+    E_lj, F_lj, _ = lj.energy_forces(pos, box, vl.pairs)
+    E_bond, F_bond, _ = bond.energy_forces(pos, box)
+    return E_lj + E_bond, F_lj + F_bond
+
+
+def polymer_vs_lammps(inst, workdir):
+    os.makedirs(workdir, exist_ok=True)
+    spec, df = bead_spring_chain(n_beads=30, workdir=workdir)
+    box = Box(df.box.lengths, lo=df.box.lo)
+    pos = df.positions
+    bonds0 = df.bonds[:, 2:4] - 1   # LAMMPS's 1-indexed atom ids -> 0-indexed, matching pos's row order
+    E_md, F_md = _polymer_energy_forces_mdlite(pos, box, bonds0)
+
+    # single-point evaluation of the identical configuration DataFile.from_arrays wrote to
+    # chain.data above -- no integration, so the nvt fix (irrelevant to a static pe/force dump
+    # anyway) is dropped for clarity, same as lj_vs_lammps's own from-scratch Spec
+    run_spec = dataclasses.replace(spec, thermo_style="custom step pe", thermo_modify="norm no",
+                                    dumps=["f all custom 1 forces.dump id fx fy fz"],
+                                    fixes=[], stages=[Stage("run", "0")])
+    text = render(run_spec).replace("dump f all custom 1 forces.dump id fx fy fz",
+                                     "dump f all custom 1 forces.dump id fx fy fz\ndump_modify f format float %20.15g")
+    res = lrun(text, workdir, installation=inst)
+    if not res.ok:
+        raise RuntimeError("LAMMPS run failed: %s" % res.errors)
+    E_lmp = res.thermo.last["PotEng"]
+    fr = read_dump(os.path.join(workdir, "forces.dump")).frames[0]
+    F_lmp = np.column_stack([fr.get("fx"), fr.get("fy"), fr.get("fz")])
+    dE, dF = abs(E_md - E_lmp), float(np.abs(F_md - F_lmp).max())
+    return {"energy_mdlite": E_md, "energy_lammps": E_lmp, "force_maxdiff": dF, "measured": {"dE": dE, "dF": dF},
+            "tolerance_energy": _tol(dE), "tolerance_force": _tol(dF), "natoms": len(pos), "nbonds": len(bonds0),
+            "provenance": _prov(inst, "one bead-spring-chain configuration (30 beads); mdlite: LennardJones + "
+                                      "HarmonicBond summed independently over all pairs/bonds; LAMMPS: pair lj/cut "
+                                      "+ bond harmonic with special_bonds lj 1 1 1 so neither engine excludes "
+                                      "bonded pairs from the nonbonded sum (pitfall in references/pitfalls.md); "
+                                      "forces (dump_modify format %20.15g) agree to round-off")}
 
 
 def lj_nvt(inst, workdir, steps, state_point=None):
@@ -314,6 +364,11 @@ def main(argv=None):
                     raise RuntimeError("no LAMMPS")
                 rec = eam_cu_vacancy(inst, os.path.join(a.workdir, name), a.potential)
                 out = "eam_cu_vacancy"
+            elif name == "polymer":
+                if inst is None:
+                    raise RuntimeError("no LAMMPS")
+                rec = polymer_vs_lammps(inst, os.path.join(a.workdir, name))
+                out = "polymer_vs_lammps"
             else:
                 print("unknown benchmark", name)
                 rc = 2

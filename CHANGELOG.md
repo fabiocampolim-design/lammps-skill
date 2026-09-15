@@ -2,6 +2,45 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.19 — 2026-09-15
+
+Chapter 12 of the atom-visuals roadmap (item 3, built before item 2/water since it needs no
+external file or literature reference): a bead-spring polymer chain.
+
+- `lammpskill.script.bead_spring_chain()`: a simplified bead-spring model built from exactly what
+  `mdlite` already has -- `HarmonicBond` along the backbone, full (attractive + repulsive)
+  `LennardJones` between every pair -- explicitly not the field-standard Kremer-Grest FENE+WCA
+  model (`mdlite` has neither). Reduced (`lj`) units, 30 beads by default, near-straight starting
+  conformation with a small jitter. One deliberate correctness detail: `special_bonds lj 1.0 1.0
+  1.0`, because LAMMPS's own default (`lj 0 0 0`) excludes directly-bonded pairs from the
+  nonbonded sum, which `mdlite`'s potentials have no concept of at all -- a new pitfall recorded in
+  `references/pitfalls.md`. `lammpskill new --preset bead_spring_chain` and
+  `lammpskill.script.PRESETS` (CLI) support it the same way `spce_water` already does.
+- `scripts/run_benchmarks.py` gains `polymer`: one bead-spring-chain configuration, `mdlite`
+  (`LennardJones` + `HarmonicBond`, summed independently) vs LAMMPS (`run 0`, forces dumped at
+  full precision) -- the same single-configuration cross-check chapters 02/05 already established,
+  needing no external file at all (unlike the EAM benchmarks). `_polymer_energy_forces_mdlite` is
+  factored out and exercised offline in `tests/test_run_benchmarks.py` against a numerical
+  derivative, no LAMMPS needed. Energy agrees to 2.9e-7 (thermo print precision), forces to 2.1e-11
+  (round-off); the record is committed (`data/records/polymer_vs_lammps.json`), with
+  `tests/test_crosscheck.py` and `references/benchmarks.md` coverage.
+- Chapter 11 (Polymers, new): the preset and checker demo; the mdlite-vs-LAMMPS cross-check
+  reading the committed record; a real LAMMPS run with a trajectory dump (chapter 01's
+  record-or-run pattern) producing a `viz.snapshot()` of the starting conformation and a
+  `viz.animate_gif()` of the chain relaxing. The chain visibly collapses from a near-straight line
+  into a compact globule -- the real, textbook coil-globule transition full Lennard-Jones predicts
+  for a homopolymer (a purely-repulsive WCA chain would show an extended, self-avoiding coil
+  instead) -- called out explicitly in the chapter text as a direct consequence of this chapter's
+  own stated simplification, not left as an unexplained picture.
+- Course: new lecture L11 (Polymers), full intro -> core -> math depth, five slides ending on the
+  cross-check numbers table (mirroring L5's `eam-cu`). `test_eleven_lectures_locked_to_the_chapters`
+  renamed to `test_twelve_lectures_locked_to_the_chapters` (L0..L11 now, the atom-visuals design
+  spec's own item 5 anticipated this). Deck 57 -> 62 slides, PDF fallback 67 -> 73 pages, figures
+  10 -> 12; README/SKILL.md/AGENTS.md/USER_MANUAL.md's chapter/lecture counts updated throughout.
+
+Whole suite: 410 passed / 3 skipped, pyflakes clean, conformance PASS=23 FAIL=0. Deck verified
+clean across all 73 states (`course/tools/verify_deck.py`).
+
 ## 0.1.18 — 2026-09-14
 
 Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of 0.1.17's Cu

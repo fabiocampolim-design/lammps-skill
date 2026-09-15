@@ -16,9 +16,12 @@ from .install import ROUTES, detect_all
 from .io.dump import read_dump
 from .io.log import read_log
 from .post import rdf_trajectory
-from .script import check, eam_fcc, lj_melt, render, spce_water
+from .script import bead_spring_chain, check, eam_fcc, lj_melt, render, spce_water
 
-PRESETS = {"lj_melt": lj_melt, "eam_fcc": eam_fcc, "spce_water": spce_water}
+PRESETS = {"lj_melt": lj_melt, "eam_fcc": eam_fcc, "spce_water": spce_water, "bead_spring_chain": bead_spring_chain}
+# presets that return (Spec, DataFile) and need a workdir to write their data file into, vs. the
+# self-contained lattice/create_atoms presets that return a Spec alone
+_WRITES_DATA_FILE = {"spce_water": "n_side", "bead_spring_chain": "n_beads"}
 
 
 def _detect(routes=None):
@@ -39,7 +42,7 @@ def build_parser():
     n.add_argument("--preset", choices=sorted(PRESETS), required=True, help="which chapter system")
     n.add_argument("--out", required=True, help="case directory to create")
     n.add_argument("--steps", type=int, default=None, help="number of MD steps")
-    n.add_argument("--n", type=int, default=None, help="lattice repetitions per side (spce_water: molecules per side)")
+    n.add_argument("--n", type=int, default=None, help="lattice repetitions per side (spce_water: molecules per side; bead_spring_chain: number of beads)")
     c = sub.add_parser("check", help="check an input script for the mistakes the manual warns about")
     c.add_argument("file")
     c.add_argument("--workdir", help="directory the script runs in (for read_data checks; default: the script's directory)")
@@ -104,8 +107,8 @@ def _cmd_new(a):
     if a.steps is not None:
         kw["steps"] = a.steps
     if a.n is not None:
-        kw["n" if a.preset != "spce_water" else "n_side"] = a.n
-    if a.preset == "spce_water":
+        kw[_WRITES_DATA_FILE.get(a.preset, "n")] = a.n
+    if a.preset in _WRITES_DATA_FILE:
         spec, _ = fn(workdir=a.out, **kw)
     else:
         spec = fn(**kw)

@@ -50,7 +50,7 @@ Exit codes: 0 all checks passed or skipped, 1 a check failed.
 
 | flag | meaning |
 |---|---|
-| `--which a,b` | benchmarks to run: `lj-vs-lammps`, `lj-nvt`, `eam-cu`, `eam-cu-vacancy` (default all four) |
+| `--which a,b` | benchmarks to run: `lj-vs-lammps`, `lj-nvt`, `eam-cu`, `eam-cu-vacancy`, `polymer` (default all five) |
 | `--outdir DIR` | where the record JSON files go (default data/records) |
 | `--workdir DIR` | scratch directory for the LAMMPS runs (default out/benchmarks) |
 | `--potential PATH` | a Cu EAM file you obtained (funcfl `.eam` or setfl `.eam.alloy`) — required for `eam-cu` and `eam-cu-vacancy` |
@@ -176,7 +176,7 @@ Global: `--log-dir DIR` (append an audit record per command to `lammpskill-audit
 |---|---|
 | `detect` | `--route ROUTE` (only this route), `--json` (machine-readable) |
 | `verify` | `--probe` (also run the LJ-melt probe) |
-| `new` | `--preset {eam_fcc,lj_melt,spce_water}` (required), `--out DIR` (required), `--steps N`, `--n N` (lattice repetitions per side; molecules per side for spce_water) |
+| `new` | `--preset {eam_fcc,lj_melt,spce_water,bead_spring_chain}` (required), `--out DIR` (required), `--steps N`, `--n N` (lattice repetitions per side; molecules per side for spce_water; beads for bead_spring_chain) |
 | `check FILE` | `--workdir DIR` (for the read_data check; default the file's directory) — exit 1 on an error-level finding |
 | `run DIR` | `--in NAME` (input script inside DIR, default in.lammps), `--route ROUTE`, `--backend {auto,subprocess,library}`, `--mpi N`, `--omp N`, `--time-limit S` (default 3600) |
 | `log FILE` | `--csv OUT` (last thermo block as CSV), `--last` (last row as JSON) |
@@ -188,7 +188,7 @@ Exit codes: 0 success, 1 failure (no installation, an error-level finding, a fai
 ## Python entry points
 
 `lammpskill.install.detect_all()`, `lammpskill.install.base.run_command / probe`,
-`lammpskill.script.Spec / render / check / lj_melt / eam_fcc / spce_water`,
+`lammpskill.script.Spec / render / check / lj_melt / eam_fcc / spce_water / bead_spring_chain`,
 `lammpskill.run.run / SubprocessBackend / LibraryBackend / run_or_load`,
 `lammpskill.io.{log,data,dump,restart,potential,backends}`, `lammpskill.post.*`,
 `lammpskill.viz.snapshot / animate_gif` (needs the `ase` extra — headless atom snapshots and GIF

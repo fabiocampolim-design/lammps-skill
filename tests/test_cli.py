@@ -25,6 +25,16 @@ def test_new_check_and_audit_log(tmp_path, capsys):
     assert len(lines) == 2 and json.loads(lines[0])["command"] == "new"
 
 
+def test_new_bead_spring_chain_writes_both_the_script_and_its_data_file(tmp_path):
+    """bead_spring_chain, like spce_water, returns (Spec, DataFile) and needs --out as its
+    workdir so `new` can write chain.data alongside in.lammps."""
+    out = tmp_path / "chain"
+    assert cli.main(["new", "--preset", "bead_spring_chain", "--out", str(out), "--n", "10"]) == 0
+    assert (out / "in.lammps").exists() and (out / "chain.data").exists()
+    text = (out / "in.lammps").read_text(encoding="utf-8")
+    assert "read_data chain.data" in text and "bond_style harmonic" in text
+
+
 def test_check_exit_code_is_one_on_errors(tmp_path):
     bad = tmp_path / "bad.in"
     bad.write_text("units lj\natom_style atomic\npair_coeff * * 1 1\npair_style lj/cut 2.5\nrun 10\n", encoding="utf-8")

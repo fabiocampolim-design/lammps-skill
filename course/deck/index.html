@@ -311,6 +311,33 @@
         <h2 data-t="scaling-limits.title"></h2><p data-t="scaling-limits.lead"></p><table><thead><tr><th data-t="scaling-limits.table.head.0"></th><th data-t="scaling-limits.table.head.1"></th></tr></thead><tbody><tr><td data-t="scaling-limits.table.rows.0.0"></td><td data-t="scaling-limits.table.rows.0.1"></td></tr><tr><td data-t="scaling-limits.table.rows.1.0"></td><td data-t="scaling-limits.table.rows.1.1"></td></tr><tr><td data-t="scaling-limits.table.rows.2.0"></td><td data-t="scaling-limits.table.rows.2.1"></td></tr></tbody></table>
         <aside class="notes" data-notes="scaling-limits"></aside>
       </section>
+      <section id="div-polymers" data-sec="polymers" class="divider-slide">
+        <p class="kicker">L11 · notebook ch11</p>
+        <h1>Polymers</h1>
+        <p class="hero-sub">A bead-spring chain -- harmonic bonds and full Lennard-Jones, mdlite against LAMMPS to round-off -- and watching it collapse from a straight line into a globule.</p>
+        <ol class="agenda"><li class="lv-intro">A bead-spring chain, simplified on purpose</li><li class="lv-core">One bond term, one pairwise term</li><li class="lv-core">special_bonds: the pitfall this chapter exists to surface</li><li class="lv-core">Collapsing into a globule</li><li class="lv-math">One configuration, mdlite against LAMMPS</li></ol>
+        <aside class="notes">Divider — one breath: say in a sentence where the previous lecture ended and what this one adds. The list mirrors the slide order; colours mark intro / core / math.</aside>
+      </section>
+      <section id="polymers-intro" data-sec="polymers" data-level="intro">
+        <h2 data-t="polymers-intro.title"></h2><p data-t="polymers-intro.lead"></p><ul class=""><li data-t="polymers-intro.bullets.0"></li><li data-t="polymers-intro.bullets.1"></li><li data-t="polymers-intro.bullets.2"></li></ul>
+        <aside class="notes" data-notes="polymers-intro"></aside>
+      </section>
+      <section id="polymers-form" data-sec="polymers" data-level="core">
+        <h2 data-t="polymers-form.title"></h2><p data-t="polymers-form.lead"></p><div class="eq-box"><div class="kicker" data-t="polymers-form.eqs.0.label"></div><div class="eq-hero" data-t="polymers-form.eqs.0.math"></div></div><div class="eq-box"><div class="kicker" data-t="polymers-form.eqs.1.label"></div><div class="eq-hero" data-t="polymers-form.eqs.1.math"></div></div><ul class="small"><li data-t="polymers-form.bullets.0"></li></ul>
+        <aside class="notes" data-notes="polymers-form"></aside>
+      </section>
+      <section id="polymers-preset" data-sec="polymers" data-level="core">
+        <h2 data-t="polymers-preset.title"></h2><p data-t="polymers-preset.lead"></p><div class="panel code" data-t="polymers-preset.code"></div><ul class="small"><li data-t="polymers-preset.bullets.0"></li></ul>
+        <aside class="notes" data-notes="polymers-preset"></aside>
+      </section>
+      <section id="polymers-relax" data-sec="polymers" data-level="core">
+        <h2 data-t="polymers-relax.title"></h2><p data-t="polymers-relax.lead"></p><div class="grid-2 two-figs"><figure class="fig "><img src="figs/ch11-f1.png" alt="The chain&#x27;s starting conformation: near-straight, the small per-bead jitter `bead_spring_chain()` adds barely visible at this scale. Rendered as carbon-like spheres purely to pick a radius and colour -- reduced LJ units carry no real element, the same convention chapter 01&#x27;s atom views use."><figcaption class="caption">The chain&#x27;s starting conformation: near-straight, the small per-bead jitter `bead_spring_chain()` adds barely visible at this scale. Rendered as carbon-like spheres purely to pick a radius and colour -- reduced LJ units carry no real element, the same convention chapter 01&#x27;s atom views use. <span class="src">— Figure 1 · notebook §0 · chapter 11, cell 9</span></figcaption></figure><figure class="fig "><img src="figs/ch11-f2.gif" alt="The same chain animated across the run: the near-straight starting conformation collapsing into a compact globule as thermal motion (T*=1.0) samples the space the harmonic bonds and full (attractive+repulsive) Lennard-Jones allow -- the coil-globule collapse a purely-repulsive WCA chain would not show, and the same physical case the energy/force cross-check above verified, seen directly rather than only through a single static configuration."><figcaption class="caption">The same chain animated across the run: the near-straight starting conformation collapsing into a compact globule as thermal motion (T*=1.0) samples the space the harmonic bonds and full (attractive+repulsive) Lennard-Jones allow -- the coil-globule collapse a purely-repulsive WCA chain would not show, and the same physical case the energy/force cross-check above verified, seen directly rather than only through a single static configuration. <span class="src">— Figure 2 · notebook §0 · chapter 11, cell 10</span></figcaption></figure></div><ul class="small"><li data-t="polymers-relax.bullets.0"></li><li data-t="polymers-relax.bullets.1"></li></ul>
+        <aside class="notes" data-notes="polymers-relax"></aside>
+      </section>
+      <section id="polymers-crosscheck" data-sec="polymers" data-level="math">
+        <h2 data-t="polymers-crosscheck.title"></h2><p data-t="polymers-crosscheck.lead"></p><table><thead><tr><th data-t="polymers-crosscheck.table.head.0"></th><th data-t="polymers-crosscheck.table.head.1"></th><th data-t="polymers-crosscheck.table.head.2"></th><th data-t="polymers-crosscheck.table.head.3"></th></tr></thead><tbody><tr><td data-t="polymers-crosscheck.table.rows.0.0"></td><td data-t="polymers-crosscheck.table.rows.0.1"></td><td data-t="polymers-crosscheck.table.rows.0.2"></td><td data-t="polymers-crosscheck.table.rows.0.3"></td></tr><tr><td data-t="polymers-crosscheck.table.rows.1.0"></td><td data-t="polymers-crosscheck.table.rows.1.1"></td><td data-t="polymers-crosscheck.table.rows.1.2"></td><td data-t="polymers-crosscheck.table.rows.1.3"></td></tr></tbody></table>
+        <aside class="notes" data-notes="polymers-crosscheck"></aside>
+      </section>
     </div>
   </div>
   <script src="../shared/reveal/dist/reveal.js"></script>

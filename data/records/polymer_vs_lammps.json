@@ -1,0 +1,20 @@
+{
+ "energy_lammps": 26.834921,
+ "energy_mdlite": 26.83492071320523,
+ "force_maxdiff": 2.0691004465334117e-11,
+ "measured": {
+  "dE": 2.8679477281912114e-07,
+  "dF": 2.0691004465334117e-11
+ },
+ "natoms": 30,
+ "nbonds": 29,
+ "provenance": {
+  "date": "2026-09-15",
+  "lammps_skill": "0.1.18",
+  "lammps_version": "10 Dec 2025",
+  "route": "wsl-apt",
+  "why": "one bead-spring-chain configuration (30 beads); mdlite: LennardJones + HarmonicBond summed independently over all pairs/bonds; LAMMPS: pair lj/cut + bond harmonic with special_bonds lj 1 1 1 so neither engine excludes bonded pairs from the nonbonded sum (pitfall in references/pitfalls.md); forces (dump_modify format %20.15g) agree to round-off"
+ },
+ "tolerance_energy": 1e-06,
+ "tolerance_force": 1e-10
+}

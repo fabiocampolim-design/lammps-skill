@@ -54,6 +54,8 @@ _SPEC = [
      "Choosing a Build: what the 314-case examples sweep says about package list vs package count", False),
     ("10", "chapter10_scaling_limits", "Scaling_And_Limits",
      "Scaling and Limits: MPI and OpenMP speed-up, and what this machine honestly cannot do", True),
+    ("11", "chapter11_polymers", "Polymers",
+     "Polymers: a bead-spring chain, mdlite's HarmonicBond against LAMMPS bond_style harmonic, and watching it relax", True),
 ]
 
 CHAPTERS = {}

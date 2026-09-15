@@ -10,7 +10,8 @@
   "LAMMPS_07_Minimisation.ipynb",
   "LAMMPS_08_Reading_What_LAMMPS_Writes.ipynb",
   "LAMMPS_09_Choosing_A_Build.ipynb",
-  "LAMMPS_10_Scaling_And_Limits.ipynb"
+  "LAMMPS_10_Scaling_And_Limits.ipynb",
+  "LAMMPS_11_Polymers.ipynb"
  ],
  "figures": {
   "ch01-f1.png": {
@@ -112,6 +113,26 @@
    "caption": "The velocity autocorrelation function, normalised to 1 at zero lag: a liquid decays roughly monotonically toward zero rather than oscillating, which is itself evidence the case really is a liquid.",
    "sha256": "beb04ba43324d312d26f808ee26f5faa5c799abd0583e558a7a371de5cb63bb5",
    "bytes": 15535
+  },
+  "ch11-f1.png": {
+   "chapter": "LAMMPS_11_Polymers.ipynb",
+   "section": 0,
+   "heading": "Watching the chain relax",
+   "cell": 9,
+   "figure": 1,
+   "caption": "The chain's starting conformation: near-straight, the small per-bead jitter `bead_spring_chain()` adds barely visible at this scale. Rendered as carbon-like spheres purely to pick a radius and colour -- reduced LJ units carry no real element, the same convention chapter 01's atom views use.",
+   "sha256": "4c01576ddfb8f729202eb3d087381c36ec05c6ccae40e6a8894678c57ef1dfef",
+   "bytes": 9085
+  },
+  "ch11-f2.gif": {
+   "chapter": "LAMMPS_11_Polymers.ipynb",
+   "section": 0,
+   "heading": "Watching the chain relax",
+   "cell": 10,
+   "figure": 2,
+   "caption": "The same chain animated across the run: the near-straight starting conformation collapsing into a compact globule as thermal motion (T*=1.0) samples the space the harmonic bonds and full (attractive+repulsive) Lennard-Jones allow -- the coil-globule collapse a purely-repulsive WCA chain would not show, and the same physical case the energy/force cross-check above verified, seen directly rather than only through a single static configuration.",
+   "sha256": "a337ad052284b012f080e47c3881ededc0a491c32a52b87329f9745d1743164e",
+   "bytes": 28010
   }
  }
 }

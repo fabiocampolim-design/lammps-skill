@@ -4,7 +4,7 @@ description: Install, detect, drive and analyse LAMMPS molecular-dynamics simula
 license: Apache-2.0
 ---
 
-# lammps-skill 0.1.18
+# lammps-skill 0.1.19
 
 LAMMPS toolkit written from the manual and from files LAMMPS writes: install routes
 (`references/install-routes.md`, `references/platforms.md`), input scripts and the checker
@@ -34,11 +34,12 @@ per-step Python access. Docker and remote are pinned: designed, refused by the r
 
 ## 3. Build an input script from a spec; check it
 ```python
-from lammpskill.script import Spec, Stage, render, check, lj_melt, eam_fcc, spce_water
+from lammpskill.script import Spec, Stage, render, check, lj_melt, eam_fcc, spce_water, bead_spring_chain
 text = render(lj_melt(steps=1000))
 for f in check(text, workdir="case"): print(f.level, f.code, f.message, f.manual)
 ```
-`lammpskill new --preset spce_water --out case` writes the data file too. Every checker code is
+`lammpskill new --preset spce_water --out case` writes the data file too (also `bead_spring_chain`,
+LAMMPS `bond_style harmonic` against `mdlite.pair.HarmonicBond`). Every checker code is
 explained in `references/pitfalls.md`; `Spec` has no field for `pair_modify`/`dump_modify` — insert
 them after the command they modify.
 
@@ -90,7 +91,7 @@ Headless: `lammpskill.viz.snapshot` / `animate_gif` (needs the `[ase]` extra) re
 directly — a static PNG or an animated GIF, both from plain position arrays, never LAMMPS's own
 `Box` or `mdlite`'s. `io.backends.ovito_pipeline(dump)` is a designed, pinned bridge for when OVITO
 is installed (not yet built on); matplotlib for derived-quantity plots
-(`lammpskill rdf … --out png`). The eleven-lecture course (`course/`, `course/README.md`) embeds
+(`lammpskill rdf … --out png`). The twelve-lecture course (`course/`, `course/README.md`) embeds
 figures from both routes, extracted from executed chapter notebooks with full provenance.
 
 ## 11. Report a bug upstream

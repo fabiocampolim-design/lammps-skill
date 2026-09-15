@@ -40,10 +40,12 @@ closely because the potential was fit to reproduce it, not as an independent che
 | `eam_cu_lattice.json` | fcc Cu on `Cu_u3.eam`: mdlite cubic fit of E(a) (12 points, cubic splines on the funcfl tables) vs LAMMPS `fix box/relax` minimisation | a0 3.5e-5 Å; Ecoh 2.8e-5 eV | 1e-4 / 1e-4 |
 | `lj_nvt_nist.json` | mdlite Nosé–Hoover NVT, 500 atoms, T* = 0.85, ρ* = 0.776, 20 000 steps, rc 3σ + the tail formulas above, vs the NIST NVT MC entry | U* −5.5147 ± 0.0012 vs −5.5121 ± 0.0005 (diff 0.0026); P* −0.010 ± 0.008 vs 0.0068 ± 0.0018 (diff 0.017) — both within 3σ of the combined errors | 0.01 / 0.1 (3σ combined) |
 | `eam_cu_vacancy.json` | fcc Cu vacancy formation energy on the same `Cu_u3.eam`, same fitted a0: mdlite FIRE-relaxed (N-1)-atom supercell (fixed volume) vs LAMMPS `region`/`group`/`delete_atoms` + `minimize`, each engine against its own perfect-lattice reference; `thermo_modify format float %.15g` (LAMMPS's default ~8-digit thermo print is coarser than the ~1e-9 eV FIRE convergence, and an earlier version of this record without the format override agreed suspiciously exactly — a print-rounding artefact, not real precision) | formation energy 1.2e-8 eV | 1e-7 |
+| `polymer_vs_lammps.json` | one 30-bead bead-spring-chain configuration: `mdlite.pair.LennardJones` + `mdlite.pair.HarmonicBond` (summed independently, no bonded-pair exclusion) vs LAMMPS `pair_style lj/cut` + `bond_style harmonic` with `special_bonds lj 1.0 1.0 1.0` (the exclusion pitfall in `references/pitfalls.md`) — `run 0`, forces dumped with `%20.15g` | forces max diff 2.1e-11; energy diff 2.9e-7 (thermo print precision) | 1e-10 / 1e-6 |
 
 Lessons recorded while measuring (all in `references/pitfalls.md`): `thermo_modify norm` defaults to
 per-atom energies in `units lj`; the dump's default float format is 6 digits; `pair_modify` /
-`dump_modify` must follow the command they modify.
+`dump_modify` must follow the command they modify; `special_bonds` defaults to excluding directly-
+bonded pairs from the nonbonded sum, silently wrong for a bonded cross-check against `mdlite`.
 
 ## Adding a benchmark
 

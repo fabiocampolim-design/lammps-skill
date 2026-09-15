@@ -8,7 +8,7 @@
 window.DECK_CONTENT = {
   "lang": "en",
   "deckTitle": "Molecular Dynamics with LAMMPS",
-  "deckSubtitle": "An undergraduate course in eleven lectures",
+  "deckSubtitle": "An undergraduate course in twelve lectures",
   "author": "Fabio Campolim",
   "edition": "2026",
   "sections": {
@@ -33,7 +33,9 @@ window.DECK_CONTENT = {
     "build": {"name": "Choosing a Build", "lecture": "L9", "notebook": "ch09",
       "summary": "What a 314-case sweep of the examples says: package list beats package count, and how to read Installation.packages before choosing styles."},
     "scaling": {"name": "Scaling and Limits", "lecture": "L10", "notebook": "ch10",
-      "summary": "MPI and OpenMP speed-up on eight cores, where it stops, and what this machine honestly cannot do -- no GPU, no -partition methods."}
+      "summary": "MPI and OpenMP speed-up on eight cores, where it stops, and what this machine honestly cannot do -- no GPU, no -partition methods."},
+    "polymers": {"name": "Polymers", "lecture": "L11", "notebook": "ch11",
+      "summary": "A bead-spring chain -- harmonic bonds and full Lennard-Jones, mdlite against LAMMPS to round-off -- and watching it collapse from a straight line into a globule."}
   },
   "stacks": [
     {"sec": "orientation", "slides": ["orientation-intro", "orientation-releases", "orientation-toolkit", "orientation-pylj", "orientation-packages", "orientation-validation"]},
@@ -46,7 +48,8 @@ window.DECK_CONTENT = {
     {"sec": "minimisation", "slides": ["minimisation-intro", "minimisation-lj-wall", "minimisation-cap-concept", "minimisation-fire", "minimisation-math"]},
     {"sec": "reading", "slides": ["reading-intro", "reading-formats", "reading-n4", "reading-n6", "reading-tests"]},
     {"sec": "build", "slides": ["build-intro", "build-sweep", "build-bench", "build-blocked", "build-poems"]},
-    {"sec": "scaling", "slides": ["scaling-intro", "scaling-numbers", "scaling-why", "scaling-limits"]}
+    {"sec": "scaling", "slides": ["scaling-intro", "scaling-numbers", "scaling-why", "scaling-limits"]},
+    {"sec": "polymers", "slides": ["polymers-intro", "polymers-form", "polymers-preset", "polymers-relax", "polymers-crosscheck"]}
   ],
   "slides": {
     "orientation-intro": {
@@ -732,7 +735,64 @@ window.DECK_CONTENT = {
           ["Full-machine scaling", "this chapter's own 1-vs-2 measurement is bounded by a 2-core compute claim, not by the host's actual core count"]
         ]
       },
-      "notes": "Closing the whole course on this table is deliberate -- every number in every lecture came from a real, named, bounded run, and this is the last chance to say so about the toolkit's own performance, not just the physics it teaches. Q: \"Does 'no -partition support' mean NEB can never be used with this toolkit?\" A: It means this project has not built or measured that path -- lammpskill's runner does not currently pass -partition through, which is a stated gap, not a claim that LAMMPS itself cannot do NEB."
+      "notes": "Closing this lecture on this table is deliberate -- every number in every lecture came from a real, named, bounded run, and this is where the toolkit's own performance gets the same honesty as the physics it teaches. Q: \"Does 'no -partition support' mean NEB can never be used with this toolkit?\" A: It means this project has not built or measured that path -- lammpskill's runner does not currently pass -partition through, which is a stated gap, not a claim that LAMMPS itself cannot do NEB."
+    },
+    "polymers-intro": {
+      "level": "intro", "layout": "text",
+      "title": "A bead-spring chain, simplified on purpose",
+      "lead": "The field-standard bead-spring polymer model (Kremer & Grest 1990) uses FENE bonds and WCA (purely repulsive) Lennard-Jones so chains cannot cross themselves. mdlite has neither -- only HarmonicBond and full Lennard-Jones, already used everywhere else in this course.",
+      "bullets": [
+        "This chapter builds the simplest model those two pieces actually give: a harmonic bond along the backbone, ordinary (attractive + repulsive) Lennard-Jones between every pair.",
+        "It behaves like a real polymer -- a bound chain exploring conformations under thermal motion -- without claiming to be the textbook FENE/WCA one.",
+        "No external file is needed anywhere in this chapter, unlike L5's EAM potential: a bead-spring chain has no real-element dependency."
+      ],
+      "notes": "State the simplification before anything else runs, the same discipline L0 applies to mdlite as a whole -- a reader should never be surprised later that this isn't Kremer-Grest. Q: \"Why not just add FENE and WCA to mdlite instead of simplifying?\" A: That would be new mdlite physics beyond this roadmap item's own scope (the design spec named HarmonicBond and LennardJones specifically); YAGNI applies here the same as everywhere else in this project -- add it when a case actually needs it, not speculatively."
+    },
+    "polymers-form": {
+      "level": "core", "layout": "eq",
+      "title": "One bond term, one pairwise term",
+      "lead": "The two potentials this chapter's model is built from -- both already implemented in mdlite, neither new.",
+      "eqs": [
+        {"label": "harmonic bond", "math": "<span class='math'>E<sub>bond</sub> = k(r - r<sub>0</sub>)²</span>"},
+        {"label": "Lennard-Jones", "math": "<span class='math'>E<sub>LJ</sub> = 4ε[(σ/r)<sup>12</sup> - (σ/r)<sup>6</sup>]</span>"}
+      ],
+      "bullets": [
+        "Reduced (<span class='math'>lj</span>) units, <span class='math'>ε=σ=1</span>, <span class='math'>k=100</span>, <span class='math'>r<sub>0</sub>=1</span> -- a generic chain, not a specific real polymer, the same convention <span class='math'>lj_melt()</span> already uses for a generic LJ fluid."
+      ],
+      "notes": "Two closed-form potentials, no tables to fit or parse -- a much simpler physical picture than L5's EAM, worth naming explicitly since a reader has just seen EAM's F(rho)/rho(r)/phi(r) tables two lectures ago. Q: \"Why is E_LJ applied even between directly-bonded beads?\" A: Because mdlite's LennardJones has no concept of excluding a pair -- it always sums over everything the neighbour list finds -- so the bond and the pairwise term are simply added, and the LAMMPS side has to be told not to exclude bonded pairs either (next slide)."
+    },
+    "polymers-preset": {
+      "level": "core", "layout": "code",
+      "title": "special_bonds: the pitfall this chapter exists to surface",
+      "lead": "LAMMPS excludes directly-bonded pairs from its nonbonded sum by default -- invisible unless you know to look, and exactly wrong for a cross-check against a potential with no exclusion concept at all.",
+      "code": "spec = Spec(units=\"lj\", read_data=\"chain.data\", pair_style=\"lj/cut 2.5\",\n            bond_style=\"harmonic\", bond_coeffs=[\"1 100 1.0\"],\n            special_bonds=\"lj 1.0 1.0 1.0\",   # LAMMPS default: \"lj 0 0 0\" (excludes bonded pairs)\n            ...)",
+      "bullets": [
+        "Without <code>special_bonds lj 1.0 1.0 1.0</code>, LAMMPS and mdlite would compute two different systems and disagree for a reason that looks like a bug in either engine -- it is neither, it is an unmatched default."
+      ],
+      "notes": "This is the same species of pitfall as thermo_modify norm (L0/L8) and dump precision (L2/L8) -- a silent default that produces a plausible-looking wrong number rather than an error. Q: \"Is there a general lesson here, beyond this one flag?\" A: Any time two engines are cross-checked, every implicit default each one applies has to be found and matched explicitly -- this project's own references/pitfalls.md exists because that list is never obvious in advance, only after being hit once."
+    },
+    "polymers-relax": {
+      "level": "core", "layout": "two-figs", "fig": "ch11-f1", "fig2": "ch11-f2",
+      "title": "Collapsing into a globule",
+      "lead": "The starting conformation (left) and the same chain animated across a real 2000-step run (right) -- full Lennard-Jones makes a homopolymer collapse into a compact globule rather than wander as an extended coil.",
+      "bullets": [
+        "This is the textbook coil-globule transition, not an artefact -- it happens here specifically because this model uses attractive Lennard-Jones rather than WCA, exactly the trade-off named at the start of this lecture.",
+        "A model's limitations show up in its own results, not only in a disclaimer: the field-standard WCA model would show an extended, self-avoiding coil instead."
+      ],
+      "notes": "Lead with the physics before the caveat -- the collapse is real and worth understanding on its own terms, and the WCA comparison is what makes it a teaching moment rather than a surprising picture. Q: \"Could this model be made to show an extended coil instead?\" A: Yes -- truncating the Lennard-Jones at its minimum (WCA) removes the attractive well that drives the collapse; mdlite does not implement that truncation today, which is exactly why this chapter shows the full-LJ result rather than the field-standard one."
+    },
+    "polymers-crosscheck": {
+      "level": "math", "layout": "table",
+      "title": "One configuration, mdlite against LAMMPS",
+      "lead": "The identical chain, evaluated once (no dynamics): mdlite's LennardJones + HarmonicBond against LAMMPS's pair_style lj/cut + bond_style harmonic on the same positions and topology.",
+      "table": {
+        "head": ["Quantity", "mdlite", "LAMMPS", "Agreement"],
+        "rows": [
+          ["Energy", "measured", "measured", "to 3×10<sup>-7</sup> (thermo print precision)"],
+          ["Force (max component)", "measured", "measured", "to 2×10<sup>-11</sup> (round-off)"]
+        ]
+      },
+      "notes": "This is the same discipline chapters 02 and 05 hold every mdlite-vs-LAMMPS comparison to -- one controlled configuration, forces to round-off -- closing the lecture on a quantitative check the same way L5 closes on the Cu lattice constant. Q: \"Why not cross-check the dynamics run too, the way L3's NVT does?\" A: A single-configuration energy/force check is the sharper, cheaper test of whether the two engines implement the same physics; a full trajectory comparison would need matching random number streams and thermostat details neither engine exposes identically, for no real gain in confidence over the static check."
     }
   },
   "glossary": [

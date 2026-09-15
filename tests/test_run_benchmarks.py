@@ -2,9 +2,11 @@
 # Copyright 2026 Fabio Campolim
 """scripts/run_benchmarks.py: the parts that need neither LAMMPS nor a real Cu potential file --
 _fit_a0_ecoh and _vacancy_formation_energy_mdlite, exercised on synthetic_setfl() (rule 7: no
-real potential file is ever required to exist, matching chapter 05's own convention). The parts
-that DO need a real Cu file and a LAMMPS installation (eam_cu, eam_cu_vacancy themselves) are
-exercised manually by the project owner, the same as eam_cu already was before this file existed.
+real potential file is ever required to exist, matching chapter 05's own convention); and
+_polymer_energy_forces_mdlite, which needs neither LAMMPS nor any external file at all (the
+bead-spring chain has no real-element dependency). The parts that DO need LAMMPS (eam_cu,
+eam_cu_vacancy, polymer_vs_lammps themselves) are exercised manually by the project owner, the
+same as eam_cu already was before this file existed.
 
 The fit grid here (a in 2.8..3.3, n=4) is the same min-image-safe grid chapter 05's own synthetic-
 potential cells use (build/chapter05_potentials_eam.py) -- deliberately NOT chapter 05's original
@@ -27,6 +29,8 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "scripts"))
 
 from lammpskill.io.potential import synthetic_setfl  # noqa: E402
+from lammpskill.script import bead_spring_chain  # noqa: E402
+from mdlite.box import Box  # noqa: E402
 from mdlite.eam import EAM  # noqa: E402
 
 import run_benchmarks as rb  # noqa: E402
@@ -61,7 +65,6 @@ def test_fit_a0_ecoh_is_self_consistent(eam, a0_ecoh):
     assert A_LO < a0 < A_HI
     assert ecoh < 0, "a bound (cohesive) configuration has negative energy per atom"
     a_grid = np.linspace(a0 - 0.01, a0 + 0.01, 5)
-    from mdlite.box import Box
     from mdlite.neighbors import VerletList
     energies = []
     for a in a_grid:
@@ -98,3 +101,27 @@ def test_vacancy_formation_energy_is_reasonable_relative_to_cohesive_energy(a0_e
     assert 0 < vac["e_formation"] < abs(ecoh), (
         "vacancy formation energy (%.4f) should be positive and under the cohesive energy "
         "magnitude (%.4f) for a physically reasonable, bound potential" % (vac["e_formation"], abs(ecoh)))
+
+
+def test_polymer_energy_forces_mdlite_matches_a_numerical_derivative():
+    """_polymer_energy_forces_mdlite needs neither LAMMPS nor any potential file -- the same
+    central-difference check every other force calculation in this project (mdlite and chapter
+    cells alike) is held to."""
+    _, df = bead_spring_chain(n_beads=10)
+    box = Box(df.box.lengths, lo=df.box.lo)
+    pos = df.positions
+    bonds0 = df.bonds[:, 2:4] - 1
+    E0, F = rb._polymer_energy_forces_mdlite(pos, box, bonds0)
+
+    h = 1e-6
+    worst = 0.0
+    for k, c in ((0, 0), (3, 1), (9, 2), (5, 0)):
+        p = pos.copy()
+        p[k, c] += h
+        Ep, _ = rb._polymer_energy_forces_mdlite(p, box, bonds0)
+        p[k, c] -= 2 * h
+        Em, _ = rb._polymer_energy_forces_mdlite(p, box, bonds0)
+        numeric = -(Ep - Em) / (2 * h)
+        worst = max(worst, abs(F[k, c] - numeric))
+    assert worst < 1e-5
+    assert E0 != 0.0

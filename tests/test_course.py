@@ -9,8 +9,8 @@ and is byte-identical to the notebook's output (extract_figures --check); the ge
 handout and notes are up to date with the content (build_deck --check); every data-t key in
 index.html resolves; the vendored reveal.js keeps its licence and NOTICE names it.
 
-Numeric thresholds are calibrated to this project's actual scale (currently 10 figures, 57 slides
-across 11 lectures) rather than copied from pythtb-skill's reference implementation (69 figures,
+Numeric thresholds are calibrated to this project's actual scale (currently 12 figures, 62 slides
+across 12 lectures) rather than copied from pythtb-skill's reference implementation (69 figures,
 50+ slides); they are meant to keep growing as the atom-visuals roadmap adds more figures and
 lectures (docs/superpowers/specs/2026-09-14-lammps-skill-atom-visuals-design.md) -- update them
 here, not by loosening a check, whenever a real new figure or slide lands."""
@@ -61,10 +61,13 @@ def test_content_is_strict_json_after_the_assignment():
     assert d["lang"] == "en" and d["deckTitle"]
 
 
-def test_eleven_lectures_locked_to_the_chapters(deck):
+def test_twelve_lectures_locked_to_the_chapters(deck):
+    """Locked 1:1 with the chapter notebooks, L0..L11 -- renamed from "eleven" when the polymer
+    chapter (L11, atom-visuals roadmap item 3) made it twelve, the atom-visuals design spec's own
+    item 5 anticipated retargeting."""
     lectures = [s for s in deck["sections"].values() if s.get("lecture")]
-    assert len(lectures) == 11                       # L0 .. L10
-    assert [s["lecture"] for s in lectures] == ["L%d" % i for i in range(11)]
+    assert len(lectures) == 12                       # L0 .. L11
+    assert [s["lecture"] for s in lectures] == ["L%d" % i for i in range(12)]
 
 
 def test_every_slide_listed_exactly_once_and_every_stack_has_one(deck):
@@ -73,7 +76,8 @@ def test_every_slide_listed_exactly_once_and_every_stack_has_one(deck):
     assert set(listed) == set(deck["slides"]), set(listed) ^ set(deck["slides"])
     # atom visuals plan, task 7: L1 gains first-sim-atoms (the new snapshot+animation slide)
     # Cu vacancy feature: L5 gains eam-vacancy (the new snapshot pair, before/after FIRE relaxation)
-    assert len(listed) == 57
+    # Polymer chapter: L11 (5 slides) is new
+    assert len(listed) == 62
 
 
 def test_levels_run_intro_core_math_inside_each_stack(deck):
@@ -110,10 +114,11 @@ def test_every_slide_is_well_formed(deck):
 
 def test_figures_are_named_by_chapter_key():
     records = list(extract_figures.catalogue(extract_figures.NOTEBOOKS))
-    assert len(records) == 10, [r["file"] for r in records]
+    assert len(records) == 12, [r["file"] for r in records]
     names = sorted(r["file"] for r in records)
     assert names == ["ch01-f1.png", "ch01-f2.png", "ch01-f3.gif", "ch03-f1.png", "ch04-f1.png",
-                      "ch05-f1.png", "ch05-f2.png", "ch06-f1.png", "ch06-f2.png", "ch06-f3.png"]
+                      "ch05-f1.png", "ch05-f2.png", "ch06-f1.png", "ch06-f2.png", "ch06-f3.png",
+                      "ch11-f1.png", "ch11-f2.gif"]
 
 
 def test_every_figure_has_the_caption_from_the_notebook():
@@ -176,7 +181,7 @@ def test_every_figure_shown_has_notebook_provenance(deck, prov):
 def test_figures_match_the_executed_notebook():
     """Every PNG/GIF output of the chapter notebooks is on disk, byte-identical, with no orphans."""
     records = list(extract_figures.catalogue(extract_figures.NOTEBOOKS))
-    assert len(records) == 10
+    assert len(records) == 12
     problems = extract_figures.check(records, extract_figures.FIGDIR)
     assert not problems, "run course/tools/extract_figures.py: %s" % "; ".join(problems[:5])
 
