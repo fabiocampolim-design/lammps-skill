@@ -56,6 +56,8 @@ _SPEC = [
      "Scaling and Limits: MPI and OpenMP speed-up, and what this machine honestly cannot do", True),
     ("11", "chapter11_polymers", "Polymers",
      "Polymers: a bead-spring chain, mdlite's HarmonicBond against LAMMPS bond_style harmonic, and watching it relax", True),
+    ("12", "chapter12_water", "Water",
+     "Water: rigid SPC/E molecules, PPPM electrostatics, and the first chapter with no mdlite cross-check -- density against a NIST reference", True),
 ]
 
 CHAPTERS = {}

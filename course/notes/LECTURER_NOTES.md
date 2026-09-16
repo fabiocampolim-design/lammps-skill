@@ -352,3 +352,31 @@ This slide exists because the picture on its own does not distinguish 'the chain
 Slide `#polymers-crosscheck`.
 
 This is the same discipline chapters 02 and 05 hold every mdlite-vs-LAMMPS comparison to -- one controlled configuration, forces to round-off -- closing the lecture on a quantitative check the same way L5 closes on the Cu lattice constant. Q: "Why not cross-check the dynamics run too, the way L3's NVT does?" A: A single-configuration energy/force check is the sharper, cheaper test of whether the two engines implement the same physics; a full trajectory comparison would need matching random number streams and thermostat details neither engine exposes identically, for no real gain in confidence over the static check.
+
+## L12 · Water (notebook ch12)
+_Rigid SPC/E water: PPPM electrostatics and fix shake, neither in mdlite -- the first chapter validated against a NIST reference instead of a cross-engine check, plus the oxygen-oxygen structure and a real animated box._
+
+### The first chapter with no mdlite comparison  `[intro]`
+Slide `#water-intro`.
+
+State the limitation before anything else runs, the same discipline L11 applied to FENE/WCA -- a reader should never be surprised later that this chapter has no internal cross-check. Q: "Doesn't the lack of a cross-check make this chapter's numbers less trustworthy than the others?" A: Different, not less: every earlier chapter's confidence comes from two independent implementations agreeing; this chapter's confidence comes from agreement with an independent, external, government-published measurement instead -- a different but equally real form of verification.
+
+### lammpskill.script.spce_water: already built, used nowhere until now  `[core]`
+Slide `#water-preset`.
+
+Emphasise that this preset predates the chapter -- it was noted as "already built and tested, used in no chapter" as far back as the atom-visuals design spec's roadmap. Q: "Why does fix shake matter for a density check?" A: Without it the O-H bonds and H-O-H angle would vibrate as flexible degrees of freedom at a real force constant, needing a much smaller timestep than 1 fs to stay stable -- SHAKE removes those fast vibrations by holding the geometry rigid, exactly as most water simulations in the literature do.
+
+### Oxygen-oxygen structure: g_OO(r)  `[core]`
+Slide `#water-structure`; figures `ch12-f1` (§0 cell 10).
+
+This slide is deliberately not a hard numeric test -- this project could not independently re-derive an exact literature decimal for the O-O peak position, so it is reported as context, the same honesty standard the Cu vacancy chapter applies to its own literature comparison. Q: "Why is this shown but not tested, when the density is tested?" A: The density has one precise, government-published reference value with a stated uncertainty this project can compare against directly; the RDF's literature values here are only approximate ranges triangulated from secondary sources, not something to build a hard assertion on.
+
+### Watching the water box  `[core]`
+Slide `#water-relax`; figures `ch12-f2` (§0 cell 11), `ch12-f3` (§0 cell 12).
+
+Real elements finally on screen after eleven reduced-unit or generic-element lectures -- worth naming as a small milestone, not just another figure. Q: "Why run this separately from the NPT density run instead of reusing its trajectory?" A: The density run uses fix npt (a changing box volume complicates a fixed-cell animation); this run uses the preset's own default fix nvt at a fixed box, simpler and cheaper, and the density check never needed the trajectory in the first place.
+
+### Density against a NIST reference  `[math]`
+Slide `#water-crosscheck`.
+
+This is the load-bearing quantitative claim of the whole chapter -- everything else (the RDF, the animation) is context; this is the one number with a real external reference and a real pass/fail. Q: "Is the NIST value density at 1 atm, matching the fix npt target exactly?" A: No -- it is the saturated liquid density (coexistence with vapour, ~0.01 bar at 300 K), stated plainly in data/benchmarks/spce_water.json rather than glossed over; for water's tiny compressibility the difference from 1 atm is far below what this comparison can resolve, but the distinction is real.

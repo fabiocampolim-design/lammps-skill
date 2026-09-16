@@ -29,7 +29,7 @@ import os
 import re
 import sys
 
-__version__ = "0.1.20"
+__version__ = "0.1.21"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SKILL = os.path.abspath(os.path.join(HERE, "..", ".."))

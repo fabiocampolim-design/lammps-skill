@@ -10,6 +10,7 @@ the stated uncertainty).
 |---|---|---|---|
 | `nist_lj.json` | Lennard-Jones fluid reference data: reduced pressure and energy at fixed (T*, rho*) state points | NIST Standard Reference Simulation Website (SRSW) | US Government work, public domain |
 | `eam_cu.json` | fcc Cu lattice constant and cohesive energy: fitting targets of the u3 EAM potential and the experimental values | Foiles, Baskes & Daw 1986 (doi:10.1103/PhysRevB.33.7983); Kittel | facts, cited |
+| `spce_water.json` | SPC/E water saturated liquid density at 300 K | NIST SAT-TMMC (Wang-Landau/TMMC Monte Carlo), citing Berendsen, Grigera & Straatsma 1987 | US Government work, public domain |
 
 The measured cross-checks (mdlite vs LAMMPS, mdlite vs NIST) are **records**, not benchmarks: they
 live in `data/records/` and carry the residue at the precision it was measured plus the route,

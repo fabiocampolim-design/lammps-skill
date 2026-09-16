@@ -50,7 +50,7 @@ Exit codes: 0 all checks passed or skipped, 1 a check failed.
 
 | flag | meaning |
 |---|---|
-| `--which a,b` | benchmarks to run: `lj-vs-lammps`, `lj-nvt`, `eam-cu`, `eam-cu-vacancy`, `polymer` (default all five) |
+| `--which a,b` | benchmarks to run: `lj-vs-lammps`, `lj-nvt`, `eam-cu`, `eam-cu-vacancy`, `polymer`, `water` (default all six) |
 | `--outdir DIR` | where the record JSON files go (default data/records) |
 | `--workdir DIR` | scratch directory for the LAMMPS runs (default out/benchmarks) |
 | `--potential PATH` | a Cu EAM file you obtained (funcfl `.eam` or setfl `.eam.alloy`) — required for `eam-cu` and `eam-cu-vacancy` |

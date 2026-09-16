@@ -1,7 +1,7 @@
 # lammps-skill
 
-An AI-agent skill, verified Python toolkit, clean-room teaching engine (`mdlite`), twelve executed
-chapter notebooks and a twelve-lecture undergraduate course for molecular dynamics with LAMMPS
+An AI-agent skill, verified Python toolkit, clean-room teaching engine (`mdlite`), thirteen executed
+chapter notebooks and a thirteen-lecture undergraduate course for molecular dynamics with LAMMPS
 (latest stable release primary; `develop` watched). See `CHANGELOG.md` for version history.
 
 ## What it does
@@ -22,9 +22,9 @@ chapter notebooks and a twelve-lecture undergraduate course for molecular dynami
   Langevin and Nosé–Hoover-chain thermostats, steepest descent and FIRE. It is cross-checked against
   LAMMPS at measured precision and against NIST reference data (`references/benchmarks.md`).
 - **`SKILL.md`** holds the agent workflows; **`references/`** what the agent must know;
-  **`docs/USER_MANUAL.md`** the manual; **`AGENTS.md`** every flag. **`chapters/`** holds twelve
+  **`docs/USER_MANUAL.md`** the manual; **`AGENTS.md`** every flag. **`chapters/`** holds thirteen
   executed notebooks (generated from `build/*.py`, never hand-edited); **`course/`** a
-  twelve-lecture undergraduate course built from them (a reveal.js deck, an A4 handout, lecturer
+  thirteen-lecture undergraduate course built from them (a reveal.js deck, an A4 handout, lecturer
   notes, a committed PDF fallback) — see `course/README.md`.
 
 ## Install
@@ -77,11 +77,11 @@ python scripts/run_benchmarks.py --potential <Cu_u3.eam from your installation> 
 ```
 lammpskill/   install/ (seven routes)  io/ (box, log, data, dump, restart, potential, backends)  script.py  run.py  post.py  viz.py  cli.py
 mdlite/       box  neighbors  pair  eam  integrate  thermostats  minimize  measure
-build/        chapterNN_*.py  assemble.py  execute.py       chapters/  twelve executed notebooks, generated
+build/        chapterNN_*.py  assemble.py  execute.py       chapters/  thirteen executed notebooks, generated
 course/       deck/ (content.en.js, index.html)  handout/  notes/  shared/  slides.pdf  tools/
 scripts/      verify_lammps.py  install_env.sh  install_env_windows.ps1  install_lammps_wsl.sh  run_benchmarks.py
 references/   install-routes  platforms  input-script  file-formats  packages  backends  benchmarks  analysis  pitfalls  ecosystem
-data/         benchmarks/ (NIST LJ, EAM Cu — with provenance)  records/ (measured cross-checks)
+data/         benchmarks/ (NIST LJ, EAM Cu, NIST SPC/E water — with provenance)  records/ (measured cross-checks)
 docs/         USER_MANUAL.md  build_manual.py  DESIGN.md        tests/  (fixtures written by LAMMPS on this machine)
 ```
 

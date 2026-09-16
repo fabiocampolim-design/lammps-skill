@@ -54,7 +54,13 @@ def test_polymer_vs_lammps_record_is_within_its_own_tolerance():
     assert r["nbonds"] == r["natoms"] - 1   # one linear chain: n beads, n-1 bonds
 
 
+def test_water_density_vs_nist_record():
+    r = _rec("water_density")
+    assert abs(r["rho_lammps"] - r["rho_nist"]) <= r["tolerance_rho"]
+    assert r["natoms"] == 3 * r["nmolecules"]   # SPC/E: one O, two H per molecule
+
+
 def test_records_carry_measured_residue_and_a_reason():
-    for name in ("lj_energy_vs_lammps", "lj_nvt_nist", "eam_cu_lattice", "eam_cu_vacancy", "polymer_vs_lammps"):
+    for name in ("lj_energy_vs_lammps", "lj_nvt_nist", "eam_cu_lattice", "eam_cu_vacancy", "polymer_vs_lammps", "water_density"):
         r = _rec(name)
         assert "measured" in r and "why" in r["provenance"] and r["provenance"]["date"]

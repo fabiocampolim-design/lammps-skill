@@ -2,6 +2,47 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.21 — 2026-09-16
+
+Chapter 12 of the atom-visuals roadmap (item 2 of 6, built after item 3/polymer since it needs a
+real literature search rather than only `mdlite` code): SPC/E water.
+
+- `scripts/run_benchmarks.py` gains `water_density_vs_nist()`: the first cross-check in this
+  project with no `mdlite` side at all -- `mdlite` has no PPPM/Ewald electrostatics and no
+  rigid-body SHAKE constraint handling, both essential to SPC/E's rigid three-site model, so
+  validation is against literature instead. Runs `spce_water()` under LAMMPS `fix npt` at 300 K /
+  1 atm (chapter 04's `fix npt` pattern, its first use on a real molecular system), block-averages
+  the density over a post-equilibration tail, and compares to a real NIST reference: `data/
+  benchmarks/spce_water.json`, the SAT-TMMC (Wang-Landau/transition-matrix Monte Carlo) saturated
+  liquid density at 300 K, 998.1 +/- 0.29 kg/m3 -- a live, public-domain NIST page found via a real
+  search (`nist.gov/mml/csd-mml/informatics/sat-tmmc-liquid-vapor-coexistence-properties-spce-
+  water-lrc`), in exactly the SRSW-style format `data/benchmarks/nist_lj.json` already uses.
+  Measured: 992.76 +/- 2.05 kg/m3, agreeing within the S4 tolerance (one decade above the measured
+  residue, or 3 sigma combined, whichever is larger -- the same discipline as `lj_nvt`).
+  `references/benchmarks.md` and `tests/test_crosscheck.py` coverage.
+- Chapter 12 (Water, new): the preset (`spce_water()`, already built and tested, used in no
+  chapter until now) and checker demo; the density result read from the committed record, compared
+  to NIST; a second, separate real NVT run (the preset's own default `fix nvt` + `fix shake`, no
+  `fix npt` needed for this one) producing the oxygen-oxygen radial distribution function
+  (`lammpskill.post.rdf_trajectory`, the same tool chapter 06 uses) -- first peak measured at
+  r=2.74 A, g=2.97, landing inside the ~2.7-2.8 A range two real, citable papers report for SPC/E
+  (Mark & Nilsson 2001, J. Phys. Chem. A 105, 9954, 4677 citations; Camisasca, Pathak, Wikfeldt &
+  Pettersson 2019, J. Chem. Phys. 151, 044502, comparing SPC/E directly to experimental X-ray
+  diffraction) -- shown as context, not a hard test, since this project could not independently
+  verify an exact literature decimal from either paper's full text. `viz.snapshot()`/
+  `viz.animate_gif()` of the water box: the first chapter with real atomic masses (15.9994,
+  1.008), so the existing mass-to-symbol guess renders oxygen and hydrogen directly, no stand-in
+  element needed for the first time in this course.
+- Course: new lecture L12 (Water), full intro -> core -> math depth, five slides ending on the
+  density cross-check table (mirrors L5's `eam-cu`, L11's `polymers-crosscheck`).
+  `test_twelve_lectures_locked_to_the_chapters` renamed to
+  `test_thirteen_lectures_locked_to_the_chapters` (L0..L12 now). Deck 63 -> 68 slides, PDF fallback
+  74 -> 80 pages, figures 12 -> 15; README/SKILL.md/AGENTS.md/USER_MANUAL.md/course/README.md
+  chapter and lecture counts updated throughout.
+
+Whole suite: 416 passed / 3 skipped, pyflakes clean, conformance PASS=23 FAIL=0. Deck verified
+clean across all 80 states (`course/tools/verify_deck.py`).
+
 ## 0.1.20 — 2026-09-15
 
 Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of 0.1.19's polymer

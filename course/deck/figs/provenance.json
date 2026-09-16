@@ -11,7 +11,8 @@
   "LAMMPS_08_Reading_What_LAMMPS_Writes.ipynb",
   "LAMMPS_09_Choosing_A_Build.ipynb",
   "LAMMPS_10_Scaling_And_Limits.ipynb",
-  "LAMMPS_11_Polymers.ipynb"
+  "LAMMPS_11_Polymers.ipynb",
+  "LAMMPS_12_Water.ipynb"
  ],
  "figures": {
   "ch01-f1.png": {
@@ -133,6 +134,36 @@
    "caption": "The same chain animated across the run: the near-straight starting conformation contracting as thermal motion (T*=1.0) samples the space the harmonic bonds and full (attractive+repulsive) Lennard-Jones allow -- the same physical case the energy/force cross-check above verified, seen directly rather than only through a single static configuration. How much of this contraction is specifically because this model uses full LJ rather than WCA is measured, not asserted, next.",
    "sha256": "a337ad052284b012f080e47c3881ededc0a491c32a52b87329f9745d1743164e",
    "bytes": 28010
+  },
+  "ch12-f1.png": {
+   "chapter": "LAMMPS_12_Water.ipynb",
+   "section": 0,
+   "heading": "Oxygen-oxygen structure: g_OO(r)",
+   "cell": 10,
+   "figure": 1,
+   "caption": "The oxygen-oxygen radial distribution function from this box's own equilibrated trajectory: a first peak near the O-O hydrogen-bonding distance, decaying to the ideal-gas value of 1 at large r -- computed by lammpskill.post.rdf_trajectory, the same tool chapter 06 uses.",
+   "sha256": "33236e9dfe014b3f465de8885ff7d51489487adedca45e6f7c09c0e7935b1361",
+   "bytes": 16689
+  },
+  "ch12-f2.png": {
+   "chapter": "LAMMPS_12_Water.ipynb",
+   "section": 0,
+   "heading": "Oxygen-oxygen structure: g_OO(r)",
+   "cell": 11,
+   "figure": 2,
+   "caption": "The SPC/E water box near the start of the run -- real atomic masses (15.9994, 1.008), so lammpskill.viz's own mass-to-symbol guess correctly renders oxygen and hydrogen, unlike every earlier reduced-unit chapter, which had to pick a conventional stand-in element by hand.",
+   "sha256": "d3389cd026b9be47feaac48211b3e12256ef4f9bbe695ec62cacf43960364b4f",
+   "bytes": 61529
+  },
+  "ch12-f3.gif": {
+   "chapter": "LAMMPS_12_Water.ipynb",
+   "section": 0,
+   "heading": "Oxygen-oxygen structure: g_OO(r)",
+   "cell": 12,
+   "figure": 3,
+   "caption": "The same water box animated across the run: rigid molecules (fix shake) jiggling and reorienting under thermal motion, the same physical case the density and g_OO(r) checks above both drew from.",
+   "sha256": "15c10b614d1f27e1a6983398eb8711453405481a2450c67a13a75d42d999d436",
+   "bytes": 501498
   }
  }
 }

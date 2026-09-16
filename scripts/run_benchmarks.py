@@ -6,6 +6,7 @@
   eam-cu          : lattice constant + cohesive energy of fcc Cu on the SAME potential file (user-provided path), mdlite vs LAMMPS
   eam-cu-vacancy  : vacancy formation energy of fcc Cu (same potential, same fitted a0) -- mdlite (FIRE-relaxed) vs LAMMPS (minimize)
   polymer         : one bead-spring-chain configuration, energy and forces, mdlite (LennardJones + HarmonicBond) vs LAMMPS (`run 0`, dump forces)
+  water           : SPC/E water density at 300 K / 1 atm, LAMMPS `fix npt` vs the NIST SAT-TMMC reference (no mdlite cross-check -- see water_density_vs_nist's docstring)
 Usage: run_benchmarks.py [--which a,b] [--outdir data/records] [--potential PATH] [--steps N] [--log-dir DIR] [--version]"""
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ from lammpskill.io.dump import read_dump  # noqa: E402
 from lammpskill.io.potential import read_eam_funcfl, read_eam_setfl  # noqa: E402
 from lammpskill.post import block_average, load_benchmark  # noqa: E402
 from lammpskill.run import run as lrun  # noqa: E402
-from lammpskill.script import Spec, Stage, bead_spring_chain, eam_fcc, render  # noqa: E402
+from lammpskill.script import Spec, Stage, bead_spring_chain, eam_fcc, render, spce_water  # noqa: E402
 from mdlite.box import Box  # noqa: E402
 from mdlite.eam import EAM  # noqa: E402
 from mdlite.integrate import State, velocity_verlet  # noqa: E402
@@ -44,7 +45,7 @@ from mdlite.thermostats import NoseHooverChain  # noqa: E402
 
 def build_parser():
     p = argparse.ArgumentParser(prog="run_benchmarks.py", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--which", default="lj-vs-lammps,lj-nvt,eam-cu,eam-cu-vacancy,polymer", help="comma-separated benchmarks to run")
+    p.add_argument("--which", default="lj-vs-lammps,lj-nvt,eam-cu,eam-cu-vacancy,polymer,water", help="comma-separated benchmarks to run")
     p.add_argument("--outdir", default=os.path.join(ROOT, "data", "records"), help="where the record JSON files are written")
     p.add_argument("--workdir", default=os.path.join(ROOT, "out", "benchmarks"), help="scratch directory for the LAMMPS runs")
     p.add_argument("--potential", default=None, help="path to a Cu EAM file (funcfl .eam or setfl .eam.alloy) you obtained yourself")
@@ -185,6 +186,44 @@ def lj_nvt(inst, workdir, steps, state_point=None):
             "tolerance_P": max(_tol(dP), 3 * (Pe + (Pn.get("error") or 0.0))), "tolerance_U": max(_tol(dU), 3 * (Ue + (Un.get("error") or 0.0))),
             "steps": steps, "natoms": n,
             "provenance": _prov(None, "finite-size (500 atoms) and sampling; tolerance = max(decade above measured, 3 sigma combined)")}
+
+
+def water_density_vs_nist(inst, workdir, n_side=6, steps=20000, equil_steps=5000):
+    """SPC/E water has no mdlite cross-check at all -- mdlite has no PPPM/Ewald electrostatics
+    and no rigid-body SHAKE constraint handling, both essential to this model -- so this is the
+    first benchmark in this project compared only to an external (NIST) reference, the same
+    tolerance discipline as lj_nvt (block-averaged residue, one decade above it or 3 sigma
+    combined, whichever is larger)."""
+    b = load_benchmark("spce_water")
+    ref = b["entries"]["rho_liq_300K"]   # kg/m^3, SPC/E saturated liquid density at 300 K (NIST SAT-TMMC)
+
+    os.makedirs(workdir, exist_ok=True)
+    spec, df = spce_water(n_side=n_side, T=300.0, steps=steps, workdir=workdir)
+    npt_spec = dataclasses.replace(
+        spec, fixes=["shk all shake 1.0e-4 20 0 b 1 a 1", "npt all npt temp 300.0 300.0 100.0 iso 1.0 1.0 1000.0"],
+        thermo=100, thermo_style="custom step temp press density",
+        comment="SPC/E water, %d molecules, fix npt at 300 K / 1 atm (chapter 04's fix npt pattern, "
+                "first use of it for a real molecular system)" % df.natoms,
+    )
+    res = lrun(render(npt_spec), workdir, installation=inst)
+    if not res.ok:
+        raise RuntimeError("LAMMPS NPT run failed: %s" % res.errors)
+    step_col = res.thermo.get("Step")
+    density_gcc = res.thermo.get("Density")   # LAMMPS real units: g/cm^3
+    mask = step_col >= equil_steps
+    if mask.sum() < 10:
+        raise RuntimeError("only %d post-equilibration thermo rows (need >= 10 to block-average); "
+                            "raise steps or lower equil_steps" % mask.sum())
+    rho_m_gcc, rho_e_gcc = block_average(density_gcc[mask])
+    rho_m, rho_e = rho_m_gcc * 1000.0, rho_e_gcc * 1000.0   # g/cm^3 -> kg/m^3, matching the NIST entry's units
+    d_rho = abs(rho_m - ref["value"])
+    return {"rho_lammps": rho_m, "rho_lammps_err": rho_e, "rho_nist": ref["value"], "rho_nist_err": ref["error"],
+            "units": "kg/m3", "measured": {"d_rho": d_rho},
+            "tolerance_rho": max(_tol(d_rho), 3 * (rho_e + ref["error"])),
+            "nmolecules": n_side ** 3, "natoms": df.natoms, "steps": steps, "equil_steps": equil_steps,
+            "provenance": _prov(inst, "LAMMPS-only (see this function's own docstring for why); fix npt at 300 K / 1 atm, "
+                                      "density block-averaged over the post-equilibration tail, compared to NIST's "
+                                      "SAT-TMMC saturated liquid density at 300 K (data/benchmarks/spce_water.json)")}
 
 
 def _read_eam(potential):
@@ -369,6 +408,11 @@ def main(argv=None):
                     raise RuntimeError("no LAMMPS")
                 rec = polymer_vs_lammps(inst, os.path.join(a.workdir, name))
                 out = "polymer_vs_lammps"
+            elif name == "water":
+                if inst is None:
+                    raise RuntimeError("no LAMMPS")
+                rec = water_density_vs_nist(inst, os.path.join(a.workdir, name))
+                out = "water_density"
             else:
                 print("unknown benchmark", name)
                 rc = 2

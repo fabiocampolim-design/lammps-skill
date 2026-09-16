@@ -1,0 +1,22 @@
+{
+ "equil_steps": 5000,
+ "measured": {
+  "d_rho": 5.34191606666684
+ },
+ "natoms": 648,
+ "nmolecules": 216,
+ "provenance": {
+  "date": "2026-09-16",
+  "lammps_skill": "0.1.21",
+  "lammps_version": "10 Dec 2025",
+  "route": "wsl-apt",
+  "why": "LAMMPS-only (see this function's own docstring for why); fix npt at 300 K / 1 atm, density block-averaged over the post-equilibration tail, compared to NIST's SAT-TMMC saturated liquid density at 300 K (data/benchmarks/spce_water.json)"
+ },
+ "rho_lammps": 992.7580839333332,
+ "rho_lammps_err": 2.0512693854764814,
+ "rho_nist": 998.1,
+ "rho_nist_err": 0.2928,
+ "steps": 20000,
+ "tolerance_rho": 10.0,
+ "units": "kg/m3"
+}

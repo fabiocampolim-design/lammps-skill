@@ -32,6 +32,15 @@ literature value, 1.29 ± 0.02 eV, is positron-annihilation data: Triftshäuser 
 Physics* 6, 177 (1975), doi:10.1007/BF00883748) — `eam_cu_vacancy.json` below agrees with it
 closely because the potential was fit to reproduce it, not as an independent check.
 
+## SPC/E water (`spce_water.json`)
+
+Saturated liquid density at 300 K, 998.1 ± 0.29 kg/m³, from NIST's SAT-TMMC dataset (grand-canonical
+hybrid Wang-Landau/transition-matrix Monte Carlo, US Government work, public domain), on the SPC/E
+model of Berendsen, Grigera & Straatsma, *J. Phys. Chem.* 91, 6269 (1987). `mdlite` has no
+PPPM/Ewald electrostatics and no rigid-body SHAKE constraint handling, both essential to this
+model, so `water_density.json` below is the first record in this project with no `mdlite`
+cross-check at all — LAMMPS's own `fix npt` against this external reference only.
+
 ## Records produced on this machine (wsl-apt, LAMMPS 10 Dec 2025, 2026-09-06)
 
 | record | what | measured residue | tolerance |
@@ -41,6 +50,7 @@ closely because the potential was fit to reproduce it, not as an independent che
 | `lj_nvt_nist.json` | mdlite Nosé–Hoover NVT, 500 atoms, T* = 0.85, ρ* = 0.776, 20 000 steps, rc 3σ + the tail formulas above, vs the NIST NVT MC entry | U* −5.5147 ± 0.0012 vs −5.5121 ± 0.0005 (diff 0.0026); P* −0.010 ± 0.008 vs 0.0068 ± 0.0018 (diff 0.017) — both within 3σ of the combined errors | 0.01 / 0.1 (3σ combined) |
 | `eam_cu_vacancy.json` | fcc Cu vacancy formation energy on the same `Cu_u3.eam`, same fitted a0: mdlite FIRE-relaxed (N-1)-atom supercell (fixed volume) vs LAMMPS `region`/`group`/`delete_atoms` + `minimize`, each engine against its own perfect-lattice reference; `thermo_modify format float %.15g` (LAMMPS's default ~8-digit thermo print is coarser than the ~1e-9 eV FIRE convergence, and an earlier version of this record without the format override agreed suspiciously exactly — a print-rounding artefact, not real precision) | formation energy 1.2e-8 eV | 1e-7 |
 | `polymer_vs_lammps.json` | one 30-bead bead-spring-chain configuration: `mdlite.pair.LennardJones` + `mdlite.pair.HarmonicBond` (summed independently, no bonded-pair exclusion) vs LAMMPS `pair_style lj/cut` + `bond_style harmonic` with `special_bonds lj 1.0 1.0 1.0` (the exclusion pitfall in `references/pitfalls.md`) — `run 0`, forces dumped with `%20.15g` | forces max diff 2.1e-11; energy diff 2.9e-7 (thermo print precision) | 1e-10 / 1e-6 |
+| `water_density.json` | SPC/E water, 216 molecules, LAMMPS `fix npt` at 300 K / 1 atm, 20 000 steps (5 000 equilibration discarded), density block-averaged over the tail — vs NIST's SAT-TMMC saturated liquid density at 300 K (no `mdlite` side; see `references/benchmarks.md`'s SPC/E section above) | 992.76 ± 2.05 kg/m³ vs 998.1 ± 0.29 kg/m³ (diff 5.3 kg/m³) | 10 kg/m³ (max of decade-above-measured, 3σ combined) |
 
 Lessons recorded while measuring (all in `references/pitfalls.md`): `thermo_modify norm` defaults to
 per-atom energies in `units lj`; the dump's default float format is 6 digits; `pair_modify` /

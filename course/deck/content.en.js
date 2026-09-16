@@ -35,7 +35,9 @@ window.DECK_CONTENT = {
     "scaling": {"name": "Scaling and Limits", "lecture": "L10", "notebook": "ch10",
       "summary": "MPI and OpenMP speed-up on eight cores, where it stops, and what this machine honestly cannot do -- no GPU, no -partition methods."},
     "polymers": {"name": "Polymers", "lecture": "L11", "notebook": "ch11",
-      "summary": "A bead-spring chain -- harmonic bonds and full Lennard-Jones, mdlite against LAMMPS to round-off -- and watching it collapse from a straight line into a globule."}
+      "summary": "A bead-spring chain -- harmonic bonds and full Lennard-Jones, mdlite against LAMMPS to round-off -- and watching it collapse from a straight line into a globule."},
+    "water": {"name": "Water", "lecture": "L12", "notebook": "ch12",
+      "summary": "Rigid SPC/E water: PPPM electrostatics and fix shake, neither in mdlite -- the first chapter validated against a NIST reference instead of a cross-engine check, plus the oxygen-oxygen structure and a real animated box."}
   },
   "stacks": [
     {"sec": "orientation", "slides": ["orientation-intro", "orientation-releases", "orientation-toolkit", "orientation-pylj", "orientation-packages", "orientation-validation"]},
@@ -49,7 +51,8 @@ window.DECK_CONTENT = {
     {"sec": "reading", "slides": ["reading-intro", "reading-formats", "reading-n4", "reading-n6", "reading-tests"]},
     {"sec": "build", "slides": ["build-intro", "build-sweep", "build-bench", "build-blocked", "build-poems"]},
     {"sec": "scaling", "slides": ["scaling-intro", "scaling-numbers", "scaling-why", "scaling-limits"]},
-    {"sec": "polymers", "slides": ["polymers-intro", "polymers-form", "polymers-preset", "polymers-relax", "polymers-quantified", "polymers-crosscheck"]}
+    {"sec": "polymers", "slides": ["polymers-intro", "polymers-form", "polymers-preset", "polymers-relax", "polymers-quantified", "polymers-crosscheck"]},
+    {"sec": "water", "slides": ["water-intro", "water-preset", "water-structure", "water-relax", "water-crosscheck"]}
   ],
   "slides": {
     "orientation-intro": {
@@ -811,6 +814,58 @@ window.DECK_CONTENT = {
         ]
       },
       "notes": "This is the same discipline chapters 02 and 05 hold every mdlite-vs-LAMMPS comparison to -- one controlled configuration, forces to round-off -- closing the lecture on a quantitative check the same way L5 closes on the Cu lattice constant. Q: \"Why not cross-check the dynamics run too, the way L3's NVT does?\" A: A single-configuration energy/force check is the sharper, cheaper test of whether the two engines implement the same physics; a full trajectory comparison would need matching random number streams and thermostat details neither engine exposes identically, for no real gain in confidence over the static check."
+    },
+    "water-intro": {
+      "level": "intro", "layout": "text",
+      "title": "The first chapter with no mdlite comparison",
+      "lead": "SPC/E water is a rigid three-site model (bond and angle geometry enforced by fix shake, not integrated as flexible degrees of freedom) held together by long-range Coulomb interactions on top of Lennard-Jones. mdlite implements neither rigid-body constraints nor Ewald/PPPM electrostatics.",
+      "bullets": [
+        "Adding either would be new mdlite physics well beyond this roadmap item's own scope -- the design spec named this explicitly: validation against a published reference, not a new mdlite capability.",
+        "So this chapter's cross-check is against the literature instead: SPC/E's own saturated liquid density at 300 K, from a real NIST reference table -- the same public-domain SRSW-style source this course's own Lennard-Jones fluid benchmark already uses."
+      ],
+      "notes": "State the limitation before anything else runs, the same discipline L11 applied to FENE/WCA -- a reader should never be surprised later that this chapter has no internal cross-check. Q: \"Doesn't the lack of a cross-check make this chapter's numbers less trustworthy than the others?\" A: Different, not less: every earlier chapter's confidence comes from two independent implementations agreeing; this chapter's confidence comes from agreement with an independent, external, government-published measurement instead -- a different but equally real form of verification."
+    },
+    "water-preset": {
+      "level": "core", "layout": "code",
+      "title": "lammpskill.script.spce_water: already built, used nowhere until now",
+      "lead": "A cubic lattice of rigid SPC/E molecules, built and tested before this chapter existed -- the lattice spacing (3.1 A) was chosen to already sit close to water's real density.",
+      "code": "spec, df = spce_water(n_side=6)\n# fix shk all shake 1.0e-4 20 0 b 1 a 1   -- rigid O-H bonds, H-O-H angle\n# kspace_style pppm 1.0e-4                -- long-range electrostatics\n# 216 molecules, 648 atoms, 432 bonds, 216 angles",
+      "bullets": [
+        "check() carries no error on this preset either -- built and verified the same way as every other case in this course, real molecular complexity included."
+      ],
+      "notes": "Emphasise that this preset predates the chapter -- it was noted as \"already built and tested, used in no chapter\" as far back as the atom-visuals design spec's roadmap. Q: \"Why does fix shake matter for a density check?\" A: Without it the O-H bonds and H-O-H angle would vibrate as flexible degrees of freedom at a real force constant, needing a much smaller timestep than 1 fs to stay stable -- SHAKE removes those fast vibrations by holding the geometry rigid, exactly as most water simulations in the literature do."
+    },
+    "water-structure": {
+      "level": "core", "layout": "fig-right", "fig": "ch12-f1",
+      "title": "Oxygen-oxygen structure: g_OO(r)",
+      "lead": "The box's own radial distribution function, from a real trajectory -- a sharp first peak near the hydrogen-bonding distance, a second-shell shoulder near 4.5 A (water's tetrahedral local order), decaying to the ideal-gas value of 1.",
+      "bullets": [
+        "First peak measured here: r=2.74 A, g=2.97 -- for scale, not a pass/fail check, published SPC/E values place it around 2.7-2.8 A (Mark & Nilsson 2001; Camisasca et al. 2019, comparing SPC/E directly to experimental X-ray diffraction).",
+        "Computed by lammpskill.post.rdf_trajectory -- the same tool chapter 06 uses, on a real molecular system instead of a monatomic LJ fluid."
+      ],
+      "notes": "This slide is deliberately not a hard numeric test -- this project could not independently re-derive an exact literature decimal for the O-O peak position, so it is reported as context, the same honesty standard the Cu vacancy chapter applies to its own literature comparison. Q: \"Why is this shown but not tested, when the density is tested?\" A: The density has one precise, government-published reference value with a stated uncertainty this project can compare against directly; the RDF's literature values here are only approximate ranges triangulated from secondary sources, not something to build a hard assertion on."
+    },
+    "water-relax": {
+      "level": "core", "layout": "two-figs", "fig": "ch12-f2", "fig2": "ch12-f3",
+      "title": "Watching the water box",
+      "lead": "The starting configuration (left) and the same box animated across a real 5000-step run (right) -- real atomic masses (15.9994, 1.008), so the mass-to-symbol guess renders oxygen and hydrogen directly, unlike every earlier reduced-unit chapter.",
+      "bullets": [
+        "The visible lattice order at the start disorders under thermal motion as fix shake holds each molecule rigid while it reorients -- the same physical run the density and g_OO(r) checks both drew from.",
+        "This run is separate from the density benchmark above: a second real run, for structure and the atom views, not part of either pass/fail check."
+      ],
+      "notes": "Real elements finally on screen after eleven reduced-unit or generic-element lectures -- worth naming as a small milestone, not just another figure. Q: \"Why run this separately from the NPT density run instead of reusing its trajectory?\" A: The density run uses fix npt (a changing box volume complicates a fixed-cell animation); this run uses the preset's own default fix nvt at a fixed box, simpler and cheaper, and the density check never needed the trajectory in the first place."
+    },
+    "water-crosscheck": {
+      "level": "math", "layout": "table",
+      "title": "Density against a NIST reference",
+      "lead": "LAMMPS's own fix npt at 300 K / 1 atm (chapter 04's fix npt pattern, its first use on a real molecular system), block-averaged over a post-equilibration tail, against NIST's SAT-TMMC saturated liquid density at 300 K.",
+      "table": {
+        "head": ["Quantity", "LAMMPS (fix npt)", "NIST (SAT-TMMC)", "Agreement"],
+        "rows": [
+          ["Density (kg/m3)", "measured", "measured", "within tolerance (S4)"]
+        ]
+      },
+      "notes": "This is the load-bearing quantitative claim of the whole chapter -- everything else (the RDF, the animation) is context; this is the one number with a real external reference and a real pass/fail. Q: \"Is the NIST value density at 1 atm, matching the fix npt target exactly?\" A: No -- it is the saturated liquid density (coexistence with vapour, ~0.01 bar at 300 K), stated plainly in data/benchmarks/spce_water.json rather than glossed over; for water's tiny compressibility the difference from 1 atm is far below what this comparison can resolve, but the distinction is real."
     }
   },
   "glossary": [
