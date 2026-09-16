@@ -7,6 +7,6 @@
   "note": "Table row for T=300 K: rho_liq=9.981E+02 kg/m3 +/- 2.928E+00, rho_vap=7.373E-03 kg/m3, p_sat=1.017E-02 bar. This is the SATURATED liquid density at 300 K (liquid-vapor coexistence, saturation pressure ~0.01 bar), not liquid water at 1 atm -- for a near-incompressible liquid like water the difference between the two is far below this course's measurement precision, but the distinction is real and stated here rather than glossed over. Page created 2014-09-03, updated 2026-04-08 (still live at retrieval)."
  },
  "entries": {
-  "rho_liq_300K": {"value": 998.1, "error": 0.2928, "units": "kg/m3", "meaning": "SPC/E saturated liquid density at 300 K, NIST SAT-TMMC (Wang-Landau/TMMC Monte Carlo)"}
+  "rho_liq_300K": {"value": 998.1, "error": 2.928, "units": "kg/m3", "meaning": "SPC/E saturated liquid density at 300 K, NIST SAT-TMMC (Wang-Landau/TMMC Monte Carlo)"}
  }
 }

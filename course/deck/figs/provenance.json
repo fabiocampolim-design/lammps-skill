@@ -141,7 +141,7 @@
    "heading": "Oxygen-oxygen structure: g_OO(r)",
    "cell": 10,
    "figure": 1,
-   "caption": "The oxygen-oxygen radial distribution function from this box's own equilibrated trajectory: a first peak near the O-O hydrogen-bonding distance, decaying to the ideal-gas value of 1 at large r -- computed by lammpskill.post.rdf_trajectory, the same tool chapter 06 uses.",
+   "caption": "The oxygen-oxygen radial distribution function from this box's own trajectory, after 2.5 ps of relaxation off the lattice start: a first peak near the O-O hydrogen-bonding distance, decaying to the ideal-gas value of 1 at large r -- computed by lammpskill.post.rdf_trajectory, the same tool chapter 06 uses.",
    "sha256": "33236e9dfe014b3f465de8885ff7d51489487adedca45e6f7c09c0e7935b1361",
    "bytes": 16689
   },

@@ -200,12 +200,20 @@ def water_density_vs_nist(inst, workdir, n_side=6, steps=20000, equil_steps=5000
     os.makedirs(workdir, exist_ok=True)
     spec, df = spce_water(n_side=n_side, T=300.0, steps=steps, workdir=workdir)
     npt_spec = dataclasses.replace(
-        spec, fixes=["shk all shake 1.0e-4 20 0 b 1 a 1", "npt all npt temp 300.0 300.0 100.0 iso 1.0 1.0 1000.0"],
+        spec, fixes=[spec.fixes[0], "npt all npt temp 300.0 300.0 100.0 iso 1.0 1.0 1000.0"],
         thermo=100, thermo_style="custom step temp press density",
         comment="SPC/E water, %d molecules, fix npt at 300 K / 1 atm (chapter 04's fix npt pattern, "
-                "first use of it for a real molecular system)" % df.natoms,
+                "first use of it for a real molecular system)" % (df.natoms // 3),
     )
-    res = lrun(render(npt_spec), workdir, installation=inst)
+    # the NIST reference this is compared to is explicitly the LRC (long-range corrected) dataset
+    # -- pair_modify tail yes is required to match it (Spec has no field for pair_modify; inserted
+    # after the O-O pair_coeff line, the same text-splice lj_vs_lammps already uses). Missing this
+    # was found by an adversarial review: omitting it leaves the virial pressure high by roughly
+    # 200 atm for this system (a real, computed estimate, not a guess), which under fix npt would
+    # have shown up as a density biased low by very close to the residue this benchmark had
+    # actually been measuring before the fix.
+    text = render(npt_spec).replace("pair_coeff 1 1 0.1553 3.166", "pair_coeff 1 1 0.1553 3.166\npair_modify tail yes")
+    res = lrun(text, workdir, installation=inst)
     if not res.ok:
         raise RuntimeError("LAMMPS NPT run failed: %s" % res.errors)
     step_col = res.thermo.get("Step")
@@ -221,9 +229,14 @@ def water_density_vs_nist(inst, workdir, n_side=6, steps=20000, equil_steps=5000
             "units": "kg/m3", "measured": {"d_rho": d_rho},
             "tolerance_rho": max(_tol(d_rho), 3 * (rho_e + ref["error"])),
             "nmolecules": n_side ** 3, "natoms": df.natoms, "steps": steps, "equil_steps": equil_steps,
-            "provenance": _prov(inst, "LAMMPS-only (see this function's own docstring for why); fix npt at 300 K / 1 atm, "
-                                      "density block-averaged over the post-equilibration tail, compared to NIST's "
-                                      "SAT-TMMC saturated liquid density at 300 K (data/benchmarks/spce_water.json)")}
+            "provenance": _prov(inst, "LAMMPS-only (see this function's own docstring for why); fix npt at 300 K / 1 atm "
+                                      "with pair_modify tail yes (the NIST reference is the LRC -- long-range corrected "
+                                      "-- dataset), density block-averaged over the post-equilibration tail, compared "
+                                      "to NIST's SAT-TMMC saturated liquid density at 300 K (data/benchmarks/"
+                                      "spce_water.json). Limitations not otherwise captured by the measured residue: "
+                                      "%d molecules (finite-size), the NIST value is the saturated-liquid density "
+                                      "(coexistence, ~0.01 bar) not density at exactly 1 atm -- negligible for water's "
+                                      "compressibility at this precision, but not the identical state point" % (n_side ** 3))}
 
 
 def _read_eam(potential):

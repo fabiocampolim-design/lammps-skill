@@ -107,7 +107,10 @@ def compute_water_traj():
     traj = read_dump(os.path.join(workdir, "traj.dump"))
     nframes = len(traj)
 
-    # O-O RDF from the second half only -- the first half is still relaxing off the lattice start.
+    # O-O RDF from the second half only (2.5 ps of a 5 ps run) -- the first half is still
+    # relaxing off the lattice start. 2.5 ps is enough for the first-shell O-O structure the
+    # peak below reports (it converges within ~1-2 ps); it is not claimed to equilibrate
+    # anything on a longer timescale.
     eq = Trajectory(traj.frames[nframes // 2:])
     r, g = rdf_trajectory(eq, nbins=100, pair=(1, 1))
 
@@ -146,10 +149,10 @@ if traj_rec["source"] != "skip":
     fig.tight_layout()
     plt.show()
     imax = int(np.argmax(g))
-    caption("The oxygen-oxygen radial distribution function from this box's own equilibrated "
-            "trajectory: a first peak near the O-O hydrogen-bonding distance, decaying to the "
-            "ideal-gas value of 1 at large r -- computed by lammpskill.post.rdf_trajectory, the "
-            "same tool chapter 06 uses.")
+    caption("The oxygen-oxygen radial distribution function from this box's own trajectory, after "
+            "2.5 ps of relaxation off the lattice start: a first peak near the O-O hydrogen-bonding "
+            "distance, decaying to the ideal-gas value of 1 at large r -- computed by "
+            "lammpskill.post.rdf_trajectory, the same tool chapter 06 uses.")
     print("g_OO(r) first peak: r=%.3f A, g=%.2f (literature range ~2.7-2.8 A)" % (r[imax], g[imax]))
 else:
     print("no LAMMPS and no record: nothing to analyse")
@@ -183,12 +186,12 @@ from IPython.display import Image, display
 
 if traj_rec["source"] != "skip":
     frames = [np.array(f) for f in traj_rec["frames"]]
-    masses_per_frame = [_MASS[t] for t in traj_rec["types"]]
+    masses_per_atom = [_MASS[t] for t in traj_rec["types"]]   # one per atom, reused for every frame -- atom identity never changes, only position
     cell = np.array(traj_rec["cell"])
     gif_workdir = tempfile.mkdtemp(prefix="ch12_gif_")
     try:
         gif_path = viz.animate_gif(frames, cell, os.path.join(gif_workdir, "water.gif"),
-                                   masses=masses_per_frame, fps=4)
+                                   masses=masses_per_atom, fps=4)
     except ImportError as e:
         print("ase not installed -- skipping the animation:", e)
     else:

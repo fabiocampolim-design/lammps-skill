@@ -838,7 +838,7 @@ window.DECK_CONTENT = {
     "water-structure": {
       "level": "core", "layout": "fig-right", "fig": "ch12-f1",
       "title": "Oxygen-oxygen structure: g_OO(r)",
-      "lead": "The box's own radial distribution function, from a real trajectory -- a sharp first peak near the hydrogen-bonding distance, a second-shell shoulder near 4.5 A (water's tetrahedral local order), decaying to the ideal-gas value of 1.",
+      "lead": "The box's own radial distribution function, from a real trajectory (2.5 ps of relaxation, not a long equilibration) -- a sharp first peak near the hydrogen-bonding distance and a modest second-shell feature near 4.5 A, decaying to the ideal-gas value of 1.",
       "bullets": [
         "First peak measured here: r=2.74 A, g=2.97 -- for scale, not a pass/fail check, published SPC/E values place it around 2.7-2.8 A (Mark & Nilsson 2001; Camisasca et al. 2019, comparing SPC/E directly to experimental X-ray diffraction).",
         "Computed by lammpskill.post.rdf_trajectory -- the same tool chapter 06 uses, on a real molecular system instead of a monatomic LJ fluid."
@@ -850,7 +850,7 @@ window.DECK_CONTENT = {
       "title": "Watching the water box",
       "lead": "The starting configuration (left) and the same box animated across a real 5000-step run (right) -- real atomic masses (15.9994, 1.008), so the mass-to-symbol guess renders oxygen and hydrogen directly, unlike every earlier reduced-unit chapter.",
       "bullets": [
-        "The visible lattice order at the start disorders under thermal motion as fix shake holds each molecule rigid while it reorients -- the same physical run the density and g_OO(r) checks both drew from.",
+        "The visible lattice order at the start disorders under thermal motion as fix shake holds each molecule rigid while it reorients -- the same physical case (fix nvt, not the density check's fix npt) the g_OO(r) plot was also computed from.",
         "This run is separate from the density benchmark above: a second real run, for structure and the atom views, not part of either pass/fail check."
       ],
       "notes": "Real elements finally on screen after eleven reduced-unit or generic-element lectures -- worth naming as a small milestone, not just another figure. Q: \"Why run this separately from the NPT density run instead of reusing its trajectory?\" A: The density run uses fix npt (a changing box volume complicates a fixed-cell animation); this run uses the preset's own default fix nvt at a fixed box, simpler and cheaper, and the density check never needed the trajectory in the first place."
@@ -862,10 +862,10 @@ window.DECK_CONTENT = {
       "table": {
         "head": ["Quantity", "LAMMPS (fix npt)", "NIST (SAT-TMMC)", "Agreement"],
         "rows": [
-          ["Density (kg/m3)", "measured", "measured", "within tolerance (S4)"]
+          ["Density (kg/m3)", "994.0 &plusmn; 3.8", "998.1 &plusmn; 2.9", "within 20.2 (S4: 3&sigma; combined)"]
         ]
       },
-      "notes": "This is the load-bearing quantitative claim of the whole chapter -- everything else (the RDF, the animation) is context; this is the one number with a real external reference and a real pass/fail. Q: \"Is the NIST value density at 1 atm, matching the fix npt target exactly?\" A: No -- it is the saturated liquid density (coexistence with vapour, ~0.01 bar at 300 K), stated plainly in data/benchmarks/spce_water.json rather than glossed over; for water's tiny compressibility the difference from 1 atm is far below what this comparison can resolve, but the distinction is real."
+      "notes": "This is the load-bearing quantitative claim of the whole chapter -- everything else (the RDF, the animation) is context; this is the one number with a real external reference, recorded at the precision it was actually measured (S4) rather than asserted against a fixed target. Q: \"Is the NIST value density at 1 atm, matching the fix npt target exactly?\" A: No -- it is the saturated liquid density (coexistence with vapour, ~0.01 bar at 300 K), stated plainly in data/benchmarks/spce_water.json rather than glossed over; for water's tiny compressibility the difference from 1 atm is far below what this comparison can resolve, but the distinction is real."
     }
   },
   "glossary": [

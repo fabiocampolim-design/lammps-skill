@@ -2,6 +2,52 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.22 — 2026-09-16
+
+Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of 0.1.21's water
+chapter. Verdict was SHIP WITH FIXES; all four important findings addressed:
+
+- The LAMMPS `fix npt` density run had no `pair_modify tail yes`, while the NIST reference it is
+  compared to is explicitly named "(LRC)" -- long-range corrected. The review computed the missing
+  tail's magnitude directly (~-202 atm for this system's O-O Lennard-Jones site) and showed it
+  accounts, in sign and order, for the entire observed shortfall. Fixed: `pair_modify tail yes`
+  added (the same text-splice `lj_vs_lammps` already uses, since `Spec` has no field for it).
+  Re-measured: density residue improved from 5.34 to 4.09 kg/m3 (994.0 vs 998.1 kg/m3), against a
+  corrected tolerance of 20.2 (see next finding).
+- `data/benchmarks/spce_water.json`'s entry recorded the NIST uncertainty as 0.2928 kg/m3 where
+  the source page -- and the same file's own `provenance.note` two lines above -- both say 2.928:
+  a 10x transcription error, propagated into `references/benchmarks.md`, the 0.1.21 CHANGELOG
+  entry, the record, and the executed notebook's printed output. Fixed at the source; every
+  downstream copy now shows 998.1 +/- 2.9 kg/m3.
+- The 0.1.21 CHANGELOG claimed "416 passed"; the actual count on that commit is 421 -- the same
+  mechanism as an earlier, already-identified issue in this project (`tests/test_no_held_material.
+  py` parametrizes over every tracked text file, so a count taken before `git add` undercounts by
+  exactly the number of newly-tracked files; this commit adds none, so its own count needed no
+  correction after staging).
+- A course slide (`water-relax`) contradicted itself within its own two bullets, calling the
+  animated run both "the same physical run" as the density check and, one line later, "separate
+  from the density benchmark above" -- the second was correct (`fix nvt`, not the density check's
+  `fix npt`); the first bullet now says "the same physical case", matching the notebook's own
+  caption, and names which fix it actually used.
+
+Minor: "equilibrated" reworded to name the actual relaxation time (2.5 ps) rather than claim more
+than a short run supports; a "second-shell shoulder ... tetrahedral local order" course-slide
+claim softened to "a modest second-shell feature" (a real but small feature in the actual figure,
+not the confident structural claim the wording implied); the NPT run's own rendered-script comment
+miscounted "648 molecules" (that is the atom count; 216 is the molecule count) -- fixed, and the
+hardcoded SHAKE fix string in `water_density_vs_nist()` now reuses `spce_water()`'s own
+`spec.fixes[0]` instead of a second hand-typed copy that could silently drift from the preset;
+`data/records/water_density.json`'s `provenance.why` now names its own limitations (finite-size,
+saturated-vs-1-atm) instead of only the method; the `water-crosscheck` course slide's table and
+lecturer notes now show the real measured numbers instead of the placeholder word "measured" with
+no numbers at all, and no longer call the comparison "a real pass/fail" (it is a real comparison,
+recorded at the precision it was measured, per S4 -- not a claim of certainty beyond that); CLAUDE.
+md's own Status section (six releases stale) brought current with items 1-3 of the atom-visuals
+roadmap.
+
+Whole suite: 421 passed / 3 skipped, pyflakes clean, conformance PASS=23 FAIL=0. Deck verified
+clean across all 80 states (`course/tools/verify_deck.py`).
+
 ## 0.1.21 — 2026-09-16
 
 Chapter 12 of the atom-visuals roadmap (item 2 of 6, built after item 3/polymer since it needs a
@@ -40,7 +86,9 @@ real literature search rather than only `mdlite` code): SPC/E water.
   74 -> 80 pages, figures 12 -> 15; README/SKILL.md/AGENTS.md/USER_MANUAL.md/course/README.md
   chapter and lecture counts updated throughout.
 
-Whole suite: 416 passed / 3 skipped, pyflakes clean, conformance PASS=23 FAIL=0. Deck verified
+Whole suite: 421 passed / 3 skipped (measured before `git add`, undercounting the 5 newly-tracked
+files `tests/test_no_held_material.py` parametrizes over by exactly 5 -- corrected in 0.1.22's own
+entry below, same mechanism named there), pyflakes clean, conformance PASS=23 FAIL=0. Deck verified
 clean across all 80 states (`course/tools/verify_deck.py`).
 
 ## 0.1.20 — 2026-09-15
