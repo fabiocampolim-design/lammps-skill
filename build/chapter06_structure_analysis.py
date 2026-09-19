@@ -68,8 +68,13 @@ def compute():
     r, g = rdf_trajectory(eq, nbins=80)
     k, S = structure_factor(r, g, rho=natoms / eq.box.volume)
 
-    # MSD / diffusion: xu/yu/zu are already unwrapped.
-    t, m = msd(traj, dt=DT * DUMP_EVERY, unwrap=False)
+    # MSD / diffusion: xu/yu/zu are already unwrapped. msd()'s dt multiplies each frame's own
+    # f.timestep (already the real LAMMPS step count, e.g. 0, 20, 40, ...) -- so dt is the
+    # per-step time DT alone, NOT DT*DUMP_EVERY (that would double-count the dump interval and
+    # was a real bug, found by an adversarial review 2026-09-19: it understated D by 20x). This
+    # is a different dt convention than vacf() below, which multiplies a plain lag INDEX, so
+    # DT*DUMP_EVERY is correct there -- the two functions are not interchangeable on this point.
+    t, m = msd(traj, dt=DT, unwrap=False)
     D, D_err = diffusion_coefficient(t, m)
 
     # VACF over the first 30 lags.
@@ -199,8 +204,8 @@ def compute_traj_viz():
         raise RuntimeError("viz trajectory run failed (rc=%s): %s" % (result.returncode, "; ".join(result.errors) or result.stderr))
     traj = read_dump(os.path.join(workdir, "traj.dump"))
     eq_frames = traj.frames[len(traj) // 2:]     # equilibrated liquid, same window as g(r)/S(k) above
-    # the bottom slice of the box (z < half a lattice spacing, the same crop chapter 01 uses) --
-    # by now the liquid has forgotten the lattice, so this is a spatial crop, not an atomic layer
+    # a spatial crop on unwrapped z (xu/yu/zu, not chapter 01's wrapped z==0 crop -- by now the
+    # liquid has drifted and forgotten the lattice, so this is a half-space slice, not a thin slab)
     a = (4.0 / 0.8442) ** (1.0 / 3.0)
     nn = a / np.sqrt(2.0)   # fcc nearest-neighbour spacing, the same scale chapter 03 checks against
     z0 = eq_frames[0].positions[:, 2]
@@ -233,9 +238,10 @@ if viz_rec["source"] != "skip":
         print("ase not installed -- skipping the structure snapshot:", e)
     else:
         plt.show()
-        caption("A bottom slice of the box, well into the equilibrated-liquid window g(r)/S(k) "
-                "above measure: no lattice order visible, consistent with g(r)'s decay to 1 and "
-                "the liquid-like VACF measured from the same trajectory.")
+        caption("A spatial slice of a second run of the identical case (same seed, so "
+                "statistically the same trajectory the analysis above measures, not literally "
+                "the same run) well into the equilibrated-liquid window g(r)/S(k) use: no lattice "
+                "order visible, consistent with g(r)'s decay to 1 and the liquid-like VACF above.")
 else:
     print("no LAMMPS and no record: nothing to show")
 '''),

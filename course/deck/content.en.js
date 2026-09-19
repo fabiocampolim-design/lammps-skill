@@ -355,13 +355,13 @@ window.DECK_CONTENT = {
     },
     "ensembles-atoms": {
       "level": "core", "layout": "two-figs", "fig": "ch04-f2", "fig2": "ch04-f3",
-      "title": "Watching the box relax",
-      "lead": "The volume plot above is a number; here the same atoms, tracked by id, spread apart as fix npt expands the box toward its target pressure.",
+      "title": "Watching the box relax -- and the lattice melt",
+      "lead": "The volume plot above is a number; the same atoms, tracked by id, show something the number alone does not: real disorder, not only box growth.",
       "bullets": [
-        "The box itself changes size step by step here, unlike chapter 03's fixed-volume NVT -- animate_gif needs one fixed cell for every frame, so this is two static snapshots instead, each with its own (different-sized) box.",
-        "Same technique chapter 05 uses for its vacancy relaxation: identical atoms, before and after, not two different subsets that happen to look similar."
+        "Density drops from rho*=1.1 to rho*=0.45 -- correcting for the box's own affine expansion (same atoms scaled about the box's fixed centre), the residual rearrangement exceeds a full nearest-neighbour spacing.",
+        "The box itself changes size step by step here, unlike chapter 03's fixed-volume NVT -- animate_gif needs one fixed cell for every frame, so this is two static snapshots instead, each with its own (different-sized) box, matplotlib auto-scaled to its own content (not directly comparable in apparent size)."
       ],
-      "notes": "Worth being explicit about why this pair is static rather than animated, since L1 and L3 both used animate_gif -- the API takes one fixed cell for the whole animation, which is correct for NVT (the box never changes) and wrong for NPT (the whole point is that it does). Q: \"Could animate_gif be extended to take a per-frame cell?\" A: Yes, and it would be a small change to viz.py -- not done here because two clear static frames already make the point (the box expands) without adding a new code path this project would then need to validate."
+      "notes": "This slide's first draft claimed the box was 'visibly larger' in the second panel and the atoms merely 'spread apart on the same lattice' -- an adversarial review found both false: matplotlib auto-scales each panel independently (the physically larger box can render smaller), and the atoms do not stay on a lattice at all -- an affine-correction calculation (scale positions by the box's own growth about its centre, then take the residual) shows genuine rearrangement well beyond what pure dilation would produce. Q: \"So is fix npt doing something wrong here?\" A: No -- it holds T*=2.0 and relaxes toward P*=1.0 exactly as asked; at this density and temperature the equilibrium state the system finds just isn't a crystal, the same lesson L3's thermostats-atoms slide already drew from a different case."
     },
     "ensembles-restart-code": {
       "level": "core", "layout": "code",

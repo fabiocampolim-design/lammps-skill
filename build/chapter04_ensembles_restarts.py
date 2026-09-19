@@ -124,15 +124,22 @@ else:
 '''),
 
     md("""
-## Watching the box relax
+## Watching the box relax -- and the lattice melt
 
-The plot above shows volume and pressure as numbers; here the box does the same relaxation
-visibly. Unlike chapter 03's fixed-volume NVT, `fix npt` actually changes the box size step by
-step, so `lammpskill.viz.animate_gif` (one fixed cell for every frame) does not fit -- instead,
-two **static** snapshots of the identical `fix npt` run, one at the compressed start and one at
-the expanded end, each with its own (different-sized) box: the same before/after technique
-chapter 05 uses for the vacancy relaxation. Both frames show the same bottom-layer atoms (tracked
-by id), so the same slab visibly spreads apart rather than showing two unrelated cross-sections.
+The plot above shows volume and pressure as numbers; here is the atom-level picture, and it is
+not only a box relaxing. The density drops from rho*=1.1 to rho*=0.45 over this run -- an fcc
+lattice at rho*=1.1 does not just spread out at fix npt's T*=2.0 target, it disorders. Comparing
+the same atoms' displacement to what pure affine box expansion alone would produce (scale
+positions by the box's own growth, about its fixed geometric centre, then take the residual)
+shows real rearrangement on top of the expansion, not just dilation. Unlike chapter 03's
+fixed-volume NVT, `fix npt` actually changes the box size step by step, so
+`lammpskill.viz.animate_gif` (one fixed cell for every frame) does not fit -- instead, two
+**static** snapshots, one at the compressed start and one at the expanded end, each with its own
+(different-sized) box: the same before/after technique chapter 05 uses for the vacancy
+relaxation. Both frames show the same 150 atoms (tracked by id, wrapped into their own frame's
+box so none render as having escaped it). **Matplotlib auto-scales each panel to its own
+content, so the two images below are not directly comparable in apparent size** -- the box's
+real growth is the number in the volume plot above, not something to read off these pictures.
 """),
 
     code('''\
@@ -167,14 +174,37 @@ def compute_npt_traj():
     # a changing box, not a fixed lattice-spacing threshold like chapter 01/03 use on a fixed box
     z0 = first.positions[:, 2]
     idx = np.nonzero(z0 < 0.2 * first.box.lengths[2])[0]
+    pos_start = first.positions[idx]
+    # xu/yu/zu are unwrapped: by the end, some of these atoms have drifted outside the (also
+    # larger) end box -- wrap into the end frame's own bounds so the render shows real periodic
+    # images, not atoms that look like they escaped the box (found live: 116/150 did, unwrapped)
+    pos_end = last.box.wrap(last.positions[idx])
+
+    # how much of the displacement is genuine rearrangement, not just the box's own affine
+    # dilation: fix npt's iso coupling rescales symmetrically about the box's fixed geometric
+    # centre (verified: centre_start == centre_end here), so map pos_start through that same
+    # affine transform, then take the minimum-image residual against the (wrapped) end positions
+    centre_start = (first.box.lo + first.box.hi) / 2.0
+    centre_end = (last.box.lo + last.box.hi) / 2.0
+    scale = last.box.lengths / first.box.lengths
+    pos_start_affine = centre_end + (pos_start - centre_start) * scale
+    residual = last.box.minimum_image(pos_end - pos_start_affine)
+    disorder_rmsd = float(np.sqrt((residual ** 2).sum(axis=1).mean()))
+    a_start = first.box.lengths[0] / 5.0   # region is 5x5x5 unit cells; a is the fcc lattice constant
+    nn_scaled = float(a_start / np.sqrt(2.0) * scale[0])   # nearest-neighbour spacing, affinely scaled
+
     return {"natoms_shown": len(idx),
             "route": result.installation.route if result.installation else None,
-            "pos_start": first.positions[idx].tolist(), "cell_start": first.box.lengths.tolist(),
-            "pos_end": last.positions[idx].tolist(), "cell_end": last.box.lengths.tolist()}
+            "pos_start": pos_start.tolist(), "cell_start": first.box.lengths.tolist(),
+            "pos_end": pos_end.tolist(), "cell_end": last.box.lengths.tolist(),
+            "disorder_rmsd": disorder_rmsd, "nn_scaled": nn_scaled}
 
 
 npt_traj_rec = run_or_load("lj_npt_traj_ch04", compute_npt_traj, records_dir="../data/records")
 print("source:", npt_traj_rec["source"], "| atoms shown:", npt_traj_rec.get("natoms_shown"))
+if npt_traj_rec["source"] != "skip":
+    print("disorder beyond pure affine expansion: RMS %.3f (affinely-scaled nearest-neighbour spacing: %.3f)"
+          % (npt_traj_rec["disorder_rmsd"], npt_traj_rec["nn_scaled"]))
 '''),
 
     code('''\
@@ -190,8 +220,8 @@ if npt_traj_rec["source"] != "skip":
         print("ase not installed -- skipping the npt snapshots:", e)
     else:
         plt.show()
-        caption("The bottom fifth (by box height) of the compressed starting configuration -- "
-                "the same fcc 1.1 lattice fix npt starts from above -- rendered as argon-like "
+        caption("150 atoms from the compressed starting configuration (fcc 1.1) -- perfectly "
+                "ordered, before fix npt has taken a single step -- rendered as argon-like "
                 "spheres, the reduced-units convention chapter 01 established.")
 else:
     print("no LAMMPS and no record: nothing to show")
@@ -206,9 +236,12 @@ if npt_traj_rec["source"] != "skip":
         print("ase not installed -- skipping the npt snapshots:", e)
     else:
         plt.show()
-        caption("The same atoms (tracked by id, not re-selected) after fix npt has relaxed the "
-                "box toward its target pressure -- visibly further apart in a visibly larger box, "
-                "the same box expansion the volume plot above reports as a number.")
+        caption("The same 150 atoms (tracked by id, not re-selected) after fix npt has run: "
+                "visibly scattered, not merely spread apart on the same lattice -- the measured "
+                "disorder (RMS %.2f beyond pure affine box expansion) exceeds the affinely-scaled "
+                "nearest-neighbour spacing (%.2f), so this is a real rearrangement, not only the "
+                "box growth the volume plot above reports as a number." %
+                (npt_traj_rec["disorder_rmsd"], npt_traj_rec["nn_scaled"]))
 else:
     print("no LAMMPS and no record: nothing to show")
 '''),
@@ -285,4 +318,9 @@ TALLY = [
     ("V[-1] > V[0]", "the mdlite NPT sketch expanded a compressed system toward its lower target pressure"),
     ("npt_rec['source'] in ('run', 'record', 'skip')", "run_or_load (fix npt) returned one of its three documented outcomes"),
     ("restart_rec['source'] in ('run', 'record', 'skip')", "run_or_load (restart) returned one of its three documented outcomes"),
+    ("npt_traj_rec['source'] in ('run', 'record', 'skip')", "run_or_load (npt trajectory) returned one of its three documented outcomes"),
+    ("npt_traj_rec['source'] == 'skip' or np.array(npt_traj_rec['cell_end'])[2] > np.array(npt_traj_rec['cell_start'])[2]",
+     "the box actually grew, not just the atoms' positions"),
+    ("npt_traj_rec['source'] == 'skip' or npt_traj_rec['disorder_rmsd'] > npt_traj_rec['nn_scaled']",
+     "the shown atoms rearranged by more than one affinely-scaled nearest-neighbour spacing -- genuine disorder, not just box dilation"),
 ]

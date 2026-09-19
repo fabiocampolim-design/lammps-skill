@@ -2,6 +2,40 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.26 — 2026-09-19
+
+Fixes from two parallel adversarial reviews (Opus, one per chapter) of 0.1.25's chapter 04 and
+chapter 06 atom-visuals retrofits. Both found real problems; verified independently before fixing.
+
+- **Chapter 06 — a pre-existing bug, not introduced this session, now exposed and fixed.**
+  `build/chapter06_structure_analysis.py`'s `compute()` called
+  `msd(traj, dt=DT * DUMP_EVERY, unwrap=False)`. `lammpskill.post.msd()`'s `dt` multiplies each
+  frame's own `f.timestep`, which is already the real LAMMPS step count -- so the extra
+  `* DUMP_EVERY` double-counted the dump interval, inflating the time axis 20x and understating
+  the reported diffusion coefficient D by the same factor (0.0050 instead of the correct 0.1003,
+  independently confirmed and consistent with the block-averaged temperature and with the
+  Einstein-relation prediction against this session's own measured slab displacement). `vacf()`
+  uses a different, correct `dt` convention (per-index, not per-timestep) -- left unchanged.
+  Deleted and regenerated the stale `lj_structure_ch06` record; the MSD figure's x-axis and the
+  printed D are now correct. Also fixed two caption inaccuracies (a claim that a second,
+  independent run was "the same trajectory" as the original; imprecise wording about the spatial
+  crop no longer being a lattice-aligned "layer" once the liquid has disordered).
+- **Chapter 04 — the review found the retrofit's own physics claim was wrong, plus a rendering
+  bug.** The `fix npt` case actually drops from rho*=1.1 to rho*=0.45 -- real melting, not a
+  crystal merely expanding, confirmed by an affine-corrected displacement (scale positions by the
+  box's own growth about its fixed geometric centre, then take the minimum-image residual):
+  RMS 3.111, over twice the affinely-scaled nearest-neighbour spacing (1.464). Separately, the
+  unwrapped dump coordinates left 116/150 shown atoms rendering outside the (also larger) end
+  box, and matplotlib auto-scales each of the two static snapshots to its own content, so the
+  physically larger box could render *smaller* -- defeating the slide's own point. Fixed: wrap
+  positions into their own frame's box before rendering; added the affine-correction disorder
+  metric and two tally checks (`cell_end > cell_start`, `disorder_rmsd > nn_scaled`); rewrote
+  both captions and the course slide to describe melting-plus-expansion honestly, including an
+  explicit note that the two panels' apparent sizes are not comparable. Deleted and regenerated
+  the stale `lj_npt_traj_ch04` record.
+- 417 tests green (two new tally-backed claims added, one per chapter), pyflakes clean,
+  conformance PASS=23 FAIL=0.
+
 ## 0.1.25 — 2026-09-19
 
 Atom-visuals roadmap, retrofit items 2 and 3 of 3 (chapters 04 and 06), plus a correctness fix to

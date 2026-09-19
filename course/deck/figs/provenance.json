@@ -88,22 +88,22 @@
   "ch04-f2.png": {
    "chapter": "LAMMPS_04_Ensembles_And_Restarts.ipynb",
    "section": 0,
-   "heading": "Watching the box relax",
+   "heading": "Watching the box relax -- and the lattice melt",
    "cell": 10,
    "figure": 2,
-   "caption": "The bottom fifth (by box height) of the compressed starting configuration -- the same fcc 1.1 lattice fix npt starts from above -- rendered as argon-like spheres, the reduced-units convention chapter 01 established.",
+   "caption": "150 atoms from the compressed starting configuration (fcc 1.1) -- perfectly ordered, before fix npt has taken a single step -- rendered as argon-like spheres, the reduced-units convention chapter 01 established.",
    "sha256": "03907fd5352a3b7371b7ce1b550b101d5e9a2f366e09f0f62239ef718e6b59af",
    "bytes": 52741
   },
   "ch04-f3.png": {
    "chapter": "LAMMPS_04_Ensembles_And_Restarts.ipynb",
    "section": 0,
-   "heading": "Watching the box relax",
+   "heading": "Watching the box relax -- and the lattice melt",
    "cell": 11,
    "figure": 3,
-   "caption": "The same atoms (tracked by id, not re-selected) after fix npt has relaxed the box toward its target pressure -- visibly further apart in a visibly larger box, the same box expansion the volume plot above reports as a number.",
-   "sha256": "07b1a9bccf1c2d7948c46a8d372180d60a5317d8ad93d0c3269506e552032bff",
-   "bytes": 54238
+   "caption": "The same 150 atoms (tracked by id, not re-selected) after fix npt has run: visibly scattered, not merely spread apart on the same lattice -- the measured disorder (RMS 3.11 beyond pure affine box expansion) exceeds the affinely-scaled nearest-neighbour spacing (1.46), so this is a real rearrangement, not only the box growth the volume plot above reports as a number.",
+   "sha256": "37a8a2b6a1e77cbf940b47f967eb0dda74b5381b3ecedf0d6a775cc0231fb321",
+   "bytes": 66950
   },
   "ch05-f1.png": {
    "chapter": "LAMMPS_05_Potentials_EAM.ipynb",
@@ -142,8 +142,8 @@
    "cell": 8,
    "figure": 2,
    "caption": "Mean-squared displacement against time: the slope of its later, genuinely diffusive part (not the early ballistic rise) is the Einstein-relation fit lammpskill.post.diffusion_coefficient reports as D.",
-   "sha256": "b1a40281874d4eca195f26833e999d194343eb8339605a446350a558c466a37d",
-   "bytes": 15811
+   "sha256": "e9733fb6a64a84f67ed8393d5fd6239e7e1756ab2c12182642c1d52b1dca4d02",
+   "bytes": 14773
   },
   "ch06-f3.png": {
    "chapter": "LAMMPS_06_Structure_And_Analysis.ipynb",
@@ -161,7 +161,7 @@
    "heading": "Watching the liquid diffuse",
    "cell": 15,
    "figure": 4,
-   "caption": "A bottom slice of the box, well into the equilibrated-liquid window g(r)/S(k) above measure: no lattice order visible, consistent with g(r)'s decay to 1 and the liquid-like VACF measured from the same trajectory.",
+   "caption": "A spatial slice of a second run of the identical case (same seed, so statistically the same trajectory the analysis above measures, not literally the same run) well into the equilibrated-liquid window g(r)/S(k) use: no lattice order visible, consistent with g(r)'s decay to 1 and the liquid-like VACF above.",
    "sha256": "e8990e10523d1206d8ff726ea508ae1e12e1a6f715ea7de1fe0b66e78c4d93fa",
    "bytes": 58167
   },

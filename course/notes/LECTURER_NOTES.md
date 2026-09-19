@@ -142,10 +142,10 @@ Slide `#ensembles-fixnpt`.
 
 State again, out loud, that the sketch and fix npt are answering the same question with methods of very different rigor -- comparing their directions is legitimate, comparing their numbers quantitatively is not. Q: "So is the mdlite comparison in the figure meaningless?" A: No -- both start denser than their target pressure and both expand toward it, which is exactly the qualitative claim being tested; a quantitative match was never the claim.
 
-### Watching the box relax  `[core]`
+### Watching the box relax -- and the lattice melt  `[core]`
 Slide `#ensembles-atoms`; figures `ch04-f2` (§0 cell 10), `ch04-f3` (§0 cell 11).
 
-Worth being explicit about why this pair is static rather than animated, since L1 and L3 both used animate_gif -- the API takes one fixed cell for the whole animation, which is correct for NVT (the box never changes) and wrong for NPT (the whole point is that it does). Q: "Could animate_gif be extended to take a per-frame cell?" A: Yes, and it would be a small change to viz.py -- not done here because two clear static frames already make the point (the box expands) without adding a new code path this project would then need to validate.
+This slide's first draft claimed the box was 'visibly larger' in the second panel and the atoms merely 'spread apart on the same lattice' -- an adversarial review found both false: matplotlib auto-scales each panel independently (the physically larger box can render smaller), and the atoms do not stay on a lattice at all -- an affine-correction calculation (scale positions by the box's own growth about its centre, then take the residual) shows genuine rearrangement well beyond what pure dilation would produce. Q: "So is fix npt doing something wrong here?" A: No -- it holds T*=2.0 and relaxes toward P*=1.0 exactly as asked; at this density and temperature the equilibrium state the system finds just isn't a crystal, the same lesson L3's thermostats-atoms slide already drew from a different case.
 
 ### A restart script declares only what the restart does not carry  `[core]`
 Slide `#ensembles-restart-code`.
