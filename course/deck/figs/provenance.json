@@ -58,20 +58,20 @@
   "ch03-f2.png": {
    "chapter": "LAMMPS_03_Thermostats.ipynb",
    "section": 0,
-   "heading": "Watching the cooling",
+   "heading": "Watching the lattice melt",
    "cell": 13,
    "figure": 2,
-   "caption": "The bottom-most atomic layer at the start of the fix nvt run, velocities freshly drawn at T*=2.0 (twice the target) -- rendered as argon-like spheres, the same reduced-units convention chapter 01 uses.",
+   "caption": "The bottom-most atomic layer at the very start of the fix nvt run: the undisplaced fcc lattice, before the freshly-drawn T*=2.0 velocities have moved anything -- rendered as argon-like spheres, the same reduced-units convention chapter 01 uses.",
    "sha256": "0a576317f3d454360a5dbc33a0ff9ed21736bdac05931a5c63425a8e777f6682",
    "bytes": 62707
   },
   "ch03-f3.gif": {
    "chapter": "LAMMPS_03_Thermostats.ipynb",
    "section": 0,
-   "heading": "Watching the cooling",
+   "heading": "Watching the lattice melt",
    "cell": 14,
    "figure": 3,
-   "caption": "The same layer, animated across the run: the visibly larger jitter of a hot start settling down as fix nvt's Nosé-Hoover chain pulls the system to its target temperature -- the atom-level picture behind the cooling curve above.",
+   "caption": "The same layer, animated across the run: the lattice visibly disordering, not merely jittering less, as fix nvt holds the temperature at its target -- by the last frame the shown atoms have moved by RMS 1.17, close to a full nearest-neighbour spacing (1.19), far past the Lindemann melting criterion (~0.1-0.15 of that spacing). The temperature curve above converges; the crystal does not.",
    "sha256": "a308a79755607e56606816169b254261f7337a2a0dc6275a47bf83c1c1b1c269",
    "bytes": 347692
   },
@@ -84,6 +84,26 @@
    "caption": "The NPT run started denser than its target pressure: box volume expands (left) while the instantaneous pressure relaxes down toward the target of 1.0 (right, dashed) under the Berendsen barostat.",
    "sha256": "188ac6822a70365437b2342c60629ae132adecb2b79e06aec9f635e5758efff5",
    "bytes": 28838
+  },
+  "ch04-f2.png": {
+   "chapter": "LAMMPS_04_Ensembles_And_Restarts.ipynb",
+   "section": 0,
+   "heading": "Watching the box relax",
+   "cell": 10,
+   "figure": 2,
+   "caption": "The bottom fifth (by box height) of the compressed starting configuration -- the same fcc 1.1 lattice fix npt starts from above -- rendered as argon-like spheres, the reduced-units convention chapter 01 established.",
+   "sha256": "03907fd5352a3b7371b7ce1b550b101d5e9a2f366e09f0f62239ef718e6b59af",
+   "bytes": 52741
+  },
+  "ch04-f3.png": {
+   "chapter": "LAMMPS_04_Ensembles_And_Restarts.ipynb",
+   "section": 0,
+   "heading": "Watching the box relax",
+   "cell": 11,
+   "figure": 3,
+   "caption": "The same atoms (tracked by id, not re-selected) after fix npt has relaxed the box toward its target pressure -- visibly further apart in a visibly larger box, the same box expansion the volume plot above reports as a number.",
+   "sha256": "07b1a9bccf1c2d7948c46a8d372180d60a5317d8ad93d0c3269506e552032bff",
+   "bytes": 54238
   },
   "ch05-f1.png": {
    "chapter": "LAMMPS_05_Potentials_EAM.ipynb",
@@ -134,6 +154,26 @@
    "caption": "The velocity autocorrelation function, normalised to 1 at zero lag: a liquid decays roughly monotonically toward zero rather than oscillating, which is itself evidence the case really is a liquid.",
    "sha256": "beb04ba43324d312d26f808ee26f5faa5c799abd0583e558a7a371de5cb63bb5",
    "bytes": 15535
+  },
+  "ch06-f4.png": {
+   "chapter": "LAMMPS_06_Structure_And_Analysis.ipynb",
+   "section": 0,
+   "heading": "Watching the liquid diffuse",
+   "cell": 15,
+   "figure": 4,
+   "caption": "A bottom slice of the box, well into the equilibrated-liquid window g(r)/S(k) above measure: no lattice order visible, consistent with g(r)'s decay to 1 and the liquid-like VACF measured from the same trajectory.",
+   "sha256": "e8990e10523d1206d8ff726ea508ae1e12e1a6f715ea7de1fe0b66e78c4d93fa",
+   "bytes": 58167
+  },
+  "ch06-f5.gif": {
+   "chapter": "LAMMPS_06_Structure_And_Analysis.ipynb",
+   "section": 0,
+   "heading": "Watching the liquid diffuse",
+   "cell": 16,
+   "figure": 5,
+   "caption": "The same slice, animated: atoms visibly wandering away from their starting positions (RMS displacement 1.76 over this window) -- the same diffusive motion the mean-squared-displacement fit above turns into the reported D.",
+   "sha256": "650161c26c7b01af148bf2ea747257eb6533df74d8f7322b0a993130e8f3df7e",
+   "bytes": 309869
   },
   "ch11-f1.png": {
    "chapter": "LAMMPS_11_Polymers.ipynb",

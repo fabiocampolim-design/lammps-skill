@@ -119,10 +119,10 @@ Slide `#thermostats-nist`.
 
 Point out explicitly that this is the one comparison in the whole course with no LAMMPS run on either side -- record-or-run loads it with route: "none", which L0's records cell already flagged as a distinct case. Q: "Why compare to NIST instead of only to LAMMPS?" A: An independent published reference rules out the possibility that mdlite and LAMMPS share a bug -- agreeing with each other is necessary but not sufficient; agreeing with a third, independently produced table is stronger evidence.
 
-### Watching the cooling  `[core]`
+### Watching the lattice melt  `[core]`
 Slide `#thermostats-atoms`; figures `ch03-f2` (§0 cell 13), `ch03-f3` (§0 cell 14).
 
-This is the same rendering technique L1's first-sim-atoms slide introduced (ASE + matplotlib, headless, a small subsampled slab rather than the full 864-atom trajectory) applied to a case where the physically interesting change is thermal, not structural -- the atoms don't rearrange, they just jitter less. Q: "Could you see the difference between the three thermostats this way?" A: In principle yes, though it would be a subtler visual difference than this hot-to-cold cooldown -- Berendsen, Langevin and Nose-Hoover would look nearly identical at a fixed temperature, since what differs between them is the *statistics* of the fluctuations, not their visible amplitude.
+This is the same rendering technique L1's first-sim-atoms slide introduced (ASE + matplotlib, headless, a small subsampled slab), applied here to catch a real result the temperature curve alone would hide: a thermostat's contract is about kinetic energy, not phase, and rho*=0.8442 -- the same density chapter 01's own lj_melt() uses because it IS a liquid state point -- does not support a stable crystal at T*=1.0. This was found live: an adversarial review measured the actual RMS displacement and nearest-neighbour statistics from the recorded trajectory and showed the first draft of this slide (framed as "cooling jitter") was backwards. Q: "So does fix nvt fail here?" A: No -- it does exactly its job, holding  at 1.0 (the plot two slides back confirms this); melting is the system's own thermodynamic response to that temperature at this density, not a thermostat malfunction.
 
 ### Berendsen's rescaling, in one line  `[math]`
 Slide `#thermostats-math`.
@@ -141,6 +141,11 @@ Flag directly that mdlite's NPT is intentionally the least complete piece of the
 Slide `#ensembles-fixnpt`.
 
 State again, out loud, that the sketch and fix npt are answering the same question with methods of very different rigor -- comparing their directions is legitimate, comparing their numbers quantitatively is not. Q: "So is the mdlite comparison in the figure meaningless?" A: No -- both start denser than their target pressure and both expand toward it, which is exactly the qualitative claim being tested; a quantitative match was never the claim.
+
+### Watching the box relax  `[core]`
+Slide `#ensembles-atoms`; figures `ch04-f2` (§0 cell 10), `ch04-f3` (§0 cell 11).
+
+Worth being explicit about why this pair is static rather than animated, since L1 and L3 both used animate_gif -- the API takes one fixed cell for the whole animation, which is correct for NVT (the box never changes) and wrong for NPT (the whole point is that it does). Q: "Could animate_gif be extended to take a per-frame cell?" A: Yes, and it would be a small change to viz.py -- not done here because two clear static frames already make the point (the box expands) without adding a new code path this project would then need to validate.
 
 ### A restart script declares only what the restart does not carry  `[core]`
 Slide `#ensembles-restart-code`.
@@ -202,6 +207,11 @@ This lecture is the payoff for chapters 1-5: everything computed so far becomes 
 Slide `#structure-gr-sk`.
 
 The point worth landing is the dependency direction: S(k) never touches the trajectory again once g(r) exists -- a bug in g(r) would show up identically in S(k), which is why the chapter treats them as one measurement shown two ways, not two measurements that happen to agree. Q: "Could S(k) be computed directly from the trajectory instead?" A: Yes, by Fourier-transforming the instantaneous density -- lammpskill.post takes the g(r) route because it reuses the same binned histogram RDF already needed, at the cost of extra smoothing from the integral.
+
+### Watching the liquid diffuse  `[core]`
+Slide `#structure-atoms`; figures `ch06-f4` (§0 cell 15), `ch06-f5` (§0 cell 16).
+
+Worth naming explicitly why this is a second, separate run rather than reusing the trajectory the analysis above already computed: this chapter's own discipline is to discard the raw 864-atom x 101-frame trajectory once the derived arrays are extracted, never commit it -- so a visual needs its own small, purpose-built record, same as chapter 01's. Q: "Why not just keep a small slice of the original trajectory instead of running the case twice?" A: Either would work; running it twice was chosen because it keeps a clean invariant -- the structure record demonstrably contains only derived numbers, never any positions, which is easier to state and easier to guard with a test than 'small subsample, but only up to N atoms'.
 
 ### Ballistic first, diffusive later -- fit the right half  `[core]`
 Slide `#structure-diffusive-regime`.

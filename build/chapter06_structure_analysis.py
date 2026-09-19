@@ -177,6 +177,91 @@ if rec["source"] != "skip":
 '''),
 
     md("""
+## Watching the liquid diffuse
+
+`g(r)`'s decay to 1 and the VACF's monotonic decay above already establish, numerically, that
+this trajectory really is a liquid -- this section shows it. A second, dedicated run of the
+identical case (`traj_spec` above, unchanged), because this chapter's own discipline is to
+compute on the full trajectory and discard it (never commit 864 atoms x 101 frames) -- so a
+visual needs its own small, purpose-built record, the same choice chapter 01 makes rather than
+smuggling raw positions into the structure record above. Only the **second half** of the run is
+shown, the same equilibrated-liquid window the `g(r)`/`S(k)` cell already uses, not the first half
+that is still disordering from the initial hot lattice.
+"""),
+
+    code('''\
+N_FRAMES = 10
+
+def compute_traj_viz():
+    workdir = tempfile.mkdtemp(prefix="ch06_viz_")
+    result = run(traj_spec, workdir, time_limit=300)
+    if not result.ok:
+        raise RuntimeError("viz trajectory run failed (rc=%s): %s" % (result.returncode, "; ".join(result.errors) or result.stderr))
+    traj = read_dump(os.path.join(workdir, "traj.dump"))
+    eq_frames = traj.frames[len(traj) // 2:]     # equilibrated liquid, same window as g(r)/S(k) above
+    # the bottom slice of the box (z < half a lattice spacing, the same crop chapter 01 uses) --
+    # by now the liquid has forgotten the lattice, so this is a spatial crop, not an atomic layer
+    a = (4.0 / 0.8442) ** (1.0 / 3.0)
+    nn = a / np.sqrt(2.0)   # fcc nearest-neighbour spacing, the same scale chapter 03 checks against
+    z0 = eq_frames[0].positions[:, 2]
+    idx = np.nonzero(z0 < 0.5 * a)[0]
+    step = max(1, len(eq_frames) // N_FRAMES)
+    shown = [f.positions[idx] for f in eq_frames[::step]]
+    rmsd_final = float(np.sqrt(((shown[-1] - shown[0]) ** 2).sum(axis=1).mean()))
+    return {"natoms_shown": len(idx), "nframes": len(shown), "frames": [f.tolist() for f in shown],
+            "cell": eq_frames[0].box.lengths.tolist(), "rmsd_final": rmsd_final, "nn_spacing": float(nn),
+            "route": result.installation.route if result.installation else None}
+
+
+viz_rec = run_or_load("lj_structure_viz_ch06", compute_traj_viz, records_dir="../data/records")
+print("source:", viz_rec["source"], "| atoms shown:", viz_rec.get("natoms_shown"), "| frames:", viz_rec.get("nframes"))
+if viz_rec["source"] != "skip":
+    print("RMS displacement of the shown slice over this window: %.3f" % viz_rec["rmsd_final"])
+'''),
+
+    code('''\
+import matplotlib.pyplot as plt
+
+from lammpskill import viz
+
+if viz_rec["source"] != "skip":
+    pos0 = np.array(viz_rec["frames"][0])
+    cell = np.array(viz_rec["cell"])
+    try:
+        fig = viz.snapshot(pos0, cell, symbols=["Ar"] * len(pos0))
+    except ImportError as e:
+        print("ase not installed -- skipping the structure snapshot:", e)
+    else:
+        plt.show()
+        caption("A bottom slice of the box, well into the equilibrated-liquid window g(r)/S(k) "
+                "above measure: no lattice order visible, consistent with g(r)'s decay to 1 and "
+                "the liquid-like VACF measured from the same trajectory.")
+else:
+    print("no LAMMPS and no record: nothing to show")
+'''),
+
+    code('''\
+from IPython.display import Image, display
+
+if viz_rec["source"] != "skip":
+    frames = [np.array(f) for f in viz_rec["frames"]]
+    cell = np.array(viz_rec["cell"])
+    gif_workdir = tempfile.mkdtemp(prefix="ch06_gif_")
+    try:
+        gif_path = viz.animate_gif(frames, cell, os.path.join(gif_workdir, "diffusion.gif"),
+                                   symbols=["Ar"] * len(frames[0]), fps=4)
+    except ImportError as e:
+        print("ase not installed -- skipping the animation:", e)
+    else:
+        display(Image(filename=gif_path))
+        caption("The same slice, animated: atoms visibly wandering away from their starting "
+                "positions (RMS displacement %.2f over this window) -- the same diffusive motion "
+                "the mean-squared-displacement fit above turns into the reported D." % viz_rec["rmsd_final"])
+else:
+    print("no LAMMPS and no record: nothing to animate")
+'''),
+
+    md("""
 ## Reading it
 
 - `g(r)`, `S(k)`, MSD/`D` and VACF are four views of the same trajectory, not four independent
@@ -194,4 +279,7 @@ if rec["source"] != "skip":
 TALLY = [
     ("rec['source'] in ('run', 'record', 'skip')", "run_or_load returned one of its three documented outcomes"),
     ("rec['source'] == 'skip' or rec['vacf_c'][0] == 1.0", "the VACF is normalised to 1 at zero lag, by construction"),
+    ("viz_rec['source'] in ('run', 'record', 'skip')", "run_or_load (structure viz) returned one of its three documented outcomes"),
+    ("viz_rec['source'] == 'skip' or viz_rec['rmsd_final'] > 0.3 * viz_rec['nn_spacing']",
+     "the shown liquid slice moved by more than 0.3 nearest-neighbour spacings -- real diffusion, not noise"),
 ]

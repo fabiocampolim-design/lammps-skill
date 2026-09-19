@@ -167,12 +167,16 @@ else:
 '''),
 
     md("""
-## Watching the cooling
+## Watching the lattice melt
 
-The curve above (Nosé–Hoover's own `mdlite` run) shows the temperature falling; this section
-shows the atoms doing it. The identical `fix nvt` case above, run once more with a trajectory dump
-added, so the settling from T*=2.0 to T*=1.0 is something you can watch, not only read off an
-axis. The two figures below need the optional `ase` extra -- the same graceful skip chapter 01
+`fix nvt` above holds the *temperature* at T*=1.0 -- it says nothing about the *structure* the
+system settles into. At this case's density (rho*=0.8442, the same "lattice fcc 0.8442" chapter
+01's `lj_melt()` uses, precisely because it is a liquid state point), an fcc lattice given hot
+initial velocities does not refreeze once the thermostat pulls the kinetic energy down to target:
+it melts. The identical `fix nvt` case above, run once more with a trajectory dump added, so this
+is something to watch, not assume from the temperature curve alone -- a thermostat's job is
+"hold the mean kinetic energy", not "keep the crystal intact", and this run shows the two coming
+apart. The two figures below need the optional `ase` extra -- the same graceful skip chapter 01
 uses when it is absent.
 """),
 
@@ -194,7 +198,7 @@ N_FRAMES = 10
 nvt_traj_spec = dataclasses.replace(
     nvt_spec,
     dumps=["1 all custom %d traj.dump id type xu yu zu" % DUMP_EVERY],
-    comment="the same fix nvt cooling run as above, with a trajectory dump for the atom views",
+    comment="the same fix nvt run as above, with a trajectory dump for the atom views",
 )
 
 
@@ -207,17 +211,25 @@ def compute_nvt_traj():
     # the bottom-most atomic layer (z < half a lattice spacing), the same slab chapter 01 picks --
     # a real, visually legible subset of the lattice, not a random subsample of the full 864 atoms
     a = (4.0 / 0.8442) ** (1.0 / 3.0)   # the same lattice constant "lattice fcc 0.8442" builds
+    nn = a / np.sqrt(2.0)              # fcc nearest-neighbour spacing
     z0 = traj.frames[0].positions[:, 2]
     idx = np.nonzero(z0 < 0.5 * a)[0]
     step = max(1, len(traj) // N_FRAMES)
-    frames = [f.positions[idx].tolist() for f in traj.frames[::step]]
-    return {"natoms_shown": len(idx), "nframes": len(frames), "frames": frames,
-            "cell": traj.box.lengths.tolist(),
+    shown = [f.positions[idx] for f in traj.frames[::step]]   # read_dump already sorts each frame by id
+    # RMS displacement of the shown slab from its starting (undisplaced lattice) positions --
+    # the Lindemann melting criterion puts the onset of melting around 0.1-0.15 nn; this is the
+    # honest number behind "it melts", not asserted from the picture alone
+    rmsd_final = float(np.sqrt(((shown[-1] - shown[0]) ** 2).sum(axis=1).mean()))
+    return {"natoms_shown": len(idx), "nframes": len(shown), "frames": [f.tolist() for f in shown],
+            "cell": traj.box.lengths.tolist(), "nn_spacing": float(nn), "rmsd_final": rmsd_final,
             "route": result.installation.route if result.installation else None}
 
 
 nvt_traj_rec = run_or_load("lj_nvt_traj_ch03", compute_nvt_traj, records_dir="../data/records")
 print("source:", nvt_traj_rec["source"], "| atoms shown:", nvt_traj_rec.get("natoms_shown"), "| frames:", nvt_traj_rec.get("nframes"))
+if nvt_traj_rec["source"] != "skip":
+    print("RMS displacement by the last frame: %.3f (nearest-neighbour spacing: %.3f)"
+          % (nvt_traj_rec["rmsd_final"], nvt_traj_rec["nn_spacing"]))
 '''),
 
     code('''\
@@ -234,9 +246,10 @@ if nvt_traj_rec["source"] != "skip":
         print("ase not installed -- skipping the nvt snapshot:", e)
     else:
         plt.show()
-        caption("The bottom-most atomic layer at the start of the fix nvt run, velocities freshly "
-                "drawn at T*=2.0 (twice the target) -- rendered as argon-like spheres, the same "
-                "reduced-units convention chapter 01 uses.")
+        caption("The bottom-most atomic layer at the very start of the fix nvt run: the "
+                "undisplaced fcc lattice, before the freshly-drawn T*=2.0 velocities have moved "
+                "anything -- rendered as argon-like spheres, the same reduced-units convention "
+                "chapter 01 uses.")
 else:
     print("no LAMMPS and no record: nothing to show")
 '''),
@@ -249,15 +262,18 @@ if nvt_traj_rec["source"] != "skip":
     cell = np.array(nvt_traj_rec["cell"])
     gif_workdir = tempfile.mkdtemp(prefix="ch03_gif_")
     try:
-        gif_path = viz.animate_gif(frames, cell, os.path.join(gif_workdir, "cooling.gif"),
+        gif_path = viz.animate_gif(frames, cell, os.path.join(gif_workdir, "melting.gif"),
                                    symbols=["Ar"] * len(frames[0]), fps=4)
     except ImportError as e:
         print("ase not installed -- skipping the animation:", e)
     else:
         display(Image(filename=gif_path))
-        caption("The same layer, animated across the run: the visibly larger jitter of a hot "
-                "start settling down as fix nvt's Nosé-Hoover chain pulls the system to its "
-                "target temperature -- the atom-level picture behind the cooling curve above.")
+        caption("The same layer, animated across the run: the lattice visibly disordering, not "
+                "merely jittering less, as fix nvt holds the temperature at its target -- by the "
+                "last frame the shown atoms have moved by RMS %.2f, close to a full "
+                "nearest-neighbour spacing (%.2f), far past the Lindemann melting criterion "
+                "(~0.1-0.15 of that spacing). The temperature curve above converges; the crystal "
+                "does not." % (nvt_traj_rec["rmsd_final"], nvt_traj_rec["nn_spacing"]))
 else:
     print("no LAMMPS and no record: nothing to animate")
 '''),
@@ -284,4 +300,7 @@ TALLY = [
     ("nist['measured']['dP'] < nist['tolerance_P'] and nist['measured']['dU'] < nist['tolerance_U']",
      "mdlite's NVT state point agrees with the NIST reference table within its recorded tolerance"),
     ("nvt_rec['source'] in ('run', 'record', 'skip')", "run_or_load returned one of its three documented outcomes"),
+    ("nvt_traj_rec['source'] in ('run', 'record', 'skip')", "run_or_load (nvt trajectory) returned one of its three documented outcomes"),
+    ("nvt_traj_rec['source'] == 'skip' or nvt_traj_rec['rmsd_final'] > 0.5 * nvt_traj_rec['nn_spacing']",
+     "the shown slab moved by more than half a nearest-neighbour spacing -- genuinely melted, not merely vibrating"),
 ]

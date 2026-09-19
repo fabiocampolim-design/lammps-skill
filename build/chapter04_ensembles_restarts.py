@@ -124,6 +124,96 @@ else:
 '''),
 
     md("""
+## Watching the box relax
+
+The plot above shows volume and pressure as numbers; here the box does the same relaxation
+visibly. Unlike chapter 03's fixed-volume NVT, `fix npt` actually changes the box size step by
+step, so `lammpskill.viz.animate_gif` (one fixed cell for every frame) does not fit -- instead,
+two **static** snapshots of the identical `fix npt` run, one at the compressed start and one at
+the expanded end, each with its own (different-sized) box: the same before/after technique
+chapter 05 uses for the vacancy relaxation. Both frames show the same bottom-layer atoms (tracked
+by id), so the same slab visibly spreads apart rather than showing two unrelated cross-sections.
+"""),
+
+    code('''\
+import dataclasses
+import os
+import tempfile
+
+import numpy as np
+
+from lammpskill.io.dump import read_dump
+from lammpskill.run import run, run_or_load
+
+DUMP_EVERY = 50
+
+# the identical fix npt case above (dataclasses.replace, not a hand-retyped Spec), plus a
+# trajectory dump for the atom views
+npt_traj_spec = dataclasses.replace(
+    npt_spec,
+    dumps=["1 all custom %d traj.dump id type xu yu zu" % DUMP_EVERY],
+    comment="the same fix npt case above, with a trajectory dump for the atom views",
+)
+
+
+def compute_npt_traj():
+    workdir = tempfile.mkdtemp(prefix="ch04_traj_")
+    result = run(npt_traj_spec, workdir, time_limit=300)
+    if not result.ok:
+        raise RuntimeError("npt trajectory run failed (rc=%s): %s" % (result.returncode, "; ".join(result.errors) or result.stderr))
+    traj = read_dump(os.path.join(workdir, "traj.dump"))
+    first, last = traj.frames[0].sorted_by_id(), traj.frames[-1].sorted_by_id()
+    # the bottom 20% of the box height, by the FIRST frame's own (compressed) box -- a fraction of
+    # a changing box, not a fixed lattice-spacing threshold like chapter 01/03 use on a fixed box
+    z0 = first.positions[:, 2]
+    idx = np.nonzero(z0 < 0.2 * first.box.lengths[2])[0]
+    return {"natoms_shown": len(idx),
+            "route": result.installation.route if result.installation else None,
+            "pos_start": first.positions[idx].tolist(), "cell_start": first.box.lengths.tolist(),
+            "pos_end": last.positions[idx].tolist(), "cell_end": last.box.lengths.tolist()}
+
+
+npt_traj_rec = run_or_load("lj_npt_traj_ch04", compute_npt_traj, records_dir="../data/records")
+print("source:", npt_traj_rec["source"], "| atoms shown:", npt_traj_rec.get("natoms_shown"))
+'''),
+
+    code('''\
+import matplotlib.pyplot as plt
+
+from lammpskill import viz
+
+if npt_traj_rec["source"] != "skip":
+    try:
+        fig = viz.snapshot(np.array(npt_traj_rec["pos_start"]), np.array(npt_traj_rec["cell_start"]),
+                           symbols=["Ar"] * npt_traj_rec["natoms_shown"])
+    except ImportError as e:
+        print("ase not installed -- skipping the npt snapshots:", e)
+    else:
+        plt.show()
+        caption("The bottom fifth (by box height) of the compressed starting configuration -- "
+                "the same fcc 1.1 lattice fix npt starts from above -- rendered as argon-like "
+                "spheres, the reduced-units convention chapter 01 established.")
+else:
+    print("no LAMMPS and no record: nothing to show")
+'''),
+
+    code('''\
+if npt_traj_rec["source"] != "skip":
+    try:
+        fig = viz.snapshot(np.array(npt_traj_rec["pos_end"]), np.array(npt_traj_rec["cell_end"]),
+                           symbols=["Ar"] * npt_traj_rec["natoms_shown"])
+    except ImportError as e:
+        print("ase not installed -- skipping the npt snapshots:", e)
+    else:
+        plt.show()
+        caption("The same atoms (tracked by id, not re-selected) after fix npt has relaxed the "
+                "box toward its target pressure -- visibly further apart in a visibly larger box, "
+                "the same box expansion the volume plot above reports as a number.")
+else:
+    print("no LAMMPS and no record: nothing to show")
+'''),
+
+    md("""
 ## Restart continuation
 
 A `Spec` with `read_restart` in `pre` runs before the auto-generated `units` line -- which is

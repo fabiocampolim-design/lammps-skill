@@ -4,7 +4,7 @@
   10.077577148295044,
   10.077577148295044
  ],
- "date": "2026-09-19T16:29Z",
+ "date": "2026-09-19T17:17Z",
  "frames": [
   [
    [
@@ -7950,9 +7950,11 @@
   ]
  ],
  "installation": null,
- "lammps_skill": "0.1.23",
+ "lammps_skill": "0.1.24",
  "natoms_shown": 144,
  "nframes": 11,
+ "nn_spacing": 1.187653856581669,
+ "rmsd_final": 1.1738234442361504,
  "route": "wsl-apt",
  "source": "run"
 }

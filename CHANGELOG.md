@@ -2,6 +2,38 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.25 — 2026-09-19
+
+Atom-visuals roadmap, retrofit items 2 and 3 of 3 (chapters 04 and 06), plus a correctness fix to
+item 1 (chapter 03) from an adversarial review. Bundled into one commit/version because the
+course's generated build artifacts (deck HTML, PDF, provenance) are rebuilt cumulatively each
+time and cannot be cleanly separated per chapter without redoing the deck build three times from
+intermediate states -- not worth the cost for what is otherwise three independent changes.
+
+- **Chapter 03 fix (adversarial review, Opus)**: the first version framed the `fix nvt` atom
+  visual as "cooling jitter settling down". Measured against the actual trajectory, the claim was
+  backwards -- at this case's density (rho*=0.8442, the same state point chapter 01's `lj_melt()`
+  uses because it IS liquid), the fcc lattice does not refreeze at T*=1.0: it melts. RMS
+  displacement by the last shown frame (1.174) is nearly a full nearest-neighbour spacing (1.188),
+  far past the Lindemann melting criterion. Rewrote the captions, the course slide
+  (`thermostats-atoms`, now "Watching the lattice melt"), and added two tally checks
+  (`nvt_traj_rec` source outcome, and the RMS-displacement claim itself) that were missing before.
+- **Chapter 04 (ensembles/restarts)**: the box changes size under `fix npt`, so `viz.animate_gif`
+  (one fixed cell for the whole animation) does not fit -- two static snapshots instead, same
+  atoms tracked by id, before (compressed) and after (expanded), each with its own box. The same
+  before/after technique chapter 05 uses for its vacancy relaxation. New record
+  `lj_npt_traj_ch04`. Course slide `ensembles-atoms` (L4, two-figs).
+- **Chapter 06 (structure/diffusion)**: this chapter deliberately discards its raw 864-atom x
+  101-frame trajectory to keep the record small, so a visual needed its own small, dedicated
+  second run of the identical case -- a snapshot and animation of the equilibrated liquid (the
+  same second-half window `g(r)`/`S(k)` already use), showing the diffusive motion the reported
+  D already quantifies. New record `lj_structure_viz_ch06`. Course slide `structure-atoms` (L6,
+  two-figs).
+- Course: 68 -> 71 slides, 82 -> 83 PDF pages, 17 -> 21 figures (across this and the 0.1.24
+  commit). All hardcoded figure/slide counts and version strings updated throughout, including
+  two doc-only counts (`tests/test_course.py`'s docstring, `course/README.md`) a prior review
+  found had gone stale without a test to catch it.
+
 ## 0.1.24 — 2026-09-19
 
 Atom-visuals roadmap, retrofit item 1 of 3: chapter 03 (thermostats) gets the same

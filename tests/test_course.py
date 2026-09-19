@@ -9,7 +9,7 @@ and is byte-identical to the notebook's output (extract_figures --check); the ge
 handout and notes are up to date with the content (build_deck --check); every data-t key in
 index.html resolves; the vendored reveal.js keeps its licence and NOTICE names it.
 
-Numeric thresholds are calibrated to this project's actual scale (currently 15 figures, 68 slides
+Numeric thresholds are calibrated to this project's actual scale (currently 21 figures, 71 slides
 across 13 lectures) rather than copied from pythtb-skill's reference implementation (69 figures,
 50+ slides); they are meant to keep growing as the atom-visuals roadmap adds more figures and
 lectures (docs/superpowers/specs/2026-09-14-lammps-skill-atom-visuals-design.md) -- update them
@@ -79,7 +79,9 @@ def test_every_slide_listed_exactly_once_and_every_stack_has_one(deck):
     # Polymer chapter: L11 (6 slides) is new
     # Water chapter: L12 (5 slides) is new
     # Retrofit roadmap item, chapter 03: L3 gains thermostats-atoms (the new snapshot+animation slide)
-    assert len(listed) == 69
+    # Retrofit roadmap item, chapter 04: L4 gains ensembles-atoms (the new before/after snapshot pair)
+    # Retrofit roadmap item, chapter 06: L6 gains structure-atoms (the new snapshot+animation slide)
+    assert len(listed) == 71
 
 
 def test_levels_run_intro_core_math_inside_each_stack(deck):
@@ -116,11 +118,12 @@ def test_every_slide_is_well_formed(deck):
 
 def test_figures_are_named_by_chapter_key():
     records = list(extract_figures.catalogue(extract_figures.NOTEBOOKS))
-    assert len(records) == 17, [r["file"] for r in records]
+    assert len(records) == 21, [r["file"] for r in records]
     names = sorted(r["file"] for r in records)
     assert names == ["ch01-f1.png", "ch01-f2.png", "ch01-f3.gif", "ch03-f1.png", "ch03-f2.png",
-                      "ch03-f3.gif", "ch04-f1.png",
+                      "ch03-f3.gif", "ch04-f1.png", "ch04-f2.png", "ch04-f3.png",
                       "ch05-f1.png", "ch05-f2.png", "ch06-f1.png", "ch06-f2.png", "ch06-f3.png",
+                      "ch06-f4.png", "ch06-f5.gif",
                       "ch11-f1.png", "ch11-f2.gif", "ch12-f1.png", "ch12-f2.png", "ch12-f3.gif"]
 
 
@@ -184,7 +187,7 @@ def test_every_figure_shown_has_notebook_provenance(deck, prov):
 def test_figures_match_the_executed_notebook():
     """Every PNG/GIF output of the chapter notebooks is on disk, byte-identical, with no orphans."""
     records = list(extract_figures.catalogue(extract_figures.NOTEBOOKS))
-    assert len(records) == 17
+    assert len(records) == 21
     problems = extract_figures.check(records, extract_figures.FIGDIR)
     assert not problems, "run course/tools/extract_figures.py: %s" % "; ".join(problems[:5])
 

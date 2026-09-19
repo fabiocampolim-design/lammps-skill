@@ -44,9 +44,9 @@ window.DECK_CONTENT = {
     {"sec": "first-sim", "slides": ["first-sim-intro", "first-sim-checker", "first-sim-checker-result", "first-sim-script", "first-sim-atoms", "first-sim-recordrun"]},
     {"sec": "forces", "slides": ["forces-intro", "forces-numerical", "forces-conservation", "forces-crosscheck", "forces-verlet"]},
     {"sec": "thermostats", "slides": ["thermostats-intro", "thermostats-table", "thermostats-nh-check", "thermostats-nist", "thermostats-atoms", "thermostats-math"]},
-    {"sec": "ensembles", "slides": ["ensembles-intro", "ensembles-fixnpt", "ensembles-restart-code", "ensembles-restart-numbers", "ensembles-math"]},
+    {"sec": "ensembles", "slides": ["ensembles-intro", "ensembles-fixnpt", "ensembles-atoms", "ensembles-restart-code", "ensembles-restart-numbers", "ensembles-math"]},
     {"sec": "eam", "slides": ["eam-intro", "eam-form", "eam-forces-check", "eam-fit", "eam-vacancy", "eam-cu"]},
-    {"sec": "structure", "slides": ["structure-intro", "structure-gr-sk", "structure-diffusive-regime", "structure-blockavg", "structure-msd-vacf"]},
+    {"sec": "structure", "slides": ["structure-intro", "structure-gr-sk", "structure-atoms", "structure-diffusive-regime", "structure-blockavg", "structure-msd-vacf"]},
     {"sec": "minimisation", "slides": ["minimisation-intro", "minimisation-lj-wall", "minimisation-cap-concept", "minimisation-fire", "minimisation-math"]},
     {"sec": "reading", "slides": ["reading-intro", "reading-formats", "reading-n4", "reading-n6", "reading-tests"]},
     {"sec": "build", "slides": ["build-intro", "build-sweep", "build-bench", "build-blocked", "build-poems"]},
@@ -308,13 +308,13 @@ window.DECK_CONTENT = {
     },
     "thermostats-atoms": {
       "level": "core", "layout": "two-figs", "fig": "ch03-f2", "fig2": "ch03-f3",
-      "title": "Watching the cooling",
-      "lead": "The same fix nvt run above, seen at the atom level: a hot start settling to its target temperature is a visibly smaller jitter, not only a falling number on an axis.",
+      "title": "Watching the lattice melt",
+      "lead": "fix nvt holds the temperature at target -- it says nothing about the structure. At this case's density, the fcc lattice does not survive the trip: it melts.",
       "bullets": [
-        "Left: the bottom-most atomic layer at the start, velocities freshly drawn at T*=2.0 -- twice the target.",
-        "Right: the same layer animated across the run, as the Nosé–Hoover chain pulls the system down to T*=1.0."
+        "Left: the bottom-most atomic layer at the very start, the undisplaced lattice, before the hot T*=2.0 velocities have moved anything.",
+        "Right: the same layer animated across the run -- by the last frame the shown atoms have moved by roughly a full nearest-neighbour spacing, far past the Lindemann melting criterion (~0.1-0.15 of that spacing)."
       ],
-      "notes": "This is the same rendering technique L1's first-sim-atoms slide introduced (ASE + matplotlib, headless, a small subsampled slab rather than the full 864-atom trajectory) applied to a case where the physically interesting change is thermal, not structural -- the atoms don't rearrange, they just jitter less. Q: \"Could you see the difference between the three thermostats this way?\" A: In principle yes, though it would be a subtler visual difference than this hot-to-cold cooldown -- Berendsen, Langevin and Nose-Hoover would look nearly identical at a fixed temperature, since what differs between them is the *statistics* of the fluctuations, not their visible amplitude."
+      "notes": "This is the same rendering technique L1's first-sim-atoms slide introduced (ASE + matplotlib, headless, a small subsampled slab), applied here to catch a real result the temperature curve alone would hide: a thermostat's contract is about kinetic energy, not phase, and rho*=0.8442 -- the same density chapter 01's own lj_melt() uses because it IS a liquid state point -- does not support a stable crystal at T*=1.0. This was found live: an adversarial review measured the actual RMS displacement and nearest-neighbour statistics from the recorded trajectory and showed the first draft of this slide (framed as \"cooling jitter\") was backwards. Q: \"So does fix nvt fail here?\" A: No -- it does exactly its job, holding <T> at 1.0 (the plot two slides back confirms this); melting is the system's own thermodynamic response to that temperature at this density, not a thermostat malfunction."
     },
     "thermostats-math": {
       "level": "math", "layout": "eq",
@@ -352,6 +352,16 @@ window.DECK_CONTENT = {
         ]
       },
       "notes": "State again, out loud, that the sketch and fix npt are answering the same question with methods of very different rigor -- comparing their directions is legitimate, comparing their numbers quantitatively is not. Q: \"So is the mdlite comparison in the figure meaningless?\" A: No -- both start denser than their target pressure and both expand toward it, which is exactly the qualitative claim being tested; a quantitative match was never the claim."
+    },
+    "ensembles-atoms": {
+      "level": "core", "layout": "two-figs", "fig": "ch04-f2", "fig2": "ch04-f3",
+      "title": "Watching the box relax",
+      "lead": "The volume plot above is a number; here the same atoms, tracked by id, spread apart as fix npt expands the box toward its target pressure.",
+      "bullets": [
+        "The box itself changes size step by step here, unlike chapter 03's fixed-volume NVT -- animate_gif needs one fixed cell for every frame, so this is two static snapshots instead, each with its own (different-sized) box.",
+        "Same technique chapter 05 uses for its vacancy relaxation: identical atoms, before and after, not two different subsets that happen to look similar."
+      ],
+      "notes": "Worth being explicit about why this pair is static rather than animated, since L1 and L3 both used animate_gif -- the API takes one fixed cell for the whole animation, which is correct for NVT (the box never changes) and wrong for NPT (the whole point is that it does). Q: \"Could animate_gif be extended to take a per-frame cell?\" A: Yes, and it would be a small change to viz.py -- not done here because two clear static frames already make the point (the box expands) without adding a new code path this project would then need to validate."
     },
     "ensembles-restart-code": {
       "level": "core", "layout": "code",
@@ -471,6 +481,16 @@ window.DECK_CONTENT = {
         "A liquid's g(r) has a first-neighbour peak decaying to 1; the corresponding S(k) has its own first peak, at roughly <span class='math'>2π</span> over the first-neighbour spacing."
       ],
       "notes": "The point worth landing is the dependency direction: S(k) never touches the trajectory again once g(r) exists -- a bug in g(r) would show up identically in S(k), which is why the chapter treats them as one measurement shown two ways, not two measurements that happen to agree. Q: \"Could S(k) be computed directly from the trajectory instead?\" A: Yes, by Fourier-transforming the instantaneous density -- lammpskill.post takes the g(r) route because it reuses the same binned histogram RDF already needed, at the cost of extra smoothing from the integral."
+    },
+    "structure-atoms": {
+      "level": "core", "layout": "two-figs", "fig": "ch06-f4", "fig2": "ch06-f5",
+      "title": "Watching the liquid diffuse",
+      "lead": "g(r)'s decay to 1 and the VACF's monotonic decay already prove this trajectory is a liquid; here it is, seen directly, well into the equilibrated window those measurements use.",
+      "bullets": [
+        "Left: a slice of the box, no lattice order visible -- the initial hot fcc lattice has fully forgotten its own structure by this point in the run.",
+        "Right: the same slice animated, atoms visibly wandering away from their starting positions -- the diffusive motion the mean-squared-displacement fit turns into the reported D."
+      ],
+      "notes": "Worth naming explicitly why this is a second, separate run rather than reusing the trajectory the analysis above already computed: this chapter's own discipline is to discard the raw 864-atom x 101-frame trajectory once the derived arrays are extracted, never commit it -- so a visual needs its own small, purpose-built record, same as chapter 01's. Q: \"Why not just keep a small slice of the original trajectory instead of running the case twice?\" A: Either would work; running it twice was chosen because it keeps a clean invariant -- the structure record demonstrably contains only derived numbers, never any positions, which is easier to state and easier to guard with a test than 'small subsample, but only up to N atoms'."
     },
     "structure-diffusive-regime": {
       "level": "core", "layout": "table",
