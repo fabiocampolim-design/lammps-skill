@@ -55,6 +55,26 @@
    "sha256": "3f93f5098e7a21377877f6d8baf935d14d9c9d43c727745c61c613075cd0c28b",
    "bytes": 47386
   },
+  "ch03-f2.png": {
+   "chapter": "LAMMPS_03_Thermostats.ipynb",
+   "section": 0,
+   "heading": "Watching the cooling",
+   "cell": 13,
+   "figure": 2,
+   "caption": "The bottom-most atomic layer at the start of the fix nvt run, velocities freshly drawn at T*=2.0 (twice the target) -- rendered as argon-like spheres, the same reduced-units convention chapter 01 uses.",
+   "sha256": "0a576317f3d454360a5dbc33a0ff9ed21736bdac05931a5c63425a8e777f6682",
+   "bytes": 62707
+  },
+  "ch03-f3.gif": {
+   "chapter": "LAMMPS_03_Thermostats.ipynb",
+   "section": 0,
+   "heading": "Watching the cooling",
+   "cell": 14,
+   "figure": 3,
+   "caption": "The same layer, animated across the run: the visibly larger jitter of a hot start settling down as fix nvt's Nosé-Hoover chain pulls the system to its target temperature -- the atom-level picture behind the cooling curve above.",
+   "sha256": "a308a79755607e56606816169b254261f7337a2a0dc6275a47bf83c1c1b1c269",
+   "bytes": 347692
+  },
   "ch04-f1.png": {
    "chapter": "LAMMPS_04_Ensembles_And_Restarts.ipynb",
    "section": 0,

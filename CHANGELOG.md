@@ -2,6 +2,22 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.24 — 2026-09-19
+
+Atom-visuals roadmap, retrofit item 1 of 3: chapter 03 (thermostats) gets the same
+snapshot/animation treatment chapters 01/05/11/12 already have.
+
+- `build/chapter03_thermostats.py`: a trajectory-dump variant of the existing `fix nvt` cooling
+  run (`dataclasses.replace`, chapter 01's pattern), the same bottom-slab subsample technique, a
+  static snapshot of the hot start (T*=2.0) and an animated GIF of the cooling to T*=1.0. New
+  record `lj_nvt_traj_ch03`, separate from the existing `lj_nvt_ch03` thermo record.
+- Course: new slide `thermostats-atoms` (L3, two-figs layout, `ch03-f2`/`ch03-f3`), inserted
+  before the section's closing math slide. Deck: 68 -> 69 slides, 80 -> 81 PDF pages, 15 -> 17
+  figures.
+- Two test counts that hardcoded the old figure/slide totals fixed
+  (`test_figures_are_named_by_chapter_key`, `test_figures_match_the_executed_notebook`,
+  `test_every_slide_listed_exactly_once_and_every_stack_has_one`).
+
 ## 0.1.23 — 2026-09-19
 
 Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of this session's

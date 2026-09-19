@@ -119,6 +119,11 @@ Slide `#thermostats-nist`.
 
 Point out explicitly that this is the one comparison in the whole course with no LAMMPS run on either side -- record-or-run loads it with route: "none", which L0's records cell already flagged as a distinct case. Q: "Why compare to NIST instead of only to LAMMPS?" A: An independent published reference rules out the possibility that mdlite and LAMMPS share a bug -- agreeing with each other is necessary but not sufficient; agreeing with a third, independently produced table is stronger evidence.
 
+### Watching the cooling  `[core]`
+Slide `#thermostats-atoms`; figures `ch03-f2` (§0 cell 13), `ch03-f3` (§0 cell 14).
+
+This is the same rendering technique L1's first-sim-atoms slide introduced (ASE + matplotlib, headless, a small subsampled slab rather than the full 864-atom trajectory) applied to a case where the physically interesting change is thermal, not structural -- the atoms don't rearrange, they just jitter less. Q: "Could you see the difference between the three thermostats this way?" A: In principle yes, though it would be a subtler visual difference than this hot-to-cold cooldown -- Berendsen, Langevin and Nose-Hoover would look nearly identical at a fixed temperature, since what differs between them is the *statistics* of the fluctuations, not their visible amplitude.
+
 ### Berendsen's rescaling, in one line  `[math]`
 Slide `#thermostats-math`.
 

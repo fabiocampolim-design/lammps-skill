@@ -43,7 +43,7 @@ window.DECK_CONTENT = {
     {"sec": "orientation", "slides": ["orientation-intro", "orientation-releases", "orientation-toolkit", "orientation-pylj", "orientation-packages", "orientation-validation"]},
     {"sec": "first-sim", "slides": ["first-sim-intro", "first-sim-checker", "first-sim-checker-result", "first-sim-script", "first-sim-atoms", "first-sim-recordrun"]},
     {"sec": "forces", "slides": ["forces-intro", "forces-numerical", "forces-conservation", "forces-crosscheck", "forces-verlet"]},
-    {"sec": "thermostats", "slides": ["thermostats-intro", "thermostats-table", "thermostats-nh-check", "thermostats-nist", "thermostats-math"]},
+    {"sec": "thermostats", "slides": ["thermostats-intro", "thermostats-table", "thermostats-nh-check", "thermostats-nist", "thermostats-atoms", "thermostats-math"]},
     {"sec": "ensembles", "slides": ["ensembles-intro", "ensembles-fixnpt", "ensembles-restart-code", "ensembles-restart-numbers", "ensembles-math"]},
     {"sec": "eam", "slides": ["eam-intro", "eam-form", "eam-forces-check", "eam-fit", "eam-vacancy", "eam-cu"]},
     {"sec": "structure", "slides": ["structure-intro", "structure-gr-sk", "structure-diffusive-regime", "structure-blockavg", "structure-msd-vacf"]},
@@ -305,6 +305,16 @@ window.DECK_CONTENT = {
         "State point: <span class='math'>T*=0.85, ρ*=0.776</span>, 500 atoms; both differences land within three NIST-reported standard errors."
       ],
       "notes": "Point out explicitly that this is the one comparison in the whole course with no LAMMPS run on either side -- record-or-run loads it with route: \"none\", which L0's records cell already flagged as a distinct case. Q: \"Why compare to NIST instead of only to LAMMPS?\" A: An independent published reference rules out the possibility that mdlite and LAMMPS share a bug -- agreeing with each other is necessary but not sufficient; agreeing with a third, independently produced table is stronger evidence."
+    },
+    "thermostats-atoms": {
+      "level": "core", "layout": "two-figs", "fig": "ch03-f2", "fig2": "ch03-f3",
+      "title": "Watching the cooling",
+      "lead": "The same fix nvt run above, seen at the atom level: a hot start settling to its target temperature is a visibly smaller jitter, not only a falling number on an axis.",
+      "bullets": [
+        "Left: the bottom-most atomic layer at the start, velocities freshly drawn at T*=2.0 -- twice the target.",
+        "Right: the same layer animated across the run, as the Nosé–Hoover chain pulls the system down to T*=1.0."
+      ],
+      "notes": "This is the same rendering technique L1's first-sim-atoms slide introduced (ASE + matplotlib, headless, a small subsampled slab rather than the full 864-atom trajectory) applied to a case where the physically interesting change is thermal, not structural -- the atoms don't rearrange, they just jitter less. Q: \"Could you see the difference between the three thermostats this way?\" A: In principle yes, though it would be a subtler visual difference than this hot-to-cold cooldown -- Berendsen, Langevin and Nose-Hoover would look nearly identical at a fixed temperature, since what differs between them is the *statistics* of the fluctuations, not their visible amplitude."
     },
     "thermostats-math": {
       "level": "math", "layout": "eq",

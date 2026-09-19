@@ -167,6 +167,102 @@ else:
 '''),
 
     md("""
+## Watching the cooling
+
+The curve above (Nosé–Hoover's own `mdlite` run) shows the temperature falling; this section
+shows the atoms doing it. The identical `fix nvt` case above, run once more with a trajectory dump
+added, so the settling from T*=2.0 to T*=1.0 is something you can watch, not only read off an
+axis. The two figures below need the optional `ase` extra -- the same graceful skip chapter 01
+uses when it is absent.
+"""),
+
+    code('''\
+import dataclasses
+import os
+import tempfile
+
+import numpy as np
+
+from lammpskill.io.dump import read_dump
+from lammpskill.run import run, run_or_load
+
+DUMP_EVERY = 20
+N_FRAMES = 10
+
+# the identical fix nvt case above (dataclasses.replace, not a hand-retyped Spec, so the two can
+# never silently drift apart), plus a trajectory dump for the atom views
+nvt_traj_spec = dataclasses.replace(
+    nvt_spec,
+    dumps=["1 all custom %d traj.dump id type xu yu zu" % DUMP_EVERY],
+    comment="the same fix nvt cooling run as above, with a trajectory dump for the atom views",
+)
+
+
+def compute_nvt_traj():
+    workdir = tempfile.mkdtemp(prefix="ch03_traj_")
+    result = run(nvt_traj_spec, workdir, time_limit=300)
+    if not result.ok:
+        raise RuntimeError("nvt trajectory run failed (rc=%s): %s" % (result.returncode, "; ".join(result.errors) or result.stderr))
+    traj = read_dump(os.path.join(workdir, "traj.dump"))
+    # the bottom-most atomic layer (z < half a lattice spacing), the same slab chapter 01 picks --
+    # a real, visually legible subset of the lattice, not a random subsample of the full 864 atoms
+    a = (4.0 / 0.8442) ** (1.0 / 3.0)   # the same lattice constant "lattice fcc 0.8442" builds
+    z0 = traj.frames[0].positions[:, 2]
+    idx = np.nonzero(z0 < 0.5 * a)[0]
+    step = max(1, len(traj) // N_FRAMES)
+    frames = [f.positions[idx].tolist() for f in traj.frames[::step]]
+    return {"natoms_shown": len(idx), "nframes": len(frames), "frames": frames,
+            "cell": traj.box.lengths.tolist(),
+            "route": result.installation.route if result.installation else None}
+
+
+nvt_traj_rec = run_or_load("lj_nvt_traj_ch03", compute_nvt_traj, records_dir="../data/records")
+print("source:", nvt_traj_rec["source"], "| atoms shown:", nvt_traj_rec.get("natoms_shown"), "| frames:", nvt_traj_rec.get("nframes"))
+'''),
+
+    code('''\
+import matplotlib.pyplot as plt
+
+from lammpskill import viz
+
+if nvt_traj_rec["source"] != "skip":
+    pos0 = np.array(nvt_traj_rec["frames"][0])
+    cell = np.array(nvt_traj_rec["cell"])
+    try:
+        fig = viz.snapshot(pos0, cell, symbols=["Ar"] * len(pos0))
+    except ImportError as e:
+        print("ase not installed -- skipping the nvt snapshot:", e)
+    else:
+        plt.show()
+        caption("The bottom-most atomic layer at the start of the fix nvt run, velocities freshly "
+                "drawn at T*=2.0 (twice the target) -- rendered as argon-like spheres, the same "
+                "reduced-units convention chapter 01 uses.")
+else:
+    print("no LAMMPS and no record: nothing to show")
+'''),
+
+    code('''\
+from IPython.display import Image, display
+
+if nvt_traj_rec["source"] != "skip":
+    frames = [np.array(f) for f in nvt_traj_rec["frames"]]
+    cell = np.array(nvt_traj_rec["cell"])
+    gif_workdir = tempfile.mkdtemp(prefix="ch03_gif_")
+    try:
+        gif_path = viz.animate_gif(frames, cell, os.path.join(gif_workdir, "cooling.gif"),
+                                   symbols=["Ar"] * len(frames[0]), fps=4)
+    except ImportError as e:
+        print("ase not installed -- skipping the animation:", e)
+    else:
+        display(Image(filename=gif_path))
+        caption("The same layer, animated across the run: the visibly larger jitter of a hot "
+                "start settling down as fix nvt's Nosé-Hoover chain pulls the system to its "
+                "target temperature -- the atom-level picture behind the cooling curve above.")
+else:
+    print("no LAMMPS and no record: nothing to animate")
+'''),
+
+    md("""
 ## Reading it
 
 - Berendsen reaches the target fastest and samples nothing -- fine for equilibration, wrong for
