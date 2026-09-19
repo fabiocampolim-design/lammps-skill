@@ -31,6 +31,26 @@ def test_build_manual_writes_html_without_pandoc(tmp_path, monkeypatch):
     assert "<title>lammps-skill" in out and "<h2>" in out and "scripts/verify_lammps.py" in out
 
 
+def test_pdf_env_finds_the_conda_env_fontconfig(tmp_path, monkeypatch):
+    """Regression: TeX Live's xelatex on Windows failed with 'Fontconfig error: Cannot load
+    default config file' even with the requested fonts installed system-wide (found live,
+    2026-09-19) -- fixed by pointing FONTCONFIG_FILE at the active conda env's own fonts.conf."""
+    import build_manual
+    fonts_conf = tmp_path / "Library" / "etc" / "fonts" / "fonts.conf"
+    fonts_conf.parent.mkdir(parents=True)
+    fonts_conf.write_text("<fontconfig/>", encoding="utf-8")
+    monkeypatch.delenv("FONTCONFIG_FILE", raising=False)
+    monkeypatch.delenv("FONTCONFIG_PATH", raising=False)
+    monkeypatch.setenv("CONDA_PREFIX", str(tmp_path))
+    assert build_manual._pdf_env()["FONTCONFIG_FILE"] == str(fonts_conf)
+
+
+def test_pdf_env_leaves_an_existing_fontconfig_setting_alone(monkeypatch):
+    import build_manual
+    monkeypatch.setenv("FONTCONFIG_FILE", "/already/set.conf")
+    assert build_manual._pdf_env()["FONTCONFIG_FILE"] == "/already/set.conf"
+
+
 @pytest.mark.parametrize("module", ["verify_lammps", "run_benchmarks", "run_examples", "watch_upstream", "build_manual",
                                    "lammpskill.cli"])
 def test_script_flags_are_documented(module):

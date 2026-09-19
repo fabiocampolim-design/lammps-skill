@@ -95,6 +95,24 @@ def build_parser():
     return ap
 
 
+def _pdf_env():
+    """A TeX Live xelatex on Windows (unlike a Linux/macOS install, and unlike MiKTeX) does not
+    always locate its own fontconfig config, and fails with 'Fontconfig error: Cannot load
+    default config file' even when the requested fonts are installed system-wide (found live,
+    2026-09-19: DejaVu Serif/Sans Mono were both in C:\\Windows\\Fonts the whole time). If
+    FONTCONFIG_FILE/FONTCONFIG_PATH are unset, point at the active conda environment's own
+    fonts.conf (installed alongside matplotlib's fontconfig dependency) -- confirmed to fix it."""
+    env = os.environ.copy()
+    if env.get("FONTCONFIG_FILE") or env.get("FONTCONFIG_PATH"):
+        return env
+    prefix = env.get("CONDA_PREFIX")
+    if prefix:
+        candidate = os.path.join(prefix, "Library", "etc", "fonts", "fonts.conf")
+        if os.path.isfile(candidate):
+            env["FONTCONFIG_FILE"] = candidate
+    return env
+
+
 def main(argv=None):
     args = build_parser().parse_args(argv)
     os.makedirs(args.outdir, exist_ok=True)
@@ -124,7 +142,7 @@ def main(argv=None):
                "-V", "mainfont=DejaVu Serif", "-V", "monofont=DejaVu Sans Mono", "--metadata", f"title={TITLE}"]
         if args.verbose:
             print(" ".join(cmd))
-        subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True, env=_pdf_env())
         print(f"wrote {pdf_out} ({engine})")
     except (subprocess.CalledProcessError, OSError) as exc:
         print(f"build_manual: FAILED: {exc}", file=sys.stderr)

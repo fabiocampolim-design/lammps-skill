@@ -2,6 +2,24 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.28 — 2026-09-19
+
+S6a pre-flight (playbook rules/06a) for the eventual publish: `git subtree split --prefix
+lammps-skill -b skill`, cloned into an isolated temp directory, and verified clean there
+(pyflakes, conformance --repo with no FAIL, and the full test suite run four times with no
+flakiness — 397 passed/10 skipped each time, the 21-test difference from the study repo's count
+being entirely `test_no_held_tokens_in_tracked_file` instances for files outside the product
+folder, confirmed by diffing collected test IDs). Scratch clone and the local `skill` branch
+deleted afterward; nothing pushed (no remote exists for this repo yet).
+
+Along the way, fixed N-25: `docs/build_manual.py`'s PDF step failed with "Fontconfig error:
+Cannot load default config file" on this machine's TeX Live/xelatex, even though DejaVu Serif
+and Sans Mono were both installed system-wide — deferred across three prior sessions as
+"unrelated, revisit at S6a". Fixed: point `FONTCONFIG_FILE` at the active conda environment's
+own `fonts.conf` when neither `FONTCONFIG_FILE` nor `FONTCONFIG_PATH` is already set
+(`build_manual._pdf_env()`); two new regression tests. 420 tests green, pyflakes clean,
+conformance PASS=23 FAIL=0.
+
 ## 0.1.27 — 2026-09-19
 
 Hardening after 0.1.26's `msd()` dt fix, in place of a second full adversarial-review pass:
