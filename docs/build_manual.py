@@ -95,16 +95,29 @@ def build_parser():
     return ap
 
 
-def _pdf_env():
-    """A TeX Live xelatex on Windows (unlike a Linux/macOS install, and unlike MiKTeX) does not
-    always locate its own fontconfig config, and fails with 'Fontconfig error: Cannot load
-    default config file' even when the requested fonts are installed system-wide (found live,
-    2026-09-19: DejaVu Serif/Sans Mono were both in C:\\Windows\\Fonts the whole time). If
-    FONTCONFIG_FILE/FONTCONFIG_PATH are unset, point at the active conda environment's own
-    fonts.conf (installed alongside matplotlib's fontconfig dependency) -- confirmed to fix it."""
+def _pdf_env(engine="xelatex"):
+    """A TeX Live xelatex (or lualatex) on Windows (unlike a Linux/macOS install, and unlike
+    MiKTeX) does not always locate its own fontconfig config, and fails with 'Fontconfig error:
+    Cannot load default config file' even when the requested fonts are installed system-wide
+    (found live, 2026-09-19: DejaVu Serif/Sans Mono were both in C:\\Windows\\Fonts the whole
+    time; this exact failure and fix were already diagnosed once before, KEEP rules/07,
+    2026-09-02). If FONTCONFIG_FILE/FONTCONFIG_PATH are unset: prefer TeX Live's own bundled
+    fontconfig config, found relative to wherever the actual PDF `engine` binary is (works with
+    no conda env active, e.g. a plain venv or a future CI runner -- KEEP rules/07's fix); fall
+    back to the active conda environment's own fonts.conf (installed alongside matplotlib's
+    fontconfig dependency) if that layout is not found."""
     env = os.environ.copy()
     if env.get("FONTCONFIG_FILE") or env.get("FONTCONFIG_PATH"):
         return env
+    engine_path = shutil.which(engine)
+    if engine_path:
+        # <texlive>/<year>/bin/windows/xelatex.exe -> <texlive>/<year>/tlpkg/tlpostcode/xetex/conf/fonts.conf
+        bin_dir = os.path.dirname(os.path.abspath(engine_path))     # .../<year>/bin/windows
+        year_dir = os.path.dirname(os.path.dirname(bin_dir))        # .../<year>/bin -> .../<year>
+        candidate = os.path.join(year_dir, "tlpkg", "tlpostcode", "xetex", "conf", "fonts.conf")
+        if os.path.isfile(candidate):
+            env["FONTCONFIG_FILE"] = candidate
+            return env
     prefix = env.get("CONDA_PREFIX")
     if prefix:
         candidate = os.path.join(prefix, "Library", "etc", "fonts", "fonts.conf")
@@ -142,7 +155,7 @@ def main(argv=None):
                "-V", "mainfont=DejaVu Serif", "-V", "monofont=DejaVu Sans Mono", "--metadata", f"title={TITLE}"]
         if args.verbose:
             print(" ".join(cmd))
-        subprocess.run(cmd, check=True, env=_pdf_env())
+        subprocess.run(cmd, check=True, env=_pdf_env(engine))
         print(f"wrote {pdf_out} ({engine})")
     except (subprocess.CalledProcessError, OSError) as exc:
         print(f"build_manual: FAILED: {exc}", file=sys.stderr)

@@ -31,10 +31,31 @@ def test_build_manual_writes_html_without_pandoc(tmp_path, monkeypatch):
     assert "<title>lammps-skill" in out and "<h2>" in out and "scripts/verify_lammps.py" in out
 
 
-def test_pdf_env_finds_the_conda_env_fontconfig(tmp_path, monkeypatch):
+def test_pdf_env_prefers_tex_lives_own_fontconfig(tmp_path, monkeypatch):
     """Regression: TeX Live's xelatex on Windows failed with 'Fontconfig error: Cannot load
-    default config file' even with the requested fonts installed system-wide (found live,
-    2026-09-19) -- fixed by pointing FONTCONFIG_FILE at the active conda env's own fonts.conf."""
+    default config file' even with the requested fonts installed system-wide, and even with NO
+    conda environment active -- this is the exact condition the first version of this fix
+    (conda-only) left untested and unfixed, caught by an independent /code-review the same
+    session and cross-referenced to a prior, more general diagnosis of the same root cause
+    (KEEP rules/07, 2026-09-02): TeX Live ships its own fontconfig config, findable relative to
+    wherever the engine binary itself is, with no dependency on conda at all."""
+    import build_manual
+    engine_path = tmp_path / "texlive" / "2026" / "bin" / "windows" / "xelatex.exe"
+    engine_path.parent.mkdir(parents=True)
+    engine_path.write_text("", encoding="utf-8")
+    fonts_conf = tmp_path / "texlive" / "2026" / "tlpkg" / "tlpostcode" / "xetex" / "conf" / "fonts.conf"
+    fonts_conf.parent.mkdir(parents=True)
+    fonts_conf.write_text("<fontconfig/>", encoding="utf-8")
+    monkeypatch.delenv("FONTCONFIG_FILE", raising=False)
+    monkeypatch.delenv("FONTCONFIG_PATH", raising=False)
+    monkeypatch.delenv("CONDA_PREFIX", raising=False)
+    monkeypatch.setattr(build_manual.shutil, "which", lambda name: str(engine_path))
+    assert build_manual._pdf_env("xelatex")["FONTCONFIG_FILE"] == str(fonts_conf)
+
+
+def test_pdf_env_falls_back_to_conda_when_tex_lives_own_layout_is_absent(tmp_path, monkeypatch):
+    """The conda fallback still matters when the engine isn't laid out like a normal TeX Live
+    install (a case shutil.which can't distinguish from the real one without checking)."""
     import build_manual
     fonts_conf = tmp_path / "Library" / "etc" / "fonts" / "fonts.conf"
     fonts_conf.parent.mkdir(parents=True)
@@ -42,13 +63,27 @@ def test_pdf_env_finds_the_conda_env_fontconfig(tmp_path, monkeypatch):
     monkeypatch.delenv("FONTCONFIG_FILE", raising=False)
     monkeypatch.delenv("FONTCONFIG_PATH", raising=False)
     monkeypatch.setenv("CONDA_PREFIX", str(tmp_path))
-    assert build_manual._pdf_env()["FONTCONFIG_FILE"] == str(fonts_conf)
+    monkeypatch.setattr(build_manual.shutil, "which", lambda name: None)
+    assert build_manual._pdf_env("xelatex")["FONTCONFIG_FILE"] == str(fonts_conf)
 
 
 def test_pdf_env_leaves_an_existing_fontconfig_setting_alone(monkeypatch):
     import build_manual
     monkeypatch.setenv("FONTCONFIG_FILE", "/already/set.conf")
     assert build_manual._pdf_env()["FONTCONFIG_FILE"] == "/already/set.conf"
+
+
+def test_pdf_env_is_a_harmless_noop_when_neither_layout_is_found(monkeypatch):
+    """Neither fix applies (no TeX Live layout, no conda fonts.conf): _pdf_env() must not crash
+    or fabricate a path -- the caller's own subprocess call will then fail exactly as before,
+    which is honest, not a silent wrong answer."""
+    import build_manual
+    monkeypatch.delenv("FONTCONFIG_FILE", raising=False)
+    monkeypatch.delenv("FONTCONFIG_PATH", raising=False)
+    monkeypatch.delenv("CONDA_PREFIX", raising=False)
+    monkeypatch.setattr(build_manual.shutil, "which", lambda name: None)
+    env = build_manual._pdf_env("xelatex")
+    assert "FONTCONFIG_FILE" not in env
 
 
 @pytest.mark.parametrize("module", ["verify_lammps", "run_benchmarks", "run_examples", "watch_upstream", "build_manual",

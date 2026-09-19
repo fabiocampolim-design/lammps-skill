@@ -2,6 +2,35 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.29 — 2026-09-19
+
+Fixes from an independent `/code-review` of the just-published v0.1.28 repo (KEEP rule 14 /
+release non-negotiables), all verified before fixing:
+
+- **The 0.1.28 fontconfig fix (finding N-25 at the time) was itself incomplete.** It pointed
+  `FONTCONFIG_FILE` at the active conda environment's own `fonts.conf`, which worked but was
+  never actually exercised with no conda env active — the exact condition that reproduces the
+  original bug, confirmed live: with `CONDA_PREFIX`/`FONTCONFIG_FILE`/`FONTCONFIG_PATH` all
+  unset, the manual PDF build failed exactly as before. The review also found `KEEP\rules\07-
+  windows-shell-and-wsl.md` had already diagnosed and fixed the identical root cause on
+  2026-09-02, more generally, by pointing at TeX Live's own bundled fontconfig config — not
+  reused because it wasn't checked first. Fixed: `_pdf_env()` now derives TeX Live's own config
+  from wherever the actual PDF engine binary (`xelatex` or `lualatex`) resolves to, with the
+  conda lookup kept only as a fallback for a non-standard TeX Live layout; verified end to end
+  with every relevant environment variable unset. Three regression tests replace the one
+  (TeX-Live-own-config found; conda fallback used when the TeX Live layout is absent; a harmless
+  no-op when neither is found — this last case is expected to still fail the PDF build honestly,
+  not silently produce a wrong result).
+- `docs/02-findings-backlog.md`'s new row for this finding was assigned id **N-25**, already
+  used by an unrelated, pre-existing row (the `lammps.org/download.html` redirect-stub finding)
+  — renumbered to **N-28**, the next free id.
+- This file's own 0.1.28 entry above states "397 passed... 21-test difference" alongside "420
+  tests green" two sentences later, which don't reconcile (420-397=23). The 397 figure was
+  measured before two tests were added later in the same session and never re-verified — the
+  actual split, re-verified fresh, is 399 passed/10 skipped (409 collected) against the study
+  repo's 420 passed/10 skipped (430 collected), a 21-test gap either way. Per this project's own
+  convention, past CHANGELOG entries are never edited — this entry is the correction of record.
+
 ## 0.1.28 — 2026-09-19
 
 S6a pre-flight (playbook rules/06a) for the eventual publish: `git subtree split --prefix
