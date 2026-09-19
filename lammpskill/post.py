@@ -70,6 +70,13 @@ def unwrap_positions(traj):
 
 
 def msd(traj, dt=1.0, unwrap=True):
+    """Mean-squared displacement. `dt` is the real time **per LAMMPS step** (e.g. the input
+    script's `timestep` command) -- it multiplies each frame's own `f.timestep` (already the
+    actual step count LAMMPS wrote, e.g. 0, 20, 40, ... for a dump every 20 steps), which already
+    encodes the dump interval. Passing `dt * dump_every` double-counts it and silently produces a
+    diffusion coefficient wrong by a factor of `dump_every` (found live, chapter 06, 2026-09-19).
+    This is a different convention from `vacf()` below, whose `dt` multiplies a plain lag index,
+    not a real step count -- the two are not interchangeable."""
     P = unwrap_positions(traj) if unwrap else traj.positions
     d = P - P[0]
     m = (d * d).sum(axis=-1).mean(axis=1)

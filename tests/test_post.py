@@ -45,6 +45,33 @@ def test_msd_and_diffusion_of_a_random_walk():
     assert abs(D - 3 * 0.01 / 6) < 0.002      # <r^2> = 3 sigma^2 t -> D = sigma^2/2 = 0.005
 
 
+def test_msd_dt_multiplies_the_real_step_not_the_frame_index():
+    """Regression for a real bug (chapter 06, 2026-09-19): dt=DT*DUMP_EVERY double-counted the
+    dump interval and understated D by exactly DUMP_EVERY, because f.timestep for a dumped-every-N
+    trajectory is already the real step count, unlike test_msd_and_diffusion_of_a_random_walk
+    above (frame index used as timestep, which masks this exact mistake)."""
+    rng = np.random.default_rng(3)
+    nframes, natoms, L = 100, 200, 1000.0
+    dump_every, dt_step, D_true = 20, 0.005, 0.05
+    dt_per_frame = dump_every * dt_step
+    sigma = np.sqrt(2 * D_true * dt_per_frame)
+    box = Box(0, L, 0, L, 0, L)
+    steps = rng.normal(0, sigma, (nframes, natoms, 3)).cumsum(axis=0) + L / 2
+    frames = [Frame(t * dump_every, natoms, box, ("pp",) * 3, ["id", "type", "xu", "yu", "zu"],
+                    np.column_stack([np.arange(1, natoms + 1), np.ones(natoms), steps[t]])) for t in range(nframes)]
+    traj = Trajectory(frames)
+
+    t_right, m_right = post.msd(traj, dt=dt_step, unwrap=False)
+    D_right, _ = post.diffusion_coefficient(t_right, m_right)
+    assert abs(D_right / D_true - 1) < 0.3, "dt=dt_step should recover the true D within noise"
+
+    t_wrong, m_wrong = post.msd(traj, dt=dt_step * dump_every, unwrap=False)
+    D_wrong, _ = post.diffusion_coefficient(t_wrong, m_wrong)
+    assert abs(D_wrong * dump_every - D_right) / D_right < 0.05, (
+        "dt=dt_step*dump_every should understate D by exactly dump_every -- "
+        "if this fails, the double-counting bug's signature has changed")
+
+
 def test_vacf_starts_at_one_and_decays():
     rng = np.random.default_rng(3)
     v = rng.normal(size=(300, 20, 3))

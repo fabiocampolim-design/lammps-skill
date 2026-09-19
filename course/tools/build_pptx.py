@@ -15,7 +15,7 @@ import os
 import sys
 import tempfile
 
-__version__ = "0.1.26"
+__version__ = "0.1.27"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 COURSE = os.path.abspath(os.path.join(HERE, ".."))

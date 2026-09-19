@@ -2,6 +2,19 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.27 — 2026-09-19
+
+Hardening after 0.1.26's `msd()` dt fix, in place of a second full adversarial-review pass:
+independently confirmed the fix with a synthetic random walk of known diffusion coefficient
+(dumped every 20 steps, real step numbers as `f.timestep`) -- the buggy `dt=DT*DUMP_EVERY`
+reproduces the exact "wrong by a factor of `dump_every`" signature, the fixed `dt=DT` recovers
+the true D within statistical noise. Documented `msd()`'s `dt` convention explicitly in its
+docstring (it multiplies the real per-step time, not a frame index -- `vacf()` does the latter,
+which is what made the two easy to confuse) and added
+`test_msd_dt_multiplies_the_real_step_not_the_frame_index` as a permanent regression test, since
+the existing `test_msd_and_diffusion_of_a_random_walk` uses the frame index as `f.timestep`,
+which masks exactly this mistake. 418 tests green, pyflakes clean.
+
 ## 0.1.26 — 2026-09-19
 
 Fixes from two parallel adversarial reviews (Opus, one per chapter) of 0.1.25's chapter 04 and
