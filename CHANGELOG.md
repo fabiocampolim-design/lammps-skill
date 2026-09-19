@@ -2,6 +2,22 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.23 — 2026-09-19
+
+Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of this session's
+`watch_upstream.py` Task Scheduler re-registration (the entry had gone missing since 0.1.6):
+
+- `scripts/register_watch_task.ps1` registered the task without `-Pull`, despite its own header
+  docstring describing `--weekly --pull` as the default behaviour -- the mirror clone was never
+  going to be fetched. Fixed: the task now runs `--weekly -q --pull`; the script's docstring
+  corrected to state `-Pull` is opt-in, matching `AGENTS.md`'s existing (correct) documentation.
+- The same registration never set `PYTHONIOENCODING=utf-8`, this project's own hard rule for a
+  cp1252 console. Fixed: the task's cmd wrapper now sets it, matching sibling skills' convention.
+- `tests/test_register_watch_task_dry_run_changes_nothing` assumed no real task ever exists on
+  the test machine -- false now that one is actually registered. Fixed: the test compares the
+  task's registration before/after the dry run instead of asserting absence, so it is correct
+  whether or not a real task is present.
+
 ## 0.1.22 — 2026-09-16
 
 Fixes from an adversarial review (Opus, a different model, per KEEP rule 14) of 0.1.21's water

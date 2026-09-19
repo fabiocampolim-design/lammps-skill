@@ -4,8 +4,8 @@
 # Register (or remove) the weekly LAMMPS upstream watch as a Windows Scheduled Task.
 #
 # The task runs hidden and writes to a log file -- nothing may appear on the owner's screen
-# (KEEP rules/12). It runs `scripts/watch_upstream.py --weekly --pull`, which writes
-# docs/watch/YYYY-WW.md and refreshes the snapshot.
+# (KEEP rules/12). It runs `scripts/watch_upstream.py --weekly` (add -Pull to also refresh the
+# mirror clone), which writes docs/watch/YYYY-WW.md.
 #
 #   .\scripts\register_watch_task.ps1 -DryRun          # print what would be registered
 #   .\scripts\register_watch_task.ps1                  # register (Mondays 09:00 local)
@@ -52,10 +52,11 @@ if ($Remove) {
 if (-not (Test-Path $script))  { Write-Output "watch_upstream.py not found at $script"; exit 2 }
 if (-not (Test-Path $Python))  { Write-Output "python not found at $Python (pass -Python <path>)"; exit 2 }
 
-$args = "-u `"$script`" --weekly"
+$args = "-u `"$script`" --weekly -q"
 if ($Pull) { $args += " --pull" }
 # cmd.exe wrapper so both streams reach one log file; the task itself is hidden.
-$cmd = "/c `"`"$Python`" $args >> `"$log`" 2>&1`""
+# PYTHONIOENCODING=utf-8 per this project's own hard rule (CLAUDE.md: console is cp1252).
+$cmd = "/c `"set PYTHONIOENCODING=utf-8&& `"$Python`" $args >> `"$log`" 2>&1`""
 
 Write-Output "task     : $TaskName"
 Write-Output "runs     : $Python $args"

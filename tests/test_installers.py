@@ -106,15 +106,30 @@ def test_install_lammps_wsl_source_dry_run_sets_an_rpath_and_a_venv():
     assert "--target install-python" not in p.stdout
 
 
+_TASK_EXISTS_CMD = ("(Get-ScheduledTask -TaskName 'lammps-skill upstream watch' "
+                    "-ErrorAction SilentlyContinue) -ne $null")
+_TASK_ARGS_CMD = "(Get-ScheduledTask -TaskName 'lammps-skill upstream watch').Actions[0].Arguments"
+
+
 @pytest.mark.skipif(sys.platform != "win32" or shutil.which("powershell") is None, reason="Windows only")
 def test_register_watch_task_dry_run_changes_nothing():
     """Rule 24: the installer-shaped scripts have a dry run. Registering a scheduled task writes to
-    the user's task store, so -DryRun must print the plan and stop."""
+    the user's task store, so -DryRun must print the plan and stop -- whether or not the real task
+    (registered separately, outside this test, by scripts/register_watch_task.ps1 itself) already
+    exists on this machine: the dry run must neither create one where none existed nor modify one
+    that did."""
+    existed_before = "True" in _run(["powershell", "-NoProfile", "-Command", _TASK_EXISTS_CMD]).stdout
+    args_before = _run(["powershell", "-NoProfile", "-Command", _TASK_ARGS_CMD]).stdout if existed_before else None
+
     p = _run(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
               os.path.join(SCRIPTS, "register_watch_task.ps1"), "-DryRun"])
     assert p.returncode == 0, p.stdout + p.stderr
     assert "register : DRY-RUN" in p.stdout
     assert 'watch_upstream.py" --weekly' in p.stdout       # the script path is quoted for cmd.exe
-    out = _run(["powershell", "-NoProfile", "-Command",
-                "(Get-ScheduledTask -TaskName 'lammps-skill upstream watch' -ErrorAction SilentlyContinue) -ne $null"])
-    assert "True" not in out.stdout, "the dry run registered a task"
+
+    existed_after = "True" in _run(["powershell", "-NoProfile", "-Command", _TASK_EXISTS_CMD]).stdout
+    if not existed_before:
+        assert not existed_after, "the dry run registered a task where none existed"
+    else:
+        args_after = _run(["powershell", "-NoProfile", "-Command", _TASK_ARGS_CMD]).stdout
+        assert args_after == args_before, "the dry run modified an already-registered task"
