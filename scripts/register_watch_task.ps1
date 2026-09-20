@@ -50,7 +50,6 @@ if ($Remove) {
 }
 
 if (-not (Test-Path $script))  { Write-Output "watch_upstream.py not found at $script"; exit 2 }
-if (-not (Test-Path $Python))  { Write-Output "python not found at $Python (pass -Python <path>)"; exit 2 }
 
 $args = "-u `"$script`" --weekly -q"
 if ($Pull) { $args += " --pull" }
@@ -64,11 +63,15 @@ Write-Output "schedule : weekly, $Day at $At"
 Write-Output "log      : $log"
 
 if ($DryRun) {
+    # A dry run only describes the plan -- it must not require $Python to actually exist yet
+    # (found live in CI, 2026-09-19: a GitHub Actions Windows runner has no `lammps` conda env,
+    # and a dry run failing over that defeats the whole point of a side-effect-free preview).
     Step "register" "DRY-RUN"
     $status | ForEach-Object { Write-Output $_ }
     exit 0
 }
 
+if (-not (Test-Path $Python))  { Write-Output "python not found at $Python (pass -Python <path>)"; exit 2 }
 if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Path $logDir -Force | Out-Null }
 
 try {

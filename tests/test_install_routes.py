@@ -74,6 +74,7 @@ def test_wsl_source_cmake_command_names_every_preset_package():
 def test_windows_detect_with_a_fake_path(tmp_path, monkeypatch):
     exe = tmp_path / "lmp.exe"
     exe.write_text("")
+    os.chmod(exe, 0o755)   # shutil.which() on POSIX also requires the executable bit, unlike Windows
     monkeypatch.setenv("PATH", str(tmp_path))
     monkeypatch.setenv("LAMMPS_POTENTIALS", str(tmp_path / "pot"))
 

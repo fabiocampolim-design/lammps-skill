@@ -2,6 +2,30 @@
 
 All notable changes to lammps-skill. Format: Keep a Changelog; versions: SemVer.
 
+## 0.1.30 — 2026-09-20
+
+Fixed the first two real CI failures this project has ever had, surfaced only now: GitHub
+Actions had been blocked by an account-wide billing issue on every push since the repo was
+created (rule 31, "release only on green", was violated tagging v0.1.28/v0.1.29 without knowing
+this -- both went out with CI never having actually run). Making the repo public restored free
+Actions minutes and let CI run for the first time, immediately catching two pre-existing,
+previously-undetected cross-platform bugs:
+
+- `tests/test_install_routes.py::test_windows_detect_with_a_fake_path` failed on Linux and
+  macOS runners: the fake `lmp.exe` fixture had no executable bit set, which `shutil.which()`
+  requires on POSIX (unlike Windows, which only checks the name via PATHEXT). Fixed: `chmod
+  0o755` on the fixture file, making the test genuinely cross-platform rather than
+  Windows-only-by-accident.
+- `scripts/register_watch_task.ps1 -DryRun` failed on the `windows-latest` runner: the script
+  checked that `-Python`'s default path (a personal `lammps` conda env) actually exists *before*
+  the `-DryRun` early return, so a dry run -- which by definition changes nothing and should not
+  need any of its referenced binaries to exist yet -- failed hard on any machine without that
+  exact conda environment, CI included. Fixed: the Python-existence check now runs only for a
+  real registration, after the dry-run branch.
+
+422 tests green (including on this machine; CI verified separately before tagging this time),
+pyflakes clean, conformance PASS=23 FAIL=0.
+
 ## 0.1.29 — 2026-09-19
 
 Fixes from an independent `/code-review` of the just-published v0.1.28 repo (KEEP rule 14 /

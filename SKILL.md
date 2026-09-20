@@ -4,7 +4,7 @@ description: Install, detect, drive and analyse LAMMPS molecular-dynamics simula
 license: Apache-2.0
 ---
 
-# lammps-skill 0.1.29
+# lammps-skill 0.1.30
 
 LAMMPS toolkit written from the manual and from files LAMMPS writes: install routes
 (`references/install-routes.md`, `references/platforms.md`), input scripts and the checker
